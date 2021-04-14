@@ -2,7 +2,7 @@
 
   <node pkg="fixed_hk_camera" type="visible_node" name="visible_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
-      <param name="cali_offset_h" type="int" value="75"/>
+      <param name="cali_offset_h" type="int" value="72"/>
       <param name="cali_offset_v" type="int" value="-10"/>
       <param name="camera_image_width" type="int" value="1920"/>
       <param name="camera_image_height" type="int" value="1080"/>

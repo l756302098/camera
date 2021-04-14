@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-14 10:10:37
+ * @LastEditTime: 2021-04-14 14:27:07
  */
 #include "fixed_hk_camera/infrared_control.hpp"
 
@@ -96,6 +96,7 @@ void infrared_control::transfer_callback(const yidamsg::transfer& msg){
         std::string str_devicepoint = msg.data;
         msg_list.clear();
     	SplitString(str_devicepoint, msg_list, "/");
+        if(msg_list.size()<5) return;
         //set value
         if(msg_list[3] == "2" || msg_list[3] == "5"){
             vector<std::string> device_point;

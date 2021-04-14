@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-13 17:29:15
+ * @LastEditTime: 2021-04-14 15:46:56
  */
 #ifndef __VISIBLE_CONTROL__
 #define __VISIBLE_CONTROL__
@@ -52,12 +52,13 @@ public:
     std::vector<int> camera_focus_set;
     vector<std::string> msg_list;
     string device_id;
-    int camera_id,device_type,visible_survey_parm_id;
+    int camera_id,device_type,watch_counter;
     int cali_offset_h,cali_offset_v;
     int camera_image_width,camera_image_height;
     double camera_cmos_width,camera_cmos_height;
     bool do_task;
     double camera_pixel_size,focus_dis;
+    float yaw_first,pitch_first;
 
 private:
     void init(std::string camera_file);

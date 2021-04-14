@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-13 16:58:48
+ * @LastEditTime: 2021-04-14 16:24:07
  */
 #include "ros/ros.h"
 #include "fixed_hk_camera/hk_sdk_control.hpp"
@@ -400,15 +400,15 @@ void hk_sdk_control::read_hk(){
         {
             if((g_xy_goal != 0) || (g_z_goal != 0)){
                 xy_diff_val = g_xy_goal - g_now_xyposition;
-                std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
-                std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
-                std::cout << "xy_val: " << xy_diff_val << std::endl;
+                // std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
+                // std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
+                // std::cout << "xy_val: " << xy_diff_val << std::endl;
                 if((xy_diff_val > 35900) || (xy_diff_val < -35900))
                     xy_diff_val = 0;
                 z_diff_val = g_z_goal - g_now_zposition;
-                std::cout << "g_z_goal: " << g_z_goal << std::endl;
-                std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
-                std::cout << "z_val: " << z_diff_val << std::endl;
+                // std::cout << "g_z_goal: " << g_z_goal << std::endl;
+                // std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
+                // std::cout << "z_val: " << z_diff_val << std::endl;
                 if((z_diff_val > 35900) || (z_diff_val < -35900))
                     z_diff_val = 0;
                 if(((z_diff_val < 100) && (z_diff_val > -100)) && ((xy_diff_val < 100) && (xy_diff_val > -100)))

@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-14 10:01:43
+ * @LastEditTime: 2021-04-14 18:27:26
  */
 #include "fixed_hk_camera/visible_control.hpp"
 
@@ -111,6 +111,7 @@ void visible_control::transfer_callback(const yidamsg::transfer& msg){
         //std::vector<std::string> msg_list;
         msg_list.clear();
     	SplitString(str_devicepoint, msg_list, "/");
+        if(msg_list.size()<5) return;
         //set value
         if(msg_list[3] == "1"){
             vector<std::string> device_point;
@@ -138,41 +139,43 @@ void visible_control::transfer_callback(const yidamsg::transfer& msg){
 	        float dotf = c(0) * f[0] + c(1) * f[1];
 	        float dotr = c(0) * r[0] + c(1) * r[1];
             float roll = acos(dotf/sqrt(c(0) * c(0) + c(1) * c(1)));
-            float roll_angle = 180 * roll / M_PI;
+            yaw_first = 180 * roll / M_PI;
 	        if(dotr>0){
-		        std::cout <<" 右 " << roll_angle;
+		        std::cout <<" 右 " << yaw_first;
 	        }else{
-                std::cout <<" 左 " << roll_angle;
-                roll_angle = 360 - roll_angle;
+                std::cout <<" 左 " << yaw_first;
+                yaw_first = 360 - yaw_first;
 	        }
             //get pitch
             float magnitude = sqrt(c(0) * c(0) + c(1) * c(1) + c(2) * c(2));
             float pitch = asin(abs(c(2)) / magnitude);
-            float pitch_angle = 180 * pitch / M_PI;
-            //std::cout <<"pitch_angle:" << pitch_angle <<std::endl;
+            pitch_first = 180 * pitch / M_PI;
             if(c(2)<0){
-                std::cout <<" 下" << " angle:"<<pitch_angle<< std::endl;
-                pitch_angle =  360 - pitch_angle;
+                std::cout <<" 下" << " angle:"<<pitch_first<< std::endl;
+                pitch_first =  360 - pitch_first;
             }else{
-                std::cout <<" 上" << " angle:"<<pitch_angle << std::endl;
+                std::cout <<" 上" << " angle:"<<pitch_first << std::endl;
             }
-	        //ptz_client.call();
+            //calc zoom
+            int zoom_set = get_zoomset(magnitude, device_width, device_height, 8);
+            std::cout << "magnitude:" << magnitude <<"h angle:" << yaw_first << " v angle:" << pitch_first << std::endl;
+            std::cout << "focus_dis:" << focus_dis << " zoom_set:" << zoom_set << std::endl;
 	        fixed_msg::cp_control ptz_cmd;
 	        ptz_cmd.request.id = camera_id;
 	        ptz_cmd.request.action = 1;
-	        ptz_cmd.request.type = 3;
+	        ptz_cmd.request.type = 4;
 	        std::vector<unsigned int> quavalue;
-	        quavalue.push_back(roll_angle * 100);
-	        quavalue.push_back(pitch_angle * 100);
+	        quavalue.push_back(yaw_first * 100);
+	        quavalue.push_back(pitch_first * 100);
+            quavalue.push_back(focus_dis * 100);
 	        ptz_cmd.request.allvalue = quavalue;
 	        if(ptz_client.call(ptz_cmd))
 		        std::cout << "set xy degree success!" << std::endl;
 	        else
 		        std::cout << "set xy degree failed!" << std::endl;
-            
 			//read callback
             do_task = true;
-            visible_survey_parm_id = 1;
+            watch_counter = 1;
         }
     }else if(msg.flag == 1){
         //复位
@@ -181,15 +184,15 @@ void visible_control::transfer_callback(const yidamsg::transfer& msg){
 }
 
 void visible_control::isreach_callback(const std_msgs::Int32& msg){
-    std::cout << "isreach_callback" << std::endl;
-    if(msg.data == 1 && do_task && msg_list.size() > 7)
+    std::cout << "isreach_callback " << msg_list.size() << std::endl;
+    if(msg_list.size()<7) return;
+    if(msg.data == 1 && do_task)
 	{
 		do_task = false;
 		yidamsg::InspectedResult imagezoom_msg;
-		imagezoom_msg.camid = visible_survey_parm_id;
+		imagezoom_msg.camid = watch_counter;
 		imagezoom_msg.picid = device_type;
 		std::stringstream ss;
-		ss.clear();
 		ss.str("");
 		ss << msg_list[2] << "," << msg_list[4] << "/" << msg_list[5] << "/" << msg_list[6];
 		imagezoom_msg.equipid = ss.str();
@@ -232,6 +235,51 @@ void visible_control::detect_rect_callback(const yidamsg::Detect_Result& msg){
 	int device_width = atoi(device_point[3].c_str());
 	int device_height = atoi(device_point[4].c_str());
 	device_type = atoi(device_point[5].c_str());
+    Eigen::Vector3d c(t_pos.pose.position.x-c_pos.pose.position.x, t_pos.pose.position.y-c_pos.pose.position.y, t_pos.pose.position.z-c_pos.pose.position.z);
+	//计算检测框的中心坐标
+	int framecentral_x = msg.xmin + ((msg.xmax - msg.xmin) / 2);
+	int framecentral_y = msg.ymin + ((msg.ymax - msg.ymin) / 2);
+	//（与中心坐标的）偏移量
+	int offset_x = framecentral_x - (camera_image_width / 2);
+	int offset_y = framecentral_y - (camera_image_height / 2);
+    std::cout << "offset_x:" << offset_x << " offset_y:" << offset_y << std::endl;
+	//计算焦距对应像素点个数
+	//float focus_set = focus_dis / camera_pixel_size * 1000;
+    float focus_set = focus_dis * camera_image_width / camera_cmos_width;
+	//计算水平、垂直偏移量（换算成云台对应的度制）
+	float horizontal_x = ((atan(offset_x / focus_set) / M_PI) * 180);
+	float vertical_y = ((atan(offset_y / focus_set) / M_PI) * 180);
+    std::cout << "horizontal_x:" << horizontal_x << " vertical_y:" << vertical_y << std::endl;
+    if(offset_x>0){
+        yaw_first = yaw_first + horizontal_x;
+    }else{
+        yaw_first = yaw_first - horizontal_x;
+    }
+    if(offset_y>0){
+        pitch_first = pitch_first + vertical_y;
+    }else{
+        pitch_first = pitch_first - vertical_y;
+    }
+    //calc zoom
+    float magnitude = sqrt(c(0) * c(0) + c(1) * c(1) + c(2) * c(2));
+    int zoom_set = get_zoomset(magnitude, device_width, device_height, 2);
+    std::cout << "h angle:" << yaw_first << " v angle:" << pitch_first << std::endl;
+    std::cout << "focus_dis:" << focus_dis << " zoom_set:" << zoom_set << std::endl;
+	fixed_msg::cp_control ptz_cmd;
+	ptz_cmd.request.id = camera_id;
+	ptz_cmd.request.action = 1;
+	ptz_cmd.request.type = 4;
+	std::vector<unsigned int> quavalue;
+	quavalue.push_back(yaw_first * 100);
+	quavalue.push_back(pitch_first * 100);
+    quavalue.push_back(focus_dis * 100);
+	ptz_cmd.request.allvalue = quavalue;
+	if(ptz_client.call(ptz_cmd))
+		std::cout << "set xy degree success!" << std::endl;
+	else
+		std::cout << "set xy degree failed!" << std::endl;
+    watch_counter = 2;
+    do_task = true;
 }
 
 void visible_control::reset(){
@@ -280,7 +328,7 @@ void visible_control::target_callback(const geometry_msgs::PoseStampedConstPtr &
     float magnitude = sqrt(c(0) * c(0) + c(1) * c(1) + c(2) * c(2));
     float pitch = asin(abs(c(2)) / magnitude);
     float pitch_angle = 180 * pitch / M_PI;
-    //std::cout <<"pitch_angle:" << pitch_angle <<std::endl;
+    std::cout <<"magnitude:" << magnitude << " offz:" << abs(c(2))  <<std::endl;
     if(c(2)<0){
         std::cout <<"下" << " angle:"<<pitch_angle<< std::endl;
         pitch_angle =  360 - pitch_angle;
@@ -307,7 +355,6 @@ void visible_control::target_callback(const geometry_msgs::PoseStampedConstPtr &
 int visible_control::get_zoomset(float distance, int device_width, int device_height, int zoom_scale)
 {
     int finalzoom_set = 8;
-
 	if((device_width == 0) || (device_height == 0))
     {
 		finalzoom_set = 8;

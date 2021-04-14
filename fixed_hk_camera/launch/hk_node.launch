@@ -22,8 +22,8 @@
 
   <node pkg="fixed_hk_camera" type="visible_node" name="visible_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
-      <param name="cali_offset_h" type="int" value="75"/>
-      <param name="cali_offset_v" type="int" value="-10"/>
+      <param name="cali_offset_h" type="int" value="60"/>
+      <param name="cali_offset_v" type="int" value="10"/>
       <param name="camera_image_width" type="int" value="1920"/>
       <param name="camera_image_height" type="int" value="1080"/>
       <param name="camera_cmos_width" type="double" value="5.28"/>
@@ -37,17 +37,10 @@
 
   <node pkg="fixed_hk_camera" type="infrared_node" name="infrared_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
-      <param name="cali_offset_h" type="int" value="75"/>
-      <param name="cali_offset_v" type="int" value="-10"/>
+      <param name="cali_offset_h" type="int" value="60"/>
+      <param name="cali_offset_v" type="int" value="10"/>
       <param name="camera_image_width" type="int" value="1920"/>
       <param name="camera_image_height" type="int" value="1080"/>
-      <param name="camera_cmos_width" type="double" value="5.28"/>
-      <param name="camera_cmos_height" type="double" value="2.97"/> 
-      <param name="camera_pixel_size" type="double" value="3.75"/> 
-      <param name="camera_file" value="$(find fixed_hk_camera)/launch/66color_map_calibration0_-10.yaml"/>
-      <param name="camera_focus_mm" type="str" value="4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,
-      68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129"/>
-      <param name="camera_focus_value" type="str" value="0,4281,7007,8783,10014,10933,11643,12225,12715,13138,13518,13854,14161,14442,14700,14939,15147,15337,15508,15655,15784,15894,15986,16072,16145,16206,16262,16311,16353,16384"/>
   </node>
   
 </launch>
