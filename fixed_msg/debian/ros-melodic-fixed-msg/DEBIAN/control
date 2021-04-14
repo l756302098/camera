@@ -1,0 +1,9 @@
+Package: ros-melodic-fixed-msg
+Version: 0.0.0-0bionic
+Architecture: amd64
+Maintainer: li <li@todo.todo>
+Installed-Size: 200
+Depends: ros-melodic-geometry-msgs, ros-melodic-roscpp, ros-melodic-rospy, ros-melodic-sensor-msgs, ros-melodic-std-msgs
+Section: misc
+Priority: optional
+Description: The fixed_msg package

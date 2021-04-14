@@ -1,0 +1,16 @@
+string stamp
+uint8 version
+uint8 device_id
+float32 pos_x
+float32 pos_y
+float32 pos_z
+float32 qua_x
+float32 qua_y
+float32 qua_z
+float32 qua_w
+int32 horizontal
+int32 vertical
+float32 zoom
+uint8[] temperature
+string v_format
+uint8[] v_data
