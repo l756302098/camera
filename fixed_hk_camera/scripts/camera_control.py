@@ -1,4 +1,29 @@
-#!/usr/bin/env python
+# Axis of the camera is according to the right hand thumb rule
+# where thumb points towards +z axis.
+# index finger points towards +y axis
+# middle finger points towards +x axis
+# If rotation of the second frame is in anticlockwise direction with respect to 
+# the global frame(observed from origin), then the angle is positive, 
+# otherwise the angle is negative.
+
+# Pitch is rotation in the x-direction
+# Roll is rotation in the y-direction
+# Yaw is rotation in the z-direction
+# To define the camera's rotation with respect to the global frame, it should be in the
+# x, y and z sequence.
+
+# Description:
+# Optical zoom as per datasheet = 36x, but with zoom=1,it is going upto 33x
+# After power reset camera goes to its last postion(i.e. the location before power reset), but 
+# It doesnot do the appropriate zoom:
+# Initial zoom was = 24, after power reset zoom = 16
+# Initial zoom was = 12, after power reset zoom = 8
+
+# Error:
+# 1.There are some errors in onvif-zeep library for python3.
+#   I tried AbsoluteMove function, but fields in the object returned from 'create_type function
+#   are None.'
+
 import sys
 from time import sleep
 from onvif import ONVIFCamera
@@ -116,7 +141,7 @@ class camera(object):
     def __calculate_object_distance ( self, x, y, z ):
         object_distance = ((x*x)+(y*y)+(z*z))
         object_distance = sqrt( object_distance )
-        return object_distance
+        return object_distance;
 
 # Axis of the camera is according to the right hand thumb rule
 # where thumb points towards +z axis.
@@ -144,7 +169,7 @@ class camera(object):
                 pan_angle = 180 + pan_angle
             #4th quadrant
             elif( x<0 and y>=0 ):
-                pan_angle = 360 - pan_angle
+                pan_angle = 360 - pan_angle;
 
         return 360 - pan_angle
 
@@ -159,8 +184,8 @@ class camera(object):
             object_distance = ( (x*x) + (y*y) + (z*z) )
             object_distance = sqrt(object_distance)
             
-            tilt_angle = ( object_distance_along_z_axis ) / object_distance
-            tilt_angle = asin(tilt_angle) * 180/pi
+            tilt_angle = ( object_distance_along_z_axis ) / object_distance;
+            tilt_angle = asin(tilt_angle) * 180/pi;
 
             if z < 0:
                 tilt_angle = 90 - tilt_angle
@@ -281,7 +306,7 @@ class camera_onvif(object):
         # Create ptz service object
         self.imaging_service_object = self.my_camera.create_imaging_service()
         # Get target profile
-        self.media_profile = self.media_service_object.GetProfiles()[0]
+        self.media_profile = self.media_service_object.GetProfiles()[0];
         # Get video sources
         video_sources = self.my_camera.media.GetVideoSources()
         # Save the range values
@@ -521,3 +546,16 @@ class camera_onvif(object):
     def onvif_reboot_camera( self ):
         response = self.my_camera.devicemgmt.SystemReboot()
         return STATUS_OK, response
+
+def camera_control_mock():
+
+    camera_object = camera( '192.168.100.67', 80, 'admin', 'admin', 0, 0, -0.3, 0, 0, 0 )
+    
+    #camera_object.move_camera( -2, 15, 0 )
+    #sleep(2)
+    #camera_object.move_camera( 10, 10, 10 )
+    #sleep(2)
+
+if __name__ == '__main__':
+    camera_control_mock()
+    

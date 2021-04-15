@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-14 18:27:26
+ * @LastEditTime: 2021-04-15 09:12:10
  */
 #include "fixed_hk_camera/visible_control.hpp"
 
@@ -157,7 +157,7 @@ void visible_control::transfer_callback(const yidamsg::transfer& msg){
                 std::cout <<" 上" << " angle:"<<pitch_first << std::endl;
             }
             //calc zoom
-            int zoom_set = get_zoomset(magnitude, device_width, device_height, 8);
+            int zoom_set = get_zoomset(magnitude, device_width, device_height, 5);
             std::cout << "magnitude:" << magnitude <<"h angle:" << yaw_first << " v angle:" << pitch_first << std::endl;
             std::cout << "focus_dis:" << focus_dis << " zoom_set:" << zoom_set << std::endl;
 	        fixed_msg::cp_control ptz_cmd;
