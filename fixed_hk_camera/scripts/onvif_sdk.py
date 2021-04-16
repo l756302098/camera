@@ -25,7 +25,7 @@ CAMERA_PAN_RANGE_MAX = 360
 # Theoritically tilt is -16 to 90, but practically tilt is from -2.9 to 90 degrees
 # When tilt value is +1, tilt angle is -2.9 degree, due to which there is a 3 degree
 # error in the calculated and actual value
-CAMERA_TILT_RANGE_MIN = -2.9
+CAMERA_TILT_RANGE_MIN = -5
 CAMERA_TILT_RANGE_MAX = 90
 #optical zoom as per datasheet = 36x, but with zoom=1, it is going upto 33x
 CAMERA_ZOOM_RANGE_MIN = 1
@@ -211,6 +211,9 @@ class camera(object):
         # Map pan tilt and zoom to x y and z
         return self.camera_device.onvif_get_position()
     
+    def set_camera_ptz(self, pan, tilt, zoom):
+        return self.camera_device.onvif_move_camera(pan,tilt,zoom)
+    
     def move_camera( self, x, y, z ):
         status = self.is_camera_created()
         if ( status != STATUS_OK ):
@@ -326,6 +329,9 @@ class camera_onvif(object):
         param.Name = DEFAULT_HOSTNAME_OF_CAMERA
         self.my_camera.devicemgmt.SetHostname(param)
         print ('camera_onvif comamnds object created')
+        print("pan min:",self.absolute_pan_value_min," max:",self.absolute_pan_value_max)
+        print("tilt min:",self.absolute_tilt_value_min," max:",self.absolute_tilt_value_max)
+        print("zoom min:",self.absolute_zoom_value_min," max:",self.absolute_zoom_value_max)
 
     def __get_users( self ):
         response = self.my_camera.devicemgmt.GetUsers()
@@ -452,6 +458,7 @@ class camera_onvif(object):
         # Tilt value returned by this function is multiplied by -1,
         tilt_value = response.Position.PanTilt._y * ( -1 )
         zoom_value = response.Position.Zoom._x
+        #print("pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
         #mapping physical values to camera values
         pan = ( pan_value * self.slope_pan ) - ( self.absolute_pan_value_min * self.slope_pan ) + CAMERA_PAN_RANGE_MIN
         tilt = ( tilt_value * self.slope_tilt ) - ( self.absolute_tilt_value_min * self.slope_tilt ) + CAMERA_TILT_RANGE_MIN

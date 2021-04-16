@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-14 16:24:07
+ * @LastEditTime: 2021-04-16 16:19:03
  */
 #include "ros/ros.h"
 #include "fixed_hk_camera/hk_sdk_control.hpp"
@@ -13,6 +13,7 @@ using namespace std;
 
 hk_sdk_control::hk_sdk_control(const ros::NodeHandle &nh):nh_(nh)
 {
+    nh_.param<bool>("auto_zoom", auto_zoom, false);
     nh_.param<std::string>("haikang_topic_name", visible_topic_str, "/haikangsdk/image_proc");
     nh_.param<std::string>("sdkcom_dir", sdkcom_dir_str, "/home/yd/workspace/src/yd_camerastream_capture/libs");
     nh_.param<std::string>("heartbeat_topic_string", heartbeat_topic_str, "/fixed/heartbeat");
@@ -28,11 +29,21 @@ hk_sdk_control::hk_sdk_control(const ros::NodeHandle &nh):nh_(nh)
     nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/internal/platform_cmd");
     nh_.param<bool>("pub_raw_temp", pub_raw_temp, true);
     nh_.param<std::string>("raw_temp_topic", raw_temp_topic, "/fixed/internal/temperature");
+    std::string pan_range_str,tilt_range_str;
+    std::vector<std::string> pan_range_list,tilt_range_list;
+    nh_.param<std::string>("pan_range", pan_range_str, "0,0");
+    SplitString(pan_range_str, pan_range_list, ",");
+    pan_min = atoi(pan_range_list[0].c_str());
+    pan_max = atoi(pan_range_list[1].c_str());
+    nh_.param<std::string>("tilt_range", tilt_range_str, "0,0");
+    SplitString(pan_range_str, tilt_range_list, ",");
+    tilt_min = atoi(tilt_range_list[0].c_str());
+    tilt_max = atoi(tilt_range_list[1].c_str());
 
     heartbeat_pub_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(heartbeat_topic_str, 1);
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform_isreach", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
-    //detectresult_sub_ = nh_.subscribe("/detect_rect", 1, &hk_sdk_control::detect_rect_callback, this);
+    detect_sub = nh_.subscribe("/detect_rect", 1, &hk_sdk_control::detect_rect_callback, this);
     ptz_server = nh_.advertiseService(ptz_server_name, &hk_sdk_control::handle_cloudplatform, this);
     raw_temp_pub_ = nh_.advertise<sensor_msgs::Image>(raw_temp_topic,1);
 
@@ -435,7 +446,7 @@ bool hk_sdk_control::set_action(int id, int type, int value, int xy_value, int z
     }
     else if(type == 1){
         m_ptzPos.wAction = 3;
-        z_degree = 36000 - value;
+        z_degree = value;
     }
     else if(type == 2){
         m_ptzPos.wAction = 4;
@@ -444,12 +455,12 @@ bool hk_sdk_control::set_action(int id, int type, int value, int xy_value, int z
     else if(type == 3){
         m_ptzPos.wAction = 5;
         xy_degree = xy_value;
-        z_degree = 36000 - z_value;
+        z_degree = z_value;
     }
     else if(type == 4){
         m_ptzPos.wAction = 1;
         xy_degree = xy_value;
-        z_degree = 36000 - z_value;
+        z_degree = z_value;
         focus_adjust = zoom_value;
     }
     int xy_idegree = xy_degree/10;
@@ -497,7 +508,8 @@ int hk_sdk_control::get_action(int id, int type)
         return HEXToDEC(m_ptzPosNow.wPanPos)*10;
     }
     else if(type == 1){
-        return (3600-HEXToDEC(m_ptzPosNow.wTiltPos))*10;
+        //return (3600-HEXToDEC(m_ptzPosNow.wTiltPos))*10;
+        return HEXToDEC(m_ptzPosNow.wTiltPos)*10;
     }
     else if(type == 2){
         return HEXToDEC(m_ptzPosNow.wZoomPos);   
@@ -629,4 +641,37 @@ bool hk_sdk_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, f
     _cmd_control_queue.push_back(s_cmd);
     this->write_mtx.unlock();
 	return true;
+}
+
+void hk_sdk_control::detect_rect_callback(const yidamsg::Detect_Result &msg)
+{
+    if(!auto_zoom) return;
+    //设置要进行ptz区域
+    NET_DVR_POINT_FRAME  posdata;  
+    posdata.xTop = (int)(msg.xmin * 255 / 1920 );   
+    // (int)((target_tmp.x + target_tmp.width) / std_cols * 255); 
+    int diff_x_value = (int)(msg.xmax - msg.xmin) * 255 / 1920;     
+    if(diff_x_value > 2){
+        posdata.xBottom = posdata.xTop + diff_x_value;
+    }
+    else{
+        posdata.xBottom = posdata.xTop + 2;
+    }       
+    posdata.yTop = (int)(msg.ymin * 255 / 1080);
+    // (int)((target_tmp.y + target_tmp.height) / std_rows * 255); 
+    int diff_y_value = (int)(msg.ymax - msg.ymin) * 255 / 1080;
+    if(diff_y_value > 2){
+        posdata.yBottom = posdata.yTop + diff_y_value;
+    }
+    else{
+        posdata.yBottom = posdata.yTop + 2;
+    }   
+    posdata.bCounter = 1;    
+    if (!NET_DVR_PTZSelZoomIn_EX(0, 1, &posdata)){
+        std::cout << "set pzt zoom failed！" << std::endl;
+    }
+    else{
+        std::cout << "set ptz zoom success!" << std::endl;
+    }
+
 }

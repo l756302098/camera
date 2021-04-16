@@ -4,14 +4,13 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-14 14:27:07
+ * @LastEditTime: 2021-04-15 15:21:27
  */
 #include "fixed_hk_camera/infrared_control.hpp"
 
 infrared_control::infrared_control(const ros::NodeHandle &nh):nh_(nh){
     std::string camera_focus_value_str,camera_focus_mm_str;
     std::string camera_file = nh_.param<std::string>("camera_file", "");
-    nh_.param<int>("camera_id", camera_id, 1);
     nh_.param<int>("camera_id", camera_id, 1);
     nh_.param<int>("cali_offset_h", cali_offset_h, 0);
     nh_.param<int>("cali_offset_v", cali_offset_v, 0);
@@ -134,8 +133,8 @@ void infrared_control::transfer_callback(const yidamsg::transfer& msg){
             float pitch_angle = 180 * pitch / M_PI;
             if(c(2)<0){
                 std::cout <<" 下 " << " angle:" << pitch_angle << std::endl;
-                pitch_angle =  360 - pitch_angle;
             }else{
+                pitch_angle =  360 - pitch_angle;
                 std::cout <<" 上 " << " angle:" << pitch_angle << std::endl;
             }
 	        //ptz_client.call();
@@ -160,12 +159,11 @@ void infrared_control::transfer_callback(const yidamsg::transfer& msg){
 void infrared_control::ptz_callback(const nav_msgs::Odometry& msg){
     float x = msg.pose.pose.position.x;
     float z = msg.pose.pose.position.z;
-    //std::cout << "x:" << x << " z:" << z << std::endl;
     Eigen::AngleAxisd h_off( -1 * M_PI / 180 * x / 100, Vector3d(0, 0, 1));
     Eigen::Quaterniond qua(c_pos.pose.orientation.w, c_pos.pose.orientation.x, c_pos.pose.orientation.y, c_pos.pose.orientation.z);
     Eigen::Quaterniond h_q(h_off);
 	qua = h_q * qua;
-    Eigen::AngleAxisd v_off( M_PI / 180 * z / 100, Vector3d(0, 1, 0));
+    Eigen::AngleAxisd v_off( -1 * M_PI / 180 * z / 100, Vector3d(0, 1, 0));
     Eigen::Quaterniond v_q(v_off);
 	qua = v_q * qua;
     geometry_msgs::PoseStamped camera_pose;
@@ -248,9 +246,9 @@ void infrared_control::target_callback(const geometry_msgs::PoseStampedConstPtr 
     //std::cout <<"pitch_angle:" << pitch_angle <<std::endl;
     if(c(2)<0){
         std::cout <<"下" << " angle:"<<pitch_angle<< std::endl;
-        pitch_angle =  360 - pitch_angle;
     }else{
-         std::cout <<"上" << " angle:"<<pitch_angle << std::endl;
+        pitch_angle =  360 - pitch_angle;
+        std::cout <<"上" << " angle:"<<pitch_angle << std::endl;
     }
 	//ptz_client.call();
 	fixed_msg::cp_control ptz_cmd;

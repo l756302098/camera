@@ -50,7 +50,7 @@ CAMERA_PAN_RANGE_MAX = 360
 # Theoritically tilt is -16 to 90, but practically tilt is from -2.9 to 90 degrees
 # When tilt value is +1, tilt angle is -2.9 degree, due to which there is a 3 degree
 # error in the calculated and actual value
-CAMERA_TILT_RANGE_MIN = -2.9
+CAMERA_TILT_RANGE_MIN = -5
 CAMERA_TILT_RANGE_MAX = 90
 #optical zoom as per datasheet = 36x, but with zoom=1, it is going upto 33x
 CAMERA_ZOOM_RANGE_MIN = 1

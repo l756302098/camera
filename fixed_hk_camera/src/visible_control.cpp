@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-15 09:12:10
+ * @LastEditTime: 2021-04-16 16:25:04
  */
 #include "fixed_hk_camera/visible_control.hpp"
 
@@ -15,6 +15,9 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     nh_.param<int>("camera_id", camera_id, 1);
     nh_.param<int>("cali_offset_h", cali_offset_h, 0);
     nh_.param<int>("cali_offset_v", cali_offset_v, 0);
+    nh_.param<double>("h_offset", h_offset, 0);
+    nh_.param<double>("v_offset", v_offset, 0);
+    nh_.param<bool>("auto_zoom", auto_zoom, false);
     nh_.param<int>("camera_image_width", camera_image_width, 1920);
     nh_.param<int>("camera_image_height", camera_image_height, 1080);
     nh_.param<double>("camera_cmos_width", camera_cmos_width, 3.75);
@@ -150,10 +153,21 @@ void visible_control::transfer_callback(const yidamsg::transfer& msg){
             float magnitude = sqrt(c(0) * c(0) + c(1) * c(1) + c(2) * c(2));
             float pitch = asin(abs(c(2)) / magnitude);
             pitch_first = 180 * pitch / M_PI;
+            std::cout << " first calc angle:" << pitch_first << std::endl;
+            //again calc angle
+            double xy_distance = sqrt(magnitude * magnitude - c(2) * c(2));
+            double z_distance = abs(c(2));
+            double offset_z = h_offset * cos(pitch);
+            double offset_x = h_offset * sin(pitch);
+            double xy = xy_distance + offset_x;
+            double z = z_distance + h_offset - offset_z;
+            float pitch1 = atan(z/xy);
+            pitch_first = 180 * pitch1 / M_PI;
+            std::cout << "again calc angle:" << pitch_first << std::endl;
             if(c(2)<0){
                 std::cout <<" 下" << " angle:"<<pitch_first<< std::endl;
-                pitch_first =  360 - pitch_first;
             }else{
+                pitch_first = 360 - pitch_first;
                 std::cout <<" 上" << " angle:"<<pitch_first << std::endl;
             }
             //calc zoom
@@ -197,22 +211,17 @@ void visible_control::isreach_callback(const std_msgs::Int32& msg){
 		ss << msg_list[2] << "," << msg_list[4] << "/" << msg_list[5] << "/" << msg_list[6];
 		imagezoom_msg.equipid = ss.str();
 		readyimage_pub.publish(imagezoom_msg);
-		time_t currtime = time(NULL);
-		tm* p = localtime(&currtime);
-		char filename[100] = {0};
-    	sprintf(filename,"visible_%d%02d%02d%02d%02d%02d.jpg",p->tm_year+1900,p->tm_mon+1,p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec);
 	}
 }
 
 void visible_control::ptz_callback(const nav_msgs::Odometry& msg){
     float x = msg.pose.pose.position.x;
     float z = msg.pose.pose.position.z;
-    //std::cout << "x:" << x << " z:" << z << std::endl;
     Eigen::AngleAxisd h_off( -1 * M_PI / 180 * x / 100, Vector3d(0, 0, 1));
     Eigen::Quaterniond qua(c_pos.pose.orientation.w, c_pos.pose.orientation.x, c_pos.pose.orientation.y, c_pos.pose.orientation.z);
     Eigen::Quaterniond h_q(h_off);
 	qua = h_q * qua;
-    Eigen::AngleAxisd v_off( M_PI / 180 * z / 100, Vector3d(0, 1, 0));
+    Eigen::AngleAxisd v_off( -1 * M_PI / 180 * z / 100, Vector3d(0, 1, 0));
     Eigen::Quaterniond v_q(v_off);
 	qua = v_q * qua;
     geometry_msgs::PoseStamped camera_pose;
@@ -227,6 +236,7 @@ void visible_control::ptz_callback(const nav_msgs::Odometry& msg){
 }
 
 void visible_control::detect_rect_callback(const yidamsg::Detect_Result& msg){
+    if(auto_zoom) return; 
     vector<std::string> device_point;
     SplitString(msg_list[4], device_point, ",");
 	float x_device = atof(device_point[0].c_str());
@@ -256,9 +266,9 @@ void visible_control::detect_rect_callback(const yidamsg::Detect_Result& msg){
         yaw_first = yaw_first - horizontal_x;
     }
     if(offset_y>0){
-        pitch_first = pitch_first + vertical_y;
-    }else{
         pitch_first = pitch_first - vertical_y;
+    }else{
+        pitch_first = pitch_first + vertical_y;
     }
     //calc zoom
     float magnitude = sqrt(c(0) * c(0) + c(1) * c(1) + c(2) * c(2));
@@ -331,10 +341,13 @@ void visible_control::target_callback(const geometry_msgs::PoseStampedConstPtr &
     std::cout <<"magnitude:" << magnitude << " offz:" << abs(c(2))  <<std::endl;
     if(c(2)<0){
         std::cout <<"下" << " angle:"<<pitch_angle<< std::endl;
-        pitch_angle =  360 - pitch_angle;
     }else{
-         std::cout <<"上" << " angle:"<<pitch_angle << std::endl;
+        pitch_angle =  360 - pitch_angle;
+        std::cout <<"上" << " angle:"<<pitch_angle << std::endl;
     }
+    //calc angle
+    
+
 	//ptz_client.call();
 	fixed_msg::cp_control ptz_cmd;
 	ptz_cmd.request.id = camera_id;

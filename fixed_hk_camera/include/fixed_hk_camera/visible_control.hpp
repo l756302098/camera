@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-14 15:46:56
+ * @LastEditTime: 2021-04-16 16:04:10
  */
 #ifndef __VISIBLE_CONTROL__
 #define __VISIBLE_CONTROL__
@@ -56,9 +56,10 @@ public:
     int cali_offset_h,cali_offset_v;
     int camera_image_width,camera_image_height;
     double camera_cmos_width,camera_cmos_height;
-    bool do_task;
+    bool do_task,auto_zoom;
     double camera_pixel_size,focus_dis;
     float yaw_first,pitch_first;
+    double h_offset,v_offset;
 
 private:
     void init(std::string camera_file);

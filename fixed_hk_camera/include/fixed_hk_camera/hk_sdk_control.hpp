@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-06 10:33:40
+ * @LastEditTime: 2021-04-16 16:17:46
  */
 #ifndef __HK_SDK_CONTROL__
 #define __HK_SDK_CONTROL__
@@ -22,6 +22,7 @@
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
 #include "fixed_msg/cp_control.h"
+#include <yidamsg/Detect_Result.h>
 
 #include "hk/HCNetSDK.h"
 #include "hk/LinuxPlayM4.h"
@@ -40,7 +41,7 @@ private:
     bool m_set_infrared_focus,pub_raw_temp;
 
     ros::Publisher heartbeat_pub_,ptz_pub_,isreach_pub_,raw_temp_pub_;
-    //ros::Subscriber detectresult_sub_;
+    ros::Subscriber detect_sub;
     ros::ServiceServer ptz_server,raw_temp_server;
 
     //sdk
@@ -61,6 +62,9 @@ private:
     unsigned int g_xy_reach_flag = 0;
     unsigned int g_z_reach_flag = 0;
     float g_temperature_c = 0.0;
+    int pan_max,pan_min;
+    int tilt_max,tilt_min;
+    bool auto_zoom;
 
 public:
     string device_id;
@@ -83,6 +87,7 @@ public:
     void read_raw_temp();
     void set_focusmode();
     bool handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res);
+    void detect_rect_callback(const yidamsg::Detect_Result &msg);
 };
 
 #endif
