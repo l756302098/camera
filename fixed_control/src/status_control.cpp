@@ -4,11 +4,11 @@
  * @Author: li
  * @Date: 2021-02-22 13:05:41
  * @LastEditors: li
- * @LastEditTime: 2021-04-13 16:08:39
+ * @LastEditTime: 2021-04-19 15:57:26
  */
 #include "fixed_control/status_control.hpp"
 
-status_control::status_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(false),watch_flag(false)
+status_control::status_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(false),watch_flag(false),task_pause(false)
 {
     //get param
     nh_.param<int>("robot_id", robot_id, 1);
@@ -46,12 +46,42 @@ bool status_control::task_srv(yidamsg::TaskList::Request &req, yidamsg::TaskList
 	return true;
 }
 
+bool status_control::task_clear_srv(yidamsg::TaskControl::Request &req, yidamsg::TaskControl::Response &res)
+{
+	res.success = 0;
+	if (req.flag == 1) //暂停当前任务
+	{
+		ROS_INFO("clear task ***");
+        task_pause = true;
+		res.success = 1;
+	}
+	else if (req.flag == 2) //清除当前任务
+	{
+		ROS_INFO("pause task *** ");
+		clear_task_flag = true;
+		res.success = 1;
+	}
+	else if (req.flag == 3) //继续当前任务
+	{
+		ROS_INFO("continue task ***");
+		task_pause = false;
+		res.success = 1;
+	}
+	return true;
+}
+
 void status_control::tick(const ros::TimerEvent &event){
     //ROS_INFO("tick ...");
     update();
 }
 
-void status_control::taskStatusPub(int task_id, int task_status)
+void status_control::reset(){
+    task_running = false;
+    task_pause = false;
+    clear_task_flag = false;
+}
+
+void status_control::pub_task_status(int task_id, int task_status)
 {
 	yidamsg::TaskExecuteStatus task_msg;
 	task_msg.task_history_id = task_id;
@@ -59,8 +89,8 @@ void status_control::taskStatusPub(int task_id, int task_status)
 	task_status_pub.publish(task_msg);
 }
 
-    void status_control::transfer(vector<string> lists, vector<string> task_camera, string trans_id, char flg)
-    {
+void status_control::transfer(vector<string> lists, vector<string> task_camera, string trans_id, char flg)
+{
 	    string s_time;
 	    yidamsg::transfer data;
 	    double secs = ros::Time::now().toSec();
@@ -86,16 +116,10 @@ void status_control::taskStatusPub(int task_id, int task_status)
 	    }
         std::cout << "transfer_pub data:" << data << std::endl;
 	    transfer_pub.publish(data);
-    }
+}
 
 void status_control::update(){
     //ROS_INFO("update ...");
-    if (clear_task_flag) //清除当前任务
-    {
-        ROS_INFO("clear task");
-        road_tasks.clear();
-        clear_task_flag = false;
-    }
     yidamsg::ControlMode msg;
     msg.robot_id = robot_id;
 	msg.mode = ctr_mode;
@@ -106,7 +130,11 @@ void status_control::update(){
     ros::Time last;
     //ROS_INFO("task size %i",road_tasks.size());
     for (size_t i = 0; i < road_tasks.size(); i++){
-        if (clear_task_flag) break;
+        if(clear_task_flag) break;
+        if(task_pause){
+            pub_task_status(task_id,1);
+            break;
+        }
         task_running = true;
         ROAD_PLAN ctask = road_tasks[i];
         ROS_INFO("run %i task",i);
@@ -150,11 +178,22 @@ void status_control::update(){
             }
         }
     }
-    if(task_running){
-        taskStatusPub(task_id,0);
-        task_running = false;
+    if(task_running && !task_pause){
+        pub_task_status(task_id,0);
+        //reset flag
+        reset();
+        //reset cloudplatform
+        yidamsg::transfer data;
+        data.flag = 1;
+        transfer_pub.publish(data);
         //finish ok
         if(road_tasks.size()>0)
             road_tasks.clear();
+    }
+    if (clear_task_flag) //清除当前任务
+    {
+        ROS_INFO("clear task");
+        road_tasks.clear();
+        reset();
     }
 }

@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-15 15:21:27
+ * @LastEditTime: 2021-04-19 10:58:17
  */
 #include "fixed_hk_camera/infrared_control.hpp"
 
@@ -179,13 +179,13 @@ void infrared_control::ptz_callback(const nav_msgs::Odometry& msg){
 
 void infrared_control::isreach_callback(const std_msgs::Int32& msg){
     std::cout << "isreach_callback" << std::endl;
-    for (int i = 0; i < msg_list.size(); i++)
-    {
-        std::cout << " " << i << ":" << msg_list[i];
-    }
-    std::cout << std::endl;
-    
+    // for (int i = 0; i < msg_list.size(); i++)
+    // {
+    //     std::cout << " " << i << ":" << msg_list[i];
+    // }
+    // std::cout << std::endl;
     if(msg.data == 1 && do_task && (msg_list[3] == "2" || msg_list[3] == "5")){
+        sleep(5);
         do_task = false;
         yidamsg::InspectedResult inspected_msg;
 		inspected_msg.camid = camera_id;

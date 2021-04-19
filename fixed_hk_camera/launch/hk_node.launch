@@ -2,8 +2,6 @@
 
   <arg name="arg1" default="true"/>
   <node pkg="fixed_hk_camera" type="fixed_hk_camera_node" name="fixed_hk_camera_node" respawn="false" output="screen">
-      <param name="handleset_xy" type="double" value="0.0"/>
-      <param name="handleset_z" type="double" value="0.0"/>
       <param name="camera_id" type="int" value="1"/>
       <param name="sdkcom_dir" value="/usr/local/lib/thirdparty_lib"/>
       <param name="heartbeat_topic_string" value="/yd/heartbeat"/>

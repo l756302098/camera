@@ -10,8 +10,9 @@ from onvif_sdk import camera
 from fixed_msg.srv import cp_control,cp_controlResponse
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+from std_msgs.msg import Int32
 
-camera_object = camera('192.168.1.66', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
+camera_object = camera('192.168.1.64', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
 cmd_queue = queue.PriorityQueue(maxsize=10)
 device_id = 1
 #ptz status
@@ -20,10 +21,15 @@ tilt = 0
 zoom = 0
 status_pt = ""
 status_z = ""
+moving = False
 
-def set_camera(type,xy_value,z_value,zoom_value):
-    print("set camera")
-    camera_object.move_camera(xy_value,z_value,zoom_value)
+def set_camera(ttype,xy_value,z_value,zoom_value):
+    v = [ttype,xy_value,z_value,zoom_value]
+    print("set camera",v)
+    r = camera_object.move_camera(xy_value,z_value,zoom_value)
+    if r == 0:
+        global moving
+        moving = True
 
 def read_ptz(bq):
     print("read ptz")
@@ -31,7 +37,14 @@ def read_ptz(bq):
         #get current ptz
         status, t_pan, t_tilt, t_zoom, move_status_pt, move_status_z = camera_object.get_position()
         V = [status, t_pan, t_tilt, t_zoom, move_status_pt, move_status_z]
-        print(V)
+        if move_status_pt == "IDLE" and move_status_z == "IDLE":
+            global moving
+            if moving:
+                print("stop move")
+                global isreach_pub
+                isreach_pub.publish(data=1)
+                moving = False
+        #print(V)
         global pan,tilt,zoom,status_pt,status_z
         pan = t_pan
         tilt = t_tilt
@@ -86,7 +99,7 @@ def handle_ptz(req):
     #ready to move
     if req.type == 3:
         read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1])
-    elif req.type == 1:
+    elif req.type == 4:
         read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1]) + "/" + str(req.allvalue[2])
     cmd_queue.put([1,read_cmd])
     return cp_controlResponse(1)
@@ -98,12 +111,21 @@ def timer_callback(event):
 if __name__ == '__main__':
     try:
         #init camera
+        device_ip = rospy.get_param("/control_onvif/device_ip")
+        device_port = rospy.get_param("/control_onvif/device_port")
+        device_username = rospy.get_param("/control_onvif/device_username")
+        device_password = rospy.get_param("/control_onvif/device_password")
+        print(device_ip,device_port,device_username,device_password)
+        if camera_object.is_camera_created() != 0:
+            camera_object = camera(device_ip, device_port, device_username, device_password, 0, 0, 0, 0, 0, 0 )
         read_thread = threading.Thread(target = read_ptz,name='read_ptz_thread',args=(cmd_queue, ))
         read_thread.daemon = True
         read_thread.start()
         write_thread = threading.Thread(target = write_ptz,name='write_ptz_thread',args=(cmd_queue, ))
         write_thread.daemon = True
         write_thread.start()
+        global isreach_pub
+        isreach_pub = rospy.Publisher('/fixed/platform_isreach', Int32, queue_size=1)
         ptz_pub = rospy.Publisher('/fixed/yuntai/position', Odometry, queue_size=1)
         ptz_server = rospy.Service('/fixed/internal/platform_cmd', cp_control, handle_ptz)
         rospy.init_node('onvif_control_node', anonymous=True)

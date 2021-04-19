@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-02-22 13:21:17
  * @LastEditors: li
- * @LastEditTime: 2021-04-13 16:20:17
+ * @LastEditTime: 2021-04-19 15:02:33
  */
 #include <ros/ros.h>
 #include "std_msgs/String.h"
@@ -12,6 +12,7 @@
 #include "yidamsg/ControlMode.h"
 #include "yidamsg/TaskList.h"
 #include "yidamsg/TaskExecuteStatus.h"
+#include "yidamsg/TaskControl.h"
 #include <thread>
 #include <fstream>
 #include <iostream>
@@ -61,7 +62,7 @@ private:
     int ctr_mode = 0;
     int robot_id,task_id;
     std::vector<ROAD_PLAN> road_tasks;
-    bool clear_task_flag,watch_flag,task_running;
+    bool clear_task_flag,watch_flag,task_running,task_pause;
     ros::NodeHandle nh_;
     //ros::Subscriber meter_sub;
     ros::ServiceServer task_server;
@@ -193,7 +194,7 @@ public:
         }
         road_tasks.push_back(task);
     }
-    taskStatusPub(task_id,3);
+    pub_task_status(task_id,3);
     }
 
     void load(std::string &path){
@@ -237,6 +238,7 @@ public:
     bool task_srv(yidamsg::TaskList::Request &req, yidamsg::TaskList::Response &res);
     void tick(const ros::TimerEvent &event);
     void update();
-    void taskStatusPub(int task_id, int task_status);
-
+    void reset();
+    void pub_task_status(int task_id, int task_status);
+    bool task_clear_srv(yidamsg::TaskControl::Request &req, yidamsg::TaskControl::Response &res);
 };

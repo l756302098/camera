@@ -28,7 +28,7 @@ CAMERA_PAN_RANGE_MAX = 360
 CAMERA_TILT_RANGE_MIN = -5
 CAMERA_TILT_RANGE_MAX = 90
 #optical zoom as per datasheet = 36x, but with zoom=1, it is going upto 33x
-CAMERA_ZOOM_RANGE_MIN = 1
+CAMERA_ZOOM_RANGE_MIN = 0
 CAMERA_ZOOM_RANGE_MAX = 33
 
 CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MIN = 5
@@ -458,11 +458,11 @@ class camera_onvif(object):
         # Tilt value returned by this function is multiplied by -1,
         tilt_value = response.Position.PanTilt._y * ( -1 )
         zoom_value = response.Position.Zoom._x
-        #print("pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
+        print("pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
         #mapping physical values to camera values
-        pan = ( pan_value * self.slope_pan ) - ( self.absolute_pan_value_min * self.slope_pan ) + CAMERA_PAN_RANGE_MIN
-        tilt = ( tilt_value * self.slope_tilt ) - ( self.absolute_tilt_value_min * self.slope_tilt ) + CAMERA_TILT_RANGE_MIN
-        zoom = ( zoom_value * self.slope_zoom ) - ( self.absolute_zoom_value_min * self.slope_zoom ) + CAMERA_ZOOM_RANGE_MIN
+        pan = ( pan_value - self.absolute_pan_value_min ) * self.slope_pan + CAMERA_PAN_RANGE_MIN
+        tilt = ( tilt_value - self.absolute_tilt_value_min ) * self.slope_tilt  + CAMERA_TILT_RANGE_MIN
+        zoom = ( zoom_value - self.absolute_zoom_value_min )* self.slope_zoom + CAMERA_ZOOM_RANGE_MIN
         return STATUS_OK, pan, tilt, zoom, response.MoveStatus.PanTilt, response.MoveStatus.Zoom
 
     def onvif_move_camera( self, pan, tilt, zoom ):

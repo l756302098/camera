@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-16 16:25:04
+ * @LastEditTime: 2021-04-19 14:27:50
  */
 #include "fixed_hk_camera/visible_control.hpp"
 
@@ -155,20 +155,22 @@ void visible_control::transfer_callback(const yidamsg::transfer& msg){
             pitch_first = 180 * pitch / M_PI;
             std::cout << " first calc angle:" << pitch_first << std::endl;
             //again calc angle
-            double xy_distance = sqrt(magnitude * magnitude - c(2) * c(2));
-            double z_distance = abs(c(2));
-            double offset_z = h_offset * cos(pitch);
-            double offset_x = h_offset * sin(pitch);
-            double xy = xy_distance + offset_x;
-            double z = z_distance + h_offset - offset_z;
-            float pitch1 = atan(z/xy);
-            pitch_first = 180 * pitch1 / M_PI;
-            std::cout << "again calc angle:" << pitch_first << std::endl;
-            if(c(2)<0){
-                std::cout <<" 下" << " angle:"<<pitch_first<< std::endl;
-            }else{
-                pitch_first = 360 - pitch_first;
-                std::cout <<" 上" << " angle:"<<pitch_first << std::endl;
+            if(h_offset>0){
+                double xy_distance = sqrt(magnitude * magnitude - c(2) * c(2));
+                double z_distance = abs(c(2));
+                double offset_z = h_offset * cos(pitch);
+                double offset_x = h_offset * sin(pitch);
+                double xy = xy_distance + offset_x;
+                double z = z_distance + h_offset - offset_z;
+                float pitch1 = atan(z/xy);
+                pitch_first = 180 * pitch1 / M_PI;
+                std::cout << "again calc angle:" << pitch_first << std::endl;
+                if(c(2)<0){
+                    std::cout <<" 下" << " angle:"<<pitch_first<< std::endl;
+                }else{
+                    pitch_first = 360 - pitch_first;
+                    std::cout <<" 上" << " angle:"<<pitch_first << std::endl;
+                }
             }
             //calc zoom
             int zoom_set = get_zoomset(magnitude, device_width, device_height, 5);
@@ -202,6 +204,7 @@ void visible_control::isreach_callback(const std_msgs::Int32& msg){
     if(msg_list.size()<7) return;
     if(msg.data == 1 && do_task)
 	{
+        sleep(5);
 		do_task = false;
 		yidamsg::InspectedResult imagezoom_msg;
 		imagezoom_msg.camid = watch_counter;
@@ -236,7 +239,15 @@ void visible_control::ptz_callback(const nav_msgs::Odometry& msg){
 }
 
 void visible_control::detect_rect_callback(const yidamsg::Detect_Result& msg){
-    if(auto_zoom) return; 
+    watch_counter = 2;
+    do_task = true;
+    if(auto_zoom){
+        sleep(2);
+        std_msgs::Int32 msg;
+        msg.data = 1;
+		isreach_callback(msg);
+        return;
+    }
     vector<std::string> device_point;
     SplitString(msg_list[4], device_point, ",");
 	float x_device = atof(device_point[0].c_str());
@@ -288,8 +299,6 @@ void visible_control::detect_rect_callback(const yidamsg::Detect_Result& msg){
 		std::cout << "set xy degree success!" << std::endl;
 	else
 		std::cout << "set xy degree failed!" << std::endl;
-    watch_counter = 2;
-    do_task = true;
 }
 
 void visible_control::reset(){
