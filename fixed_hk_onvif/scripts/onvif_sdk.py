@@ -29,10 +29,10 @@ CAMERA_TILT_RANGE_MIN = -10
 CAMERA_TILT_RANGE_MAX = 90
 #optical zoom as per datasheet = 36x, but with zoom=1, it is going upto 33x
 CAMERA_ZOOM_RANGE_MIN = 0
-CAMERA_ZOOM_RANGE_MAX = 32
+CAMERA_ZOOM_RANGE_MAX = 33
 
-CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MIN = 4.8
-CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MAX = 153
+CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MIN = 5
+CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MAX = 300
 
 class camera(object):
 
@@ -211,9 +211,6 @@ class camera(object):
         # Map pan tilt and zoom to x y and z
         return self.camera_device.onvif_get_position()
     
-    def set_camera_ptz(self, pan, tilt, zoom):
-        return self.camera_device.onvif_move_camera(pan,tilt,zoom)
-    
     def move_camera( self, x, y, z ):
         status = self.is_camera_created()
         if ( status != STATUS_OK ):
@@ -222,11 +219,17 @@ class camera(object):
         local_object_x, local_object_y, local_object_z = self.__transform_object_location( x, y, z )
         pan, tilt, zoom = self.__calculate_camera_values( local_object_x, local_object_y, local_object_z )
         zoom = round(zoom)
-        # check if it lies in min and max ranges
-        # print ( "pan:" + str(pan) )
-        # print ( "tilt:" + str(tilt) )
-        # print ( "zoom:"  + str(zoom) )
+        #check if it lies in min and max ranges
+        print ( "pan:" + str(pan) )
+        print ( "tilt:" + str(tilt) )
+        print ( "zoom:"  + str(zoom) )
         return self.camera_device.onvif_move_camera( pan, tilt, zoom )
+
+    def move_camera_ptz( self, pan, tilt, zoom ):
+        status = self.is_camera_created()
+        if ( status != STATUS_OK ):
+            return status
+        return self.camera_device.onvif_set_ptz( pan, tilt, zoom )
 
     def get_device_information( self ):
         status = self.is_camera_created()
@@ -458,7 +461,7 @@ class camera_onvif(object):
         # Tilt value returned by this function is multiplied by -1,
         tilt_value = response.Position.PanTilt._y
         zoom_value = response.Position.Zoom._x
-        print("pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
+        #print("onvif_get_position pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
         #mapping physical values to camera values
         pan = ( pan_value - self.absolute_pan_value_min ) * self.slope_pan + CAMERA_PAN_RANGE_MIN
         tilt = ( tilt_value - self.absolute_tilt_value_min ) * self.slope_tilt
@@ -469,17 +472,19 @@ class camera_onvif(object):
             tilt = CAMERA_TILT_RANGE_MAX - tilt
         if pan < 0:
             pan = pan + 360
-        
         camera_focus_dis = [4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129,135,140,153]        
-        camera_actual_zoom_values = [0,0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
+        camera_actual_zoom_values = [0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
         index = 0
-        for dis in camera_actual_zoom_values:
-            index = index + 1
-            if zoom_value >= dis:
-                zoom = zoom_value
+        for value in camera_actual_zoom_values:
+            print("value:",value)
+            if zoom_value < value:
                 break
+            else:
+                index = index + 1
+        if index > len(camera_focus_dis) - 1:
+            index = len(camera_focus_dis) - 1
         zoom = camera_focus_dis[index]
-        print("pan:",pan," tilt:",tilt," zoom:",zoom)
+        #print("onvif_get_position pan:",pan," tilt:",tilt," zoom:",zoom)
         return STATUS_OK, pan, tilt, zoom, response.MoveStatus.PanTilt, response.MoveStatus.Zoom
 
     def onvif_move_camera( self, pan, tilt, zoom ):
@@ -497,7 +502,6 @@ class camera_onvif(object):
         tilt_value = ( ( tilt - CAMERA_TILT_RANGE_MIN ) + ( self.absolute_tilt_value_min * self.slope_tilt ) ) / self.slope_tilt
 
         # Hardware actual input values
-        camera_focus_dis = [4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129,135,140,153]        
         camera_actual_zoom_values = [0,0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
         zoom_value = camera_actual_zoom_values[int(zoom)]
 
@@ -507,6 +511,53 @@ class camera_onvif(object):
             request.Position.PanTilt._x = pan_value
             request.Position.PanTilt._y = tilt_value
             request.Position.Zoom._x = zoom_value
+            request.Speed.PanTilt._x = self.absolute_relative_pan_tilt_speed_max
+            request.Speed.PanTilt._y = self.absolute_relative_pan_tilt_speed_max
+            request.Speed.Zoom._x = self.absolute_relative_zoom_speed_max
+            self.my_camera.ptz.AbsoluteMove(request)
+            print ( 'Camera moved' )
+            return STATUS_OK
+        except Exception as e:
+            print e
+            print ( 'Error in AbsoluteMove function' )
+            return STATUS_ERROR
+
+    def onvif_set_ptz( self, p, t, z ):
+        # mapping physical values to camera values
+        # zoom values are not mapping linearly with the input and output values
+        # as conversion is not linear. 
+        # Maybe same thing is happenning for pan and tilt but we are not able to identify that,
+        # as we don't exactly by what angle camera is rotating.
+        # print pan, tilt, zoom
+        if p > 180  and p < 360:
+            p = p - 360
+        pan = (p - CAMERA_PAN_RANGE_MIN)/self.slope_pan + self.absolute_pan_value_min
+        if t > CAMERA_TILT_RANGE_MAX :
+            t = CAMERA_TILT_RANGE_MAX + (360 - t)
+        else:
+            t = CAMERA_TILT_RANGE_MAX - t
+        tilt = t / self.slope_tilt + self.absolute_tilt_value_min
+        #zoom = ( zoom_value - self.absolute_zoom_value_min )* self.slope_zoom + CAMERA_ZOOM_RANGE_MIN
+        camera_focus_dis = [4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129,135,140,153]        
+        camera_actual_zoom_values = [0,0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
+        index = 0
+        for dis in camera_focus_dis:
+            if z < dis:
+                break
+            else:
+                index = index + 1
+        if index > len(camera_actual_zoom_values) - 1:
+            index = len(camera_actual_zoom_values) - 1
+        zoom = camera_actual_zoom_values[index]
+        # print ( "onvif_set_ptz pan:" + str(pan) )
+        # print ( "onvif_set_ptz tilt:" + str(tilt) )
+        # print ( "onvif_set_ptz zoom:"  + str(zoom) )
+        try:
+            request = self.my_camera.ptz.create_type('AbsoluteMove')
+            request.ProfileToken = self.media_profile._token
+            request.Position.PanTilt._x = pan
+            request.Position.PanTilt._y = tilt
+            request.Position.Zoom._x = zoom
             request.Speed.PanTilt._x = self.absolute_relative_pan_tilt_speed_max
             request.Speed.PanTilt._y = self.absolute_relative_pan_tilt_speed_max
             request.Speed.Zoom._x = self.absolute_relative_zoom_speed_max

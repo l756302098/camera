@@ -1,0 +1,13 @@
+<launch>
+
+  <node pkg="fixed_hk_onvif" type="control.py" name="control_onvif" respawn="false" output="screen">
+      <param name="camera_id" type="int" value="1"/>
+      <param name="device_ip" value="192.168.1.66"/>
+      <param name="device_port" value="80"/>
+      <param name="device_username" value="admin"/>
+      <param name="device_password" value="abcd1234"/>
+</node>
+
+</launch>
+
+

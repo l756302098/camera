@@ -1,4 +1,29 @@
-#!/usr/bin/env python
+# Axis of the camera is according to the right hand thumb rule
+# where thumb points towards +z axis.
+# index finger points towards +y axis
+# middle finger points towards +x axis
+# If rotation of the second frame is in anticlockwise direction with respect to 
+# the global frame(observed from origin), then the angle is positive, 
+# otherwise the angle is negative.
+
+# Pitch is rotation in the x-direction
+# Roll is rotation in the y-direction
+# Yaw is rotation in the z-direction
+# To define the camera's rotation with respect to the global frame, it should be in the
+# x, y and z sequence.
+
+# Description:
+# Optical zoom as per datasheet = 36x, but with zoom=1,it is going upto 33x
+# After power reset camera goes to its last postion(i.e. the location before power reset), but 
+# It doesnot do the appropriate zoom:
+# Initial zoom was = 24, after power reset zoom = 16
+# Initial zoom was = 12, after power reset zoom = 8
+
+# Error:
+# 1.There are some errors in onvif-zeep library for python3.
+#   I tried AbsoluteMove function, but fields in the object returned from 'create_type function
+#   are None.'
+
 import sys
 from time import sleep
 from onvif import ONVIFCamera
@@ -16,23 +41,23 @@ STATUS_CAMERA_NOT_CREATED = 2
 STATUS_INVALID_USER = 3
 
 # Camera default position,
-CAMERA_DEFAULT_POSITION_PAN = 0
-CAMERA_DEFAULT_POSITION_TILT = 0
-CAMERA_DEFAULT_POSITION_ZOOM = 0
-CAMERA_PAN_RANGE_MIN = -180
-CAMERA_PAN_RANGE_MAX = 180
+CAMERA_DEFAULT_POSITION_PAN = 90
+CAMERA_DEFAULT_POSITION_TILT = 90
+CAMERA_DEFAULT_POSITION_ZOOM = 10
+CAMERA_PAN_RANGE_MIN = 0
+CAMERA_PAN_RANGE_MAX = 360
 
 # Theoritically tilt is -16 to 90, but practically tilt is from -2.9 to 90 degrees
 # When tilt value is +1, tilt angle is -2.9 degree, due to which there is a 3 degree
 # error in the calculated and actual value
-CAMERA_TILT_RANGE_MIN = -10
+CAMERA_TILT_RANGE_MIN = -5
 CAMERA_TILT_RANGE_MAX = 90
 #optical zoom as per datasheet = 36x, but with zoom=1, it is going upto 33x
-CAMERA_ZOOM_RANGE_MIN = 0
-CAMERA_ZOOM_RANGE_MAX = 32
+CAMERA_ZOOM_RANGE_MIN = 1
+CAMERA_ZOOM_RANGE_MAX = 33
 
-CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MIN = 4.8
-CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MAX = 153
+CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MIN = 5
+CAMERA_ZOOM_RANGE_PHYSICAL_IN_METER_MAX = 300
 
 class camera(object):
 
@@ -116,7 +141,7 @@ class camera(object):
     def __calculate_object_distance ( self, x, y, z ):
         object_distance = ((x*x)+(y*y)+(z*z))
         object_distance = sqrt( object_distance )
-        return object_distance
+        return object_distance;
 
 # Axis of the camera is according to the right hand thumb rule
 # where thumb points towards +z axis.
@@ -144,7 +169,7 @@ class camera(object):
                 pan_angle = 180 + pan_angle
             #4th quadrant
             elif( x<0 and y>=0 ):
-                pan_angle = 360 - pan_angle
+                pan_angle = 360 - pan_angle;
 
         return 360 - pan_angle
 
@@ -159,8 +184,8 @@ class camera(object):
             object_distance = ( (x*x) + (y*y) + (z*z) )
             object_distance = sqrt(object_distance)
             
-            tilt_angle = ( object_distance_along_z_axis ) / object_distance
-            tilt_angle = asin(tilt_angle) * 180/pi
+            tilt_angle = ( object_distance_along_z_axis ) / object_distance;
+            tilt_angle = asin(tilt_angle) * 180/pi;
 
             if z < 0:
                 tilt_angle = 90 - tilt_angle
@@ -210,9 +235,6 @@ class camera(object):
 
         # Map pan tilt and zoom to x y and z
         return self.camera_device.onvif_get_position()
-    
-    def set_camera_ptz(self, pan, tilt, zoom):
-        return self.camera_device.onvif_move_camera(pan,tilt,zoom)
     
     def move_camera( self, x, y, z ):
         status = self.is_camera_created()
@@ -284,7 +306,7 @@ class camera_onvif(object):
         # Create ptz service object
         self.imaging_service_object = self.my_camera.create_imaging_service()
         # Get target profile
-        self.media_profile = self.media_service_object.GetProfiles()[0]
+        self.media_profile = self.media_service_object.GetProfiles()[0];
         # Get video sources
         video_sources = self.my_camera.media.GetVideoSources()
         # Save the range values
@@ -329,9 +351,6 @@ class camera_onvif(object):
         param.Name = DEFAULT_HOSTNAME_OF_CAMERA
         self.my_camera.devicemgmt.SetHostname(param)
         print ('camera_onvif comamnds object created')
-        print("pan min:",self.absolute_pan_value_min," max:",self.absolute_pan_value_max)
-        print("tilt min:",self.absolute_tilt_value_min," max:",self.absolute_tilt_value_max)
-        print("zoom min:",self.absolute_zoom_value_min," max:",self.absolute_zoom_value_max)
 
     def __get_users( self ):
         response = self.my_camera.devicemgmt.GetUsers()
@@ -456,30 +475,12 @@ class camera_onvif(object):
         
         pan_value = response.Position.PanTilt._x
         # Tilt value returned by this function is multiplied by -1,
-        tilt_value = response.Position.PanTilt._y
+        tilt_value = response.Position.PanTilt._y * ( -1 )
         zoom_value = response.Position.Zoom._x
-        print("pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
         #mapping physical values to camera values
-        pan = ( pan_value - self.absolute_pan_value_min ) * self.slope_pan + CAMERA_PAN_RANGE_MIN
-        tilt = ( tilt_value - self.absolute_tilt_value_min ) * self.slope_tilt
-        zoom = 0
-        if(tilt>CAMERA_TILT_RANGE_MAX):
-            tilt = 360 - (tilt - CAMERA_TILT_RANGE_MAX)
-        else:
-            tilt = CAMERA_TILT_RANGE_MAX - tilt
-        if pan < 0:
-            pan = pan + 360
-        
-        camera_focus_dis = [4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129,135,140,153]        
-        camera_actual_zoom_values = [0,0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
-        index = 0
-        for dis in camera_actual_zoom_values:
-            index = index + 1
-            if zoom_value >= dis:
-                zoom = zoom_value
-                break
-        zoom = camera_focus_dis[index]
-        print("pan:",pan," tilt:",tilt," zoom:",zoom)
+        pan = ( pan_value * self.slope_pan ) - ( self.absolute_pan_value_min * self.slope_pan ) + CAMERA_PAN_RANGE_MIN
+        tilt = ( tilt_value * self.slope_tilt ) - ( self.absolute_tilt_value_min * self.slope_tilt ) + CAMERA_TILT_RANGE_MIN
+        zoom = ( zoom_value * self.slope_zoom ) - ( self.absolute_zoom_value_min * self.slope_zoom ) + CAMERA_ZOOM_RANGE_MIN
         return STATUS_OK, pan, tilt, zoom, response.MoveStatus.PanTilt, response.MoveStatus.Zoom
 
     def onvif_move_camera( self, pan, tilt, zoom ):
@@ -497,7 +498,6 @@ class camera_onvif(object):
         tilt_value = ( ( tilt - CAMERA_TILT_RANGE_MIN ) + ( self.absolute_tilt_value_min * self.slope_tilt ) ) / self.slope_tilt
 
         # Hardware actual input values
-        camera_focus_dis = [4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129,135,140,153]        
         camera_actual_zoom_values = [0,0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
         zoom_value = camera_actual_zoom_values[int(zoom)]
 
@@ -546,3 +546,16 @@ class camera_onvif(object):
     def onvif_reboot_camera( self ):
         response = self.my_camera.devicemgmt.SystemReboot()
         return STATUS_OK, response
+
+def camera_control_mock():
+
+    camera_object = camera( '192.168.100.67', 80, 'admin', 'admin', 0, 0, -0.3, 0, 0, 0 )
+    
+    #camera_object.move_camera( -2, 15, 0 )
+    #sleep(2)
+    #camera_object.move_camera( 10, 10, 10 )
+    #sleep(2)
+
+if __name__ == '__main__':
+    camera_control_mock()
+    

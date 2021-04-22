@@ -31,7 +31,7 @@ def get_ptz():
         try:
             res = ptz.GetStatus(request)
             #print(res)
-            #rospy.loginfo(res.Position)
+            rospy.loginfo(res.Position)
             # print(res.Position)
             # print(res.Position[0]._y)
             sleep(0.1)
