@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-21 17:10:50
+ * @LastEditTime: 2021-04-22 17:28:08
  */
 #include <ros/ros.h>
 #include <thread>
@@ -36,18 +36,16 @@ int main(int argc, char **argv)
     //ros
     ros::Rate rate(30);
     //check auth
-    std::string userpwd = "admin:abcd1234";
-    std::string auth = rtsptool::base64_encode(userpwd);
-    std::cout << "auth:" << auth << std::endl;
-    std::string auth_url = "/ISAPI/Security/userCheck";
-    // auth_url = auth_url + "?Authorization=";
-    // auth_url = auth_url + auth;
-    // std::cout << "auth_url:" << auth_url << std::endl;
-    ptr->get_url(auth_url);
-    std::string cap_url = "/ISAPI/Thermal/capabilities";
-    ptr->get_url(cap_url);
-    std::string url = "/ISAPI/Thermal/channels/2/thermometry/jpegPicWithAppendData?format=json";
-    ptr->get_url(url);
+    ptr->auth("admin","abcd1234");
+    // std::string userpwd = "admin:abcd1234";
+    // std::string auth = rtsptool::base64_encode(userpwd);
+    // std::cout << "auth:" << auth << std::endl;
+    // std::string auth_url = "/ISAPI/Security/userCheck";
+    // ptr->get_url(auth_url);
+    // std::string cap_url = "/ISAPI/Thermal/capabilities";
+    // ptr->get_url(cap_url);
+    // std::string url = "/ISAPI/Thermal/channels/2/thermometry/jpegPicWithAppendData?format=json";
+    // ptr->get_url(url);
     while (ros::ok() && is_running)
     {
         //ROS_INFO("update...");

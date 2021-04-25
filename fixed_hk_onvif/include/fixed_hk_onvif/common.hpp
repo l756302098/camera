@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-02 11:45:05
  * @LastEditors: li
- * @LastEditTime: 2021-04-12 16:54:45
+ * @LastEditTime: 2021-04-22 18:14:49
  */
 #ifndef __COMMON_H__
 #define __COMMON_H__
@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <vector>
 #include <iostream>
+#include <ctime>
 
 using namespace std;
 
@@ -41,5 +42,7 @@ char* SplicingString(const char *a, const char *b);
 unsigned short DECToHEX(int x);
 
 unsigned short HEXToDEC(int x);
+
+string get_system_cur_time();
 
 #endif

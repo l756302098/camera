@@ -18,6 +18,9 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Eigen3 REQUIRED)
 
+set(_HTTPLIB_OPENSSL_MIN_VER "1.1.1")
+find_package(OpenSSL ${_HTTPLIB_OPENSSL_MIN_VER} COMPONENTS Crypto SSL REQUIRED)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -54,7 +57,12 @@ target_link_libraries(onvif_infrared_node
   ${catkin_LIBRARIES}
 )
 
-add_executable(raw_temp_node src/raw_temp_node.cpp src/raw_temp.cpp src/pugixml.cpp)
+
+add_executable(raw_temp_node src/raw_temp_node.cpp src/raw_temp.cpp src/pugixml.cpp src/common.cpp)
 target_link_libraries(raw_temp_node
   ${catkin_LIBRARIES}
+  OpenSSL::SSL
+  OpenSSL::Crypto
+  ssl
 )
+target_compile_definitions(raw_temp_node PUBLIC HTTPLIB_REQUIRE_OPENSSL)

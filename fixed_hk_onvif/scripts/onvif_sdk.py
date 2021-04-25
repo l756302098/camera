@@ -476,7 +476,6 @@ class camera_onvif(object):
         camera_actual_zoom_values = [0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
         index = 0
         for value in camera_actual_zoom_values:
-            print("value:",value)
             if zoom_value < value:
                 break
             else:

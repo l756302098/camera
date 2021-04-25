@@ -1,10 +1,13 @@
 <launch>
 
-  <node pkg="fixed_hk_onvif" type="raw_temp_node" name="raw_temp_node" respawn="false" output="screen">
+  <node pkg="fixed_hk_onvif" type="read_temperature.py" name="raw_temp_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
-      <param name="cali_offset_h" type="int" value="90"/>
-      <param name="cali_offset_v" type="int" value="0"/>
-      <param name="camera_file" value="$(find fixed_hk_camera)/launch/66color_map0_-10.yaml"/>
+      <param name="device_ip" value="192.168.1.66"/>
+      <param name="device_port" value="80"/>
+      <param name="device_username" value="admin"/>
+      <param name="device_password" value="abcd1234"/>
+      <param name="url" value="http://192.168.1.66/ISAPI/Thermal/channels/2/thermometry/jpegPicWithAppendData?format=json"/>
+      <param name="show_image" type="bool" value="false"/>
   </node>
   
 </launch>

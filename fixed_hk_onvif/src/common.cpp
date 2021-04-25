@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-02 11:45:12
  * @LastEditors: li
- * @LastEditTime: 2021-04-21 10:12:15
+ * @LastEditTime: 2021-04-22 18:14:39
  */
 #include "fixed_hk_onvif/common.hpp"
 
@@ -55,5 +55,21 @@ unsigned short HEXToDEC(int x)
         return 0;
     }
     return (x/4096*1000) + (x%4096/256*100) + (x%256/16*10) + x%16;
+}
+
+string get_system_cur_time()
+{
+    time_t raw_time;
+    struct tm * time_info;
+    time(&raw_time);
+    time_info = localtime(&raw_time);
+
+    char buffer[50];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", time_info);
+
+    string time_str(buffer);
+    memset(buffer, 0, sizeof(buffer));
+
+    return time_str;
 }
 
