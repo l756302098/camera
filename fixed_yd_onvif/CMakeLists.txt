@@ -42,9 +42,15 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 add_executable(ptz_node src/pt_node.cpp src/pt_control.cpp src/common.cpp)
 target_link_libraries(ptz_node
+  ${catkin_LIBRARIES}
+)
+
+add_executable(yd_visible_node src/visible_node.cpp src/visible_control.cpp src/common.cpp)
+target_link_libraries(yd_visible_node
   ${catkin_LIBRARIES}
 )

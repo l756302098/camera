@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-05-06 09:55:08
  * @LastEditors: li
- * @LastEditTime: 2021-05-07 16:35:48
+ * @LastEditTime: 2021-05-08 13:48:27
  */
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -125,6 +125,11 @@ public:
     }
 
     void send_bytes(std::vector<unsigned char> data){
+        // for (size_t i = 0; i < data.size(); i++)
+        // {
+        //     printf(" %x ",data[i]);
+        // }
+        // printf("\n");
         sock->write_some(boost::asio::buffer(data));
     }
 };

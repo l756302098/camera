@@ -35,7 +35,6 @@ def set_camera(ttype,xy_value,z_value,zoom_value):
 def read_ptz(bq):
     print("read ptz")
     while True:
-        #get current ptz
         status, t_pan, t_tilt, t_zoom, move_status_pt, move_status_z = camera_object.get_position()
         V = [status, t_pan, t_tilt, t_zoom, move_status_pt, move_status_z]
         if move_status_pt == "IDLE" and move_status_z == "IDLE":
@@ -129,7 +128,7 @@ def timer_callback(event):
 
 def zoom_callback(data):
     rospy.loginfo(rospy.get_caller_id() + "get zoom %f", data.data)
-    set_camera(0,0,data.data)
+    set_camera(0,0,0,data.data)
 
 if __name__ == '__main__':
     try:

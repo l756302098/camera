@@ -549,12 +549,12 @@ class camera_onvif(object):
 
 def camera_control_mock():
 
-    camera_object = camera( '192.168.100.67', 80, 'admin', 'admin', 0, 0, -0.3, 0, 0, 0 )
+    camera_object = camera( '192.168.1.131', 80, 'admin', '123qweasd', 0, 0, -0.3, 0, 0, 0 )
     
-    #camera_object.move_camera( -2, 15, 0 )
-    #sleep(2)
-    #camera_object.move_camera( 10, 10, 10 )
-    #sleep(2)
+    camera_object.move_camera( -2, 15, 0 )
+    sleep(2)
+    camera_object.move_camera( 10, 10, 10 )
+    sleep(2)
 
 if __name__ == '__main__':
     camera_control_mock()

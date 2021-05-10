@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-05-07 17:30:52
+ * @LastEditTime: 2021-05-08 14:39:06
  */
 #ifndef __YD_PT_CONTROL__
 #define __YD_PT_CONTROL__
@@ -14,11 +14,13 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
 #include <mutex>
 #include <queue>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
 #include <nav_msgs/Odometry.h>
+#include "std_msgs/String.h"
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
 #include "fixed_msg/cp_control.h"
@@ -36,9 +38,15 @@ using namespace std;
 class pt_control
 {
 private:
+    std::string CMD_GOBACK = "goback";
+    std::string CMD_SETHOME = "sethome";
+    std::string CMD_CLEAR = "clear";
+    std::string CMD_CLOSE = "close";
+    unsigned char motor_id = 0x01;
+    unsigned char motor_temp_id = 0x01;
     ros::NodeHandle nh_;
     ros::ServiceServer ptz_server;
-	ros::Subscriber detect_sub;
+	ros::Subscriber detect_sub,motor_sub;
     ros::Publisher isreach_pub_,ptz_pub_,zoom_pub_;
     geometry_msgs::PoseStamped c_pos,t_pos;
 
@@ -76,6 +84,7 @@ public:
     void read_hk();
     bool set_action(int id, int type, int value, int xy_value, int z_value, int zoom_value);
     void crc_check(std::vector<unsigned char> &data);
+    void motor_callback(const std_msgs::String::ConstPtr& msg);
     void motor_ctr(char motor_id,int angle);
     //电机按照最短的距离回到设定的原点
     void motor_back(char motor_id);
@@ -85,6 +94,8 @@ public:
     void motor_clear_mal(char motor_id);
     //设置电机当前位置为原点
     void motor_set_ori(char motor_id);
+    //读取电机系统实时数据
+    void motor_status(char motor_id);
 };
 
 #endif

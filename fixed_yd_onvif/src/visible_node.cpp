@@ -4,15 +4,15 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-05-08 14:05:26
+ * @LastEditTime: 2021-05-08 10:39:08
  */
 #include <ros/ros.h>
 #include <thread>
 #include <iostream>
 #include <csignal>
-#include "fixed_yd_onvif/pt_control.hpp"
+#include "fixed_yd_onvif/visible_control.hpp"
 
-#define __app_name__ "yd_pt_control_node"
+#define __app_name__ "visible_control_node"
 
 bool is_running;
 
@@ -31,11 +31,9 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM(__app_name__<<" node started...");
     signal(SIGINT, signalHandler);
     is_running = true;
-    std::shared_ptr<pt_control> ptr(new pt_control);
-    std::thread *write_thread = new std::thread(std::bind(&pt_control::write_hk, ptr));
-    std::thread *read_thread = new std::thread(std::bind(&pt_control::read_hk, ptr));
+    std::shared_ptr<visible_control> ptr(new visible_control);
     //ros
-    ros::Rate rate(10);
+    ros::Rate rate(30);
     while (ros::ok() && is_running)
     {
         //ROS_INFO("update...");
@@ -44,9 +42,5 @@ int main(int argc, char **argv)
         rate.sleep();
     }
     ROS_INFO("exit...");
-    if(write_thread)
-        delete write_thread;
-    if(read_thread)
-        delete read_thread;
     return 0;
 }

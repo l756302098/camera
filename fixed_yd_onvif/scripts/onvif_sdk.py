@@ -229,7 +229,8 @@ class camera(object):
         status = self.is_camera_created()
         if ( status != STATUS_OK ):
             return status
-        return self.camera_device.onvif_set_ptz( pan, tilt, zoom )
+        #return self.camera_device.onvif_set_ptz( pan, tilt, zoom )
+        return self.camera_device.onvif_continuous_move( pan, tilt, zoom )
 
     def get_device_information( self ):
         status = self.is_camera_created()
@@ -288,6 +289,7 @@ class camera_onvif(object):
         self.imaging_service_object = self.my_camera.create_imaging_service()
         # Get target profile
         self.media_profile = self.media_service_object.GetProfiles()[0]
+        print("media_profile:",self.media_profile)
         # Get video sources
         video_sources = self.my_camera.media.GetVideoSources()
         # Save the range values
@@ -456,13 +458,17 @@ class camera_onvif(object):
         request = self.my_camera.ptz.create_type('GetStatus')
         request.ProfileToken = self.media_profile._token
         response = self.my_camera.ptz.GetStatus(request)
-        
-        pan_value = response.Position.PanTilt._x
+        #print("response:",response)
+        #pan_value = response.Position.PanTilt._x
         # Tilt value returned by this function is multiplied by -1,
-        tilt_value = response.Position.PanTilt._y
-        zoom_value = response.Position.Zoom._x
+        #tilt_value = response.Position.PanTilt._y
+        #zoom_value = response.Position.Zoom._x
         #print("onvif_get_position pan:",pan_value," tilt:",tilt_value," zoom:",zoom_value)
         #mapping physical values to camera values
+        pan_value = 0
+        tilt_value = 0
+        zoom_value = response.MoveStatus.Zoom
+        #print("zoom_value:",zoom_value)
         pan = ( pan_value - self.absolute_pan_value_min ) * self.slope_pan + CAMERA_PAN_RANGE_MIN
         tilt = ( tilt_value - self.absolute_tilt_value_min ) * self.slope_tilt
         zoom = 0
@@ -521,6 +527,30 @@ class camera_onvif(object):
             print ( 'Error in AbsoluteMove function' )
             return STATUS_ERROR
 
+    def onvif_continuous_move( self, p, t, z ):
+        pan = p
+        tilt = t
+        zoom = z
+        try:
+            request = self.my_camera.ptz.create_type('ContinuousMove')
+            request.ProfileToken = self.media_profile._token
+            request.Velocity.Zoom._x = zoom
+            #request.Speed.Zoom._x = self.absolute_relative_zoom_speed_max
+            response = self.my_camera.ptz.ContinuousMove(request)
+            print("request:",request)
+            print("response:",response)
+            sleep(0.5)
+            stop_request = self.my_camera.ptz.create_type('Stop')
+            stop_request.ProfileToken = self.media_profile._token
+            stop_request.Zoom = True
+            self.my_camera.ptz.Stop(stop_request)
+            print ( 'Camera moved' )
+            return STATUS_OK
+        except Exception as e:
+            print e
+            print ( 'Error in AbsoluteMove function' )
+            return STATUS_ERROR
+
     def onvif_set_ptz( self, p, t, z ):
         # mapping physical values to camera values
         # zoom values are not mapping linearly with the input and output values
@@ -528,14 +558,8 @@ class camera_onvif(object):
         # Maybe same thing is happenning for pan and tilt but we are not able to identify that,
         # as we don't exactly by what angle camera is rotating.
         # print pan, tilt, zoom
-        if p > 180  and p < 360:
-            p = p - 360
-        pan = (p - CAMERA_PAN_RANGE_MIN)/self.slope_pan + self.absolute_pan_value_min
-        if t > CAMERA_TILT_RANGE_MAX :
-            t = CAMERA_TILT_RANGE_MAX + (360 - t)
-        else:
-            t = CAMERA_TILT_RANGE_MAX - t
-        tilt = t / self.slope_tilt + self.absolute_tilt_value_min
+        pan = p
+        tilt = t
         #zoom = ( zoom_value - self.absolute_zoom_value_min )* self.slope_zoom + CAMERA_ZOOM_RANGE_MIN
         camera_focus_dis = [4.3,8.6,12.9,17.2,21.5,25.8,30.1,34.4,38.7,43,47.3,51.6,55.9,60.2,64.5,68.8,73.1,77.4,81.7,86,90.3,94.6,98.9,103.2,107.5,111.8,116.1,120.4,124.7,129,135,140,153]        
         camera_actual_zoom_values = [0,0,0.062,0.093,0.121,0.152,0.184,0.215,0.243,0.274,0.305,0.333,0.364,0.395,0.427,0.454,0.486,0.517361111111,0.548,0.576,0.607,0.638,0.666,0.697,0.729,0.760,0.788,0.819,0.850,0.881,0.909,0.933,0.972,1]        
@@ -548,9 +572,9 @@ class camera_onvif(object):
         if index > len(camera_actual_zoom_values) - 1:
             index = len(camera_actual_zoom_values) - 1
         zoom = camera_actual_zoom_values[index]
-        # print ( "onvif_set_ptz pan:" + str(pan) )
-        # print ( "onvif_set_ptz tilt:" + str(tilt) )
-        # print ( "onvif_set_ptz zoom:"  + str(zoom) )
+        print ( "onvif_set_ptz pan:" + str(pan) )
+        print ( "onvif_set_ptz tilt:" + str(tilt) )
+        print ( "onvif_set_ptz zoom:"  + str(zoom) )
         try:
             request = self.my_camera.ptz.create_type('AbsoluteMove')
             request.ProfileToken = self.media_profile._token
@@ -560,7 +584,9 @@ class camera_onvif(object):
             request.Speed.PanTilt._x = self.absolute_relative_pan_tilt_speed_max
             request.Speed.PanTilt._y = self.absolute_relative_pan_tilt_speed_max
             request.Speed.Zoom._x = self.absolute_relative_zoom_speed_max
-            self.my_camera.ptz.AbsoluteMove(request)
+            response = self.my_camera.ptz.AbsoluteMove(request)
+            print("request:",request)
+            print("response:",response)
             print ( 'Camera moved' )
             return STATUS_OK
         except Exception as e:
