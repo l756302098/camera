@@ -4,13 +4,20 @@
  * @Author: li
  * @Date: 2021-05-12 16:14:16
  * @LastEditors: li
- * @LastEditTime: 2021-05-12 17:45:52
+ * @LastEditTime: 2021-05-12 18:18:01
 -->
 # fixed_control
 接收上位机或者网关层的消息,控制固定式设备按任务运动      
 #  话题
-##  任务模式
+##  运行模式
 Topic: /fixed/control/mode  
+Type: fixed_msg/control_mode  
+```json
+int16 device_id
+int32 mode
+```
+##  运行模式控制
+Topic: /fixed/control/mode_control  
 Type: fixed_msg/control_mode  
 ```json
 int16 device_id
@@ -24,7 +31,7 @@ int16 device_id
 int32 task_id
 uint8 task_status
 ```
-##  云台变换(ros内使用)
+##  云台变换(内部使用)
 Topic: /fixed/platform/transfer  
 Type: fixed_msg/platform_transfer  
 ```json

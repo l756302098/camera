@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-02-22 13:05:41
  * @LastEditors: li
- * @LastEditTime: 2021-05-12 17:27:48
+ * @LastEditTime: 2021-05-12 18:15:06
  */
 #include "fixed_control/status_control.hpp"
 
@@ -16,7 +16,7 @@ status_control::status_control(const ros::NodeHandle &nh):nh_(nh),clear_task_fla
     std::cout << "nh_.advertise" << std::endl;
     transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
     control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
-    task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control//task_status", 1);
+    task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control/task_status", 1);
 }
 
 status_control::~status_control()
