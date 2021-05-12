@@ -53,12 +53,19 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   sync_data.msg
+  control_mode.msg
+  platform_transfer.msg
+  task_status.msg
+  detect_result.msg
+  inspected_result.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   cp_control.srv
+  task.srv
+  task_control.srv
 )
 
 ## Generate actions in the 'action' folder

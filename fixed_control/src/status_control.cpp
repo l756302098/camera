@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-02-22 13:05:41
  * @LastEditors: li
- * @LastEditTime: 2021-04-19 15:57:26
+ * @LastEditTime: 2021-05-12 17:27:48
  */
 #include "fixed_control/status_control.hpp"
 
@@ -14,9 +14,9 @@ status_control::status_control(const ros::NodeHandle &nh):nh_(nh),clear_task_fla
     nh_.param<int>("robot_id", robot_id, 1);
     std::cout << "robot_id:" << robot_id << std::endl;
     std::cout << "nh_.advertise" << std::endl;
-    transfer_pub = nh_.advertise<yidamsg::transfer>("/transfer_pub", 1);
-    control_mode_pub = nh_.advertise<yidamsg::ControlMode>("/control_mode", 1);
-    task_status_pub = nh_.advertise<yidamsg::TaskExecuteStatus>("/task_execute_status", 1);
+    transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
+    control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
+    task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control//task_status", 1);
 }
 
 status_control::~status_control()
@@ -30,7 +30,7 @@ void status_control::meter_cb(const std_msgs::String msg)
     watch_flag = true;
 }
 
-bool status_control::task_srv(yidamsg::TaskList::Request &req, yidamsg::TaskList::Response &res){
+bool status_control::task_srv(fixed_msg::task::Request &req, fixed_msg::task::Response &res){
 	if (!task_running) //所有任务执行完毕状态
 	{
 		std::string list = req.plan;
@@ -46,7 +46,7 @@ bool status_control::task_srv(yidamsg::TaskList::Request &req, yidamsg::TaskList
 	return true;
 }
 
-bool status_control::task_clear_srv(yidamsg::TaskControl::Request &req, yidamsg::TaskControl::Response &res)
+bool status_control::task_clear_srv(fixed_msg::task_control::Request &req, fixed_msg::task_control::Response &res)
 {
 	res.success = 0;
 	if (req.flag == 1) //暂停当前任务
@@ -83,8 +83,10 @@ void status_control::reset(){
 
 void status_control::pub_task_status(int task_id, int task_status)
 {
-	yidamsg::TaskExecuteStatus task_msg;
-	task_msg.task_history_id = task_id;
+    //任务状态 0:已执行\1:终止\2:暂停\3:正在执行\4:未执行\5:超期\6:预执行\7:超时
+	fixed_msg::task_status task_msg;
+    task_msg.device_id = 0;
+	task_msg.task_id = task_id;
 	task_msg.task_status = task_status;
 	task_status_pub.publish(task_msg);
 }
@@ -92,7 +94,7 @@ void status_control::pub_task_status(int task_id, int task_status)
 void status_control::transfer(vector<string> lists, vector<string> task_camera, string trans_id, char flg)
 {
 	    string s_time;
-	    yidamsg::transfer data;
+	    fixed_msg::platform_transfer data;
 	    double secs = ros::Time::now().toSec();
 	    time_t t1 = int(secs);
 	    char now[64];
@@ -118,21 +120,26 @@ void status_control::transfer(vector<string> lists, vector<string> task_camera, 
 	    transfer_pub.publish(data);
 }
 
-void status_control::update(){
-    //ROS_INFO("update ...");
-    yidamsg::ControlMode msg;
-    msg.robot_id = robot_id;
+void status_control::pub_control_mode(){
+    fixed_msg::control_mode msg;
+    msg.device_id = robot_id;
 	msg.mode = ctr_mode;
 	control_mode_pub.publish(msg);
+}
+
+void status_control::update(){
+    //ROS_INFO("update ...");
     int state = 0;
     int cpoint = 0;
     bool is_finish = false;
     ros::Time last;
     //ROS_INFO("task size %i",road_tasks.size());
+    if(road_tasks.size()==0) pub_control_mode();
     for (size_t i = 0; i < road_tasks.size(); i++){
         if(clear_task_flag) break;
+        pub_control_mode();
         if(task_pause){
-            pub_task_status(task_id,1);
+            pub_task_status(task_id,3);
             break;
         }
         task_running = true;
@@ -183,7 +190,7 @@ void status_control::update(){
         //reset flag
         reset();
         //reset cloudplatform
-        yidamsg::transfer data;
+        fixed_msg::platform_transfer data;
         data.flag = 1;
         transfer_pub.publish(data);
         //finish ok

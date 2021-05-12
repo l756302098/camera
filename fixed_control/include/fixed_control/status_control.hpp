@@ -4,15 +4,15 @@
  * @Author: li
  * @Date: 2021-02-22 13:21:17
  * @LastEditors: li
- * @LastEditTime: 2021-04-19 15:02:33
+ * @LastEditTime: 2021-05-12 14:43:09
  */
 #include <ros/ros.h>
 #include "std_msgs/String.h"
-#include "yidamsg/transfer.h"
-#include "yidamsg/ControlMode.h"
-#include "yidamsg/TaskList.h"
-#include "yidamsg/TaskExecuteStatus.h"
-#include "yidamsg/TaskControl.h"
+#include "fixed_msg/platform_transfer.h"
+#include "fixed_msg/control_mode.h"
+#include "fixed_msg/task.h"
+#include "fixed_msg/task_control.h"
+#include "fixed_msg/task_status.h"
 #include <thread>
 #include <fstream>
 #include <iostream>
@@ -206,7 +206,7 @@ public:
         }
         //load_from_stream(in);
     }
-    void mode_cb(const yidamsg::ControlMode msg)
+    void mode_cb(const fixed_msg::control_mode msg)
     {
 	    if (msg.mode == HANDLE_CONTROL)
 	    {
@@ -235,10 +235,11 @@ public:
     status_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
     ~status_control();
     void meter_cb(const std_msgs::String msg);
-    bool task_srv(yidamsg::TaskList::Request &req, yidamsg::TaskList::Response &res);
+    bool task_srv(fixed_msg::task::Request &req, fixed_msg::task::Response &res);
     void tick(const ros::TimerEvent &event);
     void update();
     void reset();
     void pub_task_status(int task_id, int task_status);
-    bool task_clear_srv(yidamsg::TaskControl::Request &req, yidamsg::TaskControl::Response &res);
+    void pub_control_mode();
+    bool task_clear_srv(fixed_msg::task_control::Request &req, fixed_msg::task_control::Response &res);
 };

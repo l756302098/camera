@@ -127,7 +127,7 @@ if __name__ == '__main__':
         sleep(3)
         absolute_move(0, 0, 0.5)
         pub = rospy.Publisher('chatter', String, queue_size=10)
-        ptz_server = rospy.Service('/fixed/internal/platform_cmd', cp_control, handle_ptz)
+        ptz_server = rospy.Service('/fixed/platform/cmd', cp_control, handle_ptz)
         rospy.init_node('onvif_control_node', anonymous=True)
         rate = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():

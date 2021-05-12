@@ -13,9 +13,9 @@ pt_control::pt_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal
     nh_.param<int>("device_port", device_port, 1001);
     std::cout << "ip:" << device_ip << " port:" << device_port << std::endl;
     nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/yuntai/position");
-    nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/internal/platform_cmd");
+    nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
     motor_sub = nh_.subscribe("motor/cmd", 1, &pt_control::motor_callback, this);
-    isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform_isreach", 1);
+    isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
     zoom_pub_ = nh_.advertise<std_msgs::Float32>("/fixed/visible/zoom", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
     ptz_server = nh_.advertiseService(ptz_server_name, &pt_control::handle_cloudplatform, this);

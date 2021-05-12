@@ -1,0 +1,5 @@
+int16 device_id
+int32 task_id
+int16 flag
+---
+bool success

@@ -10,7 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  yidamsg
+  fixed_msg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,7 +108,7 @@ endif(Boost_FOUND)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES fixed_control
-  CATKIN_DEPENDS roscpp std_msgs yidamsg
+  CATKIN_DEPENDS roscpp std_msgs fixed_msg
   DEPENDS system_lib
 )
 

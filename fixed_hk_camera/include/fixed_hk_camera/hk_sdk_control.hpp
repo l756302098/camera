@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-16 16:17:46
+ * @LastEditTime: 2021-05-12 15:07:15
  */
 #ifndef __HK_SDK_CONTROL__
 #define __HK_SDK_CONTROL__
@@ -22,7 +22,7 @@
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
 #include "fixed_msg/cp_control.h"
-#include <yidamsg/Detect_Result.h>
+#include "fixed_msg/detect_result.h"
 
 #include "hk/HCNetSDK.h"
 #include "hk/LinuxPlayM4.h"
@@ -87,7 +87,7 @@ public:
     void read_raw_temp();
     void set_focusmode();
     bool handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res);
-    void detect_rect_callback(const yidamsg::Detect_Result &msg);
+    void detect_rect_callback(const fixed_msg::detect_result &msg);
 };
 
 #endif

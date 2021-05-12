@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
-  yidamsg
+  fixed_msg
   geometry_msgs
 )
 find_package(Eigen3 REQUIRED)
@@ -110,7 +110,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES fixed_hk_camera
-  CATKIN_DEPENDS cv_bridge roscpp rospy std_msgs tf yidamsg geometry_msgs
+  CATKIN_DEPENDS cv_bridge roscpp rospy std_msgs tf fixed_msg geometry_msgs
 #  DEPENDS system_lib
 )
 

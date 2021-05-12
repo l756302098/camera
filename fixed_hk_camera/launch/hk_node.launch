@@ -14,10 +14,10 @@
       <param name="heartbeat_topic_string" type="str" value="/yd/heartbeat"/>
       <param name="set_infrared_focus" type="bool" value="true"/>
       <param name="set_infrared_focus_waittime" type="int" value="20"/>
-      <param name="ptz_topic" value="/fixed/yuntai/position"/>
-      <param name="ptz_server_name" value="/fixed/internal/platform_cmd"/>
+      <param name="ptz_topic" value="/fixed/platform/position"/>
+      <param name="ptz_server_name" value="/fixed/platform/cmd"/>
       <param name="pub_raw_temp" type="bool" value="true"/>
-      <param name="raw_temp_topic" value="/fixed/internal/temperature"/>
+      <param name="raw_temp_topic" value="/fixed/infrared/raw"/>
       <param name="auto_zoom" type="bool" value="$(arg arg1)"/>
   </node>
 

@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-16 16:19:03
+ * @LastEditTime: 2021-05-12 15:07:44
  */
 #include "ros/ros.h"
 #include "fixed_hk_camera/hk_sdk_control.hpp"
@@ -26,7 +26,7 @@ hk_sdk_control::hk_sdk_control(const ros::NodeHandle &nh):nh_(nh)
     nh_.param<bool>("set_infrared_focus", m_set_infrared_focus, true);
     nh_.param<int>("set_infrared_focus_waittime", _set_infrared_focus_waittime, 30);
     nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/yuntai/position");
-    nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/internal/platform_cmd");
+    nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
     nh_.param<bool>("pub_raw_temp", pub_raw_temp, true);
     nh_.param<std::string>("raw_temp_topic", raw_temp_topic, "/fixed/internal/temperature");
     std::string pan_range_str,tilt_range_str;
@@ -41,7 +41,7 @@ hk_sdk_control::hk_sdk_control(const ros::NodeHandle &nh):nh_(nh)
     tilt_max = atoi(tilt_range_list[1].c_str());
 
     heartbeat_pub_ = nh_.advertise<diagnostic_msgs::DiagnosticArray>(heartbeat_topic_str, 1);
-    isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform_isreach", 1);
+    isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
     detect_sub = nh_.subscribe("/detect_rect", 1, &hk_sdk_control::detect_rect_callback, this);
     ptz_server = nh_.advertiseService(ptz_server_name, &hk_sdk_control::handle_cloudplatform, this);
@@ -643,7 +643,7 @@ bool hk_sdk_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, f
 	return true;
 }
 
-void hk_sdk_control::detect_rect_callback(const yidamsg::Detect_Result &msg)
+void hk_sdk_control::detect_rect_callback(const fixed_msg::detect_result &msg)
 {
     if(!auto_zoom) return;
     //设置要进行ptz区域

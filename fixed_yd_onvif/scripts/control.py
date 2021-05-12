@@ -148,7 +148,7 @@ if __name__ == '__main__':
         write_thread.start()
         rospy.init_node('onvif_control_node', anonymous=True)
         global isreach_pub
-        isreach_pub = rospy.Publisher('/fixed/platform_isreach', Int32, queue_size=1)
+        isreach_pub = rospy.Publisher('/fixed/platform/isreach', Int32, queue_size=1)
         rospy.Subscriber("/fixed/visible/zoom", Float32, zoom_callback)
         rospy.Timer(rospy.Duration(0.1),timer_callback)
         rate = rospy.Rate(30) # 30hz

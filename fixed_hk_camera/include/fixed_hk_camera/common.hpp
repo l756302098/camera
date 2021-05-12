@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-02 11:45:05
  * @LastEditors: li
- * @LastEditTime: 2021-04-12 16:54:45
+ * @LastEditTime: 2021-05-12 15:06:44
  */
 #ifndef __COMMON_H__
 #define __COMMON_H__
@@ -17,9 +17,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
 #include <netdb.h>
 #include <setjmp.h>
 #include <errno.h>

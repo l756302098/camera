@@ -1,3 +1,4 @@
+int16 device_id
 int32 id
 int32 action
 int32 type

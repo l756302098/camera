@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-19 10:58:17
+ * @LastEditTime: 2021-05-12 15:18:57
  */
 #include "fixed_hk_camera/infrared_control.hpp"
 
@@ -16,12 +16,12 @@ infrared_control::infrared_control(const ros::NodeHandle &nh):nh_(nh){
     nh_.param<int>("cali_offset_v", cali_offset_v, 0);
     
     meterflag_pub = nh_.advertise<std_msgs::String>("/meter_flag", 1);
-    infrared_result_pub = nh_.advertise<yidamsg::InspectedResult>("/infrared_survey_parm", 1);
-    transfer_sub = nh_.subscribe("/transfer_pub", 1, &infrared_control::transfer_callback, this);
-    isreach_sub = nh_.subscribe("/fixed/platform_isreach", 1, &infrared_control::isreach_callback, this);
+    infrared_result_pub = nh_.advertise<fixed_msg::inspected_result>("/infrared_survey_parm", 1);
+    transfer_sub = nh_.subscribe("/fixed/platform/platform_transfer", 1, &infrared_control::transfer_callback, this);
+    isreach_sub = nh_.subscribe("/fixed/platform/isreach", 1, &infrared_control::isreach_callback, this);
     ptz_sub = nh_.subscribe("/fixed/yuntai/position", 1, &infrared_control::ptz_callback, this);
     camera_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("/camera_pose", 1);
-	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/internal/platform_cmd");
+	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
 	goal_sub = nh_.subscribe("/goal", 1, &infrared_control::target_callback,this);
 	init(camera_file);
 }
@@ -89,7 +89,7 @@ void infrared_control::read_calibration(std::string _choose_file,cv::Mat &out_RT
     }
 }
 
-void infrared_control::transfer_callback(const yidamsg::transfer& msg){
+void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg){
     std::cout << "transfer_callback" << std::endl;
     if(msg.flag == 0){
         std::string str_devicepoint = msg.data;
@@ -187,7 +187,7 @@ void infrared_control::isreach_callback(const std_msgs::Int32& msg){
     if(msg.data == 1 && do_task && (msg_list[3] == "2" || msg_list[3] == "5")){
         sleep(5);
         do_task = false;
-        yidamsg::InspectedResult inspected_msg;
+        fixed_msg::inspected_result inspected_msg;
 		inspected_msg.camid = camera_id;
 		std::stringstream ss;
 		ss.str("");

@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-02-20 10:48:32
  * @LastEditors: li
- * @LastEditTime: 2021-04-19 14:38:51
+ * @LastEditTime: 2021-05-12 17:06:58
  */
 #include <ros/ros.h>
 #include <thread>
@@ -63,10 +63,10 @@ int main(int argc, char **argv)
     //     ros::spinOnce();
     //     rate.sleep();
     // }
-    ros::Subscriber meter_sub = nh_.subscribe("meter_flag", 1, &status_control::meter_cb,&control);
-    ros::Subscriber mode_sub = nh_.subscribe("/yida/robot/control_mode", 1, &status_control::mode_cb,&control);
-    ros::ServiceServer task_server = nh_.advertiseService("/tasklist", &status_control::task_srv, &control);
-    ros::ServiceServer clear_server = nh_.advertiseService("/taskclear", &status_control::task_clear_srv, &control);
+    ros::Subscriber meter_sub = nh_.subscribe("/meter_flag", 1, &status_control::meter_cb,&control);
+    ros::Subscriber mode_sub = nh_.subscribe("/fixed/control/mode", 1, &status_control::mode_cb,&control);
+    ros::ServiceServer task_server = nh_.advertiseService("/fixed/control/task", &status_control::task_srv, &control);
+    ros::ServiceServer clear_server = nh_.advertiseService("/fixed/control/task_control", &status_control::task_clear_srv, &control);
     ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &status_control::tick, &control, false);
     ros::MultiThreadedSpinner s(4);
     ros::spin(s);

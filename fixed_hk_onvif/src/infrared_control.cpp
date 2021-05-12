@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-21 10:12:25
+ * @LastEditTime: 2021-05-12 14:42:09
  */
 #include "fixed_hk_onvif/infrared_control.hpp"
 
@@ -17,11 +17,11 @@ infrared_control::infrared_control(const ros::NodeHandle &nh):nh_(nh){
     
     meterflag_pub = nh_.advertise<std_msgs::String>("/meter_flag", 1);
     infrared_result_pub = nh_.advertise<yidamsg::InspectedResult>("/infrared_survey_parm", 1);
-    transfer_sub = nh_.subscribe("/transfer_pub", 1, &infrared_control::transfer_callback, this);
-    isreach_sub = nh_.subscribe("/fixed/platform_isreach", 1, &infrared_control::isreach_callback, this);
+    transfer_sub = nh_.subscribe("/fixed/platform/transfer", 1, &infrared_control::transfer_callback, this);
+    isreach_sub = nh_.subscribe("/fixed/platform/isreach", 1, &infrared_control::isreach_callback, this);
     ptz_sub = nh_.subscribe("/fixed/yuntai/position", 1, &infrared_control::ptz_callback, this);
     camera_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("/camera_pose", 1);
-	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/internal/platform_cmd");
+	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
 	goal_sub = nh_.subscribe("/goal", 1, &infrared_control::target_callback,this);
 	init(camera_file);
 }

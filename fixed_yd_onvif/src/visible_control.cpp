@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-21 10:12:33
+ * @LastEditTime: 2021-05-12 14:42:29
  */
 #include "fixed_yd_onvif/visible_control.hpp"
 
@@ -33,11 +33,11 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     for(int i = 0; i < camera_focus_zoom_array.size(); i++)
         camera_focus_set.push_back(atoi(camera_focus_zoom_array[i].c_str()));
         
-    transfer_sub = nh_.subscribe("/transfer_pub", 1, &visible_control::transfer_callback, this);
-    isreach_sub = nh_.subscribe("/fixed/platform_isreach", 1, &visible_control::isreach_callback, this);
+    transfer_sub = nh_.subscribe("/fixed/platform/transfer", 1, &visible_control::transfer_callback, this);
+    isreach_sub = nh_.subscribe("/fixed/platform/isreach", 1, &visible_control::isreach_callback, this);
     detectresult_sub = nh_.subscribe("/detect_rect", 1, &visible_control::detect_rect_callback, this);
     ptz_sub = nh_.subscribe("/fixed/yuntai/position", 1, &visible_control::ptz_callback, this);
-	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/internal/platform_cmd");
+	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
 	camera_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("/camera_pose", 1);
     readyimage_pub = nh_.advertise<yidamsg::InspectedResult>("/visible_survey_parm", 1);
 	goal_sub = nh_.subscribe("/goal", 1, &visible_control::target_callback,this);

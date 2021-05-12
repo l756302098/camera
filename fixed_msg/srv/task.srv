@@ -1,0 +1,4 @@
+int16 device_id
+string plan
+---
+bool status
