@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-05-08 14:39:06
+ * @LastEditTime: 2021-05-13 13:39:59
  */
 #ifndef __YD_PT_CONTROL__
 #define __YD_PT_CONTROL__
@@ -24,9 +24,9 @@
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
 #include "fixed_msg/cp_control.h"
-#include "yidamsg/transfer.h"
-#include <yidamsg/InspectedResult.h>
-#include <yidamsg/Detect_Result.h>
+#include "fixed_msg/platform_transfer.h"
+#include <fixed_msg/inspected_result.h>
+#include <fixed_msg/detect_result.h>
 #include <geometry_msgs/PoseStamped.h>
 #include "fixed_yd_onvif/common.hpp"
 #include "fixed_yd_onvif/asio_client.hpp"

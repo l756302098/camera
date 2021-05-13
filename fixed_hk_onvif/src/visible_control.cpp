@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-06 13:37:38
  * @LastEditors: li
- * @LastEditTime: 2021-04-21 10:12:33
+ * @LastEditTime: 2021-05-13 13:33:26
  */
 #include "fixed_hk_onvif/visible_control.hpp"
 
@@ -39,7 +39,7 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     ptz_sub = nh_.subscribe("/fixed/yuntai/position", 1, &visible_control::ptz_callback, this);
 	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
 	camera_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("/camera_pose", 1);
-    readyimage_pub = nh_.advertise<yidamsg::InspectedResult>("/visible_survey_parm", 1);
+    readyimage_pub = nh_.advertise<fixed_msg::inspected_result>("/visible_survey_parm", 1);
 	goal_sub = nh_.subscribe("/goal", 1, &visible_control::target_callback,this);
 	init(camera_file);
 }
@@ -107,7 +107,7 @@ void visible_control::read_calibration(std::string _choose_file,cv::Mat &out_RT)
     }
 }
 
-void visible_control::transfer_callback(const yidamsg::transfer& msg){
+void visible_control::transfer_callback(const fixed_msg::platform_transfer& msg){
     std::cout << "transfer_callback" << std::endl;
     if(msg.flag == 0){
         std::string str_devicepoint = msg.data;
@@ -206,7 +206,7 @@ void visible_control::isreach_callback(const std_msgs::Int32& msg){
 	{
         sleep(5);
 		do_task = false;
-		yidamsg::InspectedResult imagezoom_msg;
+		fixed_msg::inspected_result imagezoom_msg;
 		imagezoom_msg.camid = watch_counter;
 		imagezoom_msg.picid = device_type;
 		std::stringstream ss;
@@ -238,7 +238,7 @@ void visible_control::ptz_callback(const nav_msgs::Odometry& msg){
     camera_pose_pub.publish(camera_pose);
 }
 
-void visible_control::detect_rect_callback(const yidamsg::Detect_Result& msg){
+void visible_control::detect_rect_callback(const fixed_msg::detect_result& msg){
     watch_counter = 2;
     do_task = true;
     if(auto_zoom){

@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  yidamsg
+  fixed_msg
 )
 find_package(Eigen3 REQUIRED)
 
@@ -29,7 +29,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES fixed_yd_onvif
-  CATKIN_DEPENDS cv_bridge geometry_msgs roscpp rospy std_msgs yidamsg
+  CATKIN_DEPENDS cv_bridge geometry_msgs roscpp rospy std_msgs fixed_msg
 #  DEPENDS system_lib
 )
 

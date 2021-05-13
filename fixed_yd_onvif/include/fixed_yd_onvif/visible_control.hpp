@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-05-08 10:37:21
+ * @LastEditTime: 2021-05-13 14:12:36
  */
 #ifndef __VISIBLE_CONTROL__
 #define __VISIBLE_CONTROL__
@@ -22,9 +22,9 @@
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
 #include "fixed_msg/cp_control.h"
-#include "yidamsg/transfer.h"
-#include <yidamsg/InspectedResult.h>
-#include <yidamsg/Detect_Result.h>
+#include "fixed_msg/platform_transfer.h"
+#include <fixed_msg/inspected_result.h>
+#include <fixed_msg/detect_result.h>
 #include <geometry_msgs/PoseStamped.h>
 // Eigen
 #include <Eigen/Core>
@@ -67,9 +67,9 @@ private:
 public:
     visible_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
     ~visible_control();
-    void transfer_callback(const yidamsg::transfer& msg);
+    void transfer_callback(const fixed_msg::platform_transfer& msg);
     void isreach_callback(const std_msgs::Int32& msg);
-    void detect_rect_callback(const yidamsg::Detect_Result& msg);
+    void detect_rect_callback(const fixed_msg::detect_result& msg);
     void ptz_callback(const nav_msgs::Odometry& msg);
     void update();
     void reset();

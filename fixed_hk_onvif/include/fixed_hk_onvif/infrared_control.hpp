@@ -4,7 +4,7 @@
  * @Author: li
  * @Date: 2021-04-01 13:11:04
  * @LastEditors: li
- * @LastEditTime: 2021-04-21 10:13:20
+ * @LastEditTime: 2021-05-13 13:36:13
  */
 #ifndef __INFRARED_CONTROL__
 #define __INFRARED_CONTROL__
@@ -22,10 +22,10 @@
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
 #include "fixed_msg/cp_control.h"
-#include "yidamsg/transfer.h"
+#include "fixed_msg/platform_transfer.h"
 #include <std_msgs/String.h>
-#include <yidamsg/InspectedResult.h>
-#include <yidamsg/Detect_Result.h>
+#include <fixed_msg/inspected_result.h>
+#include <fixed_msg/detect_result.h>
 #include <geometry_msgs/PoseStamped.h>
 // Eigen
 #include <Eigen/Core>
@@ -66,9 +66,9 @@ private:
 public:
     infrared_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
     ~infrared_control();
-    void transfer_callback(const yidamsg::transfer& msg);
+    void transfer_callback(const fixed_msg::platform_transfer& msg);
     void isreach_callback(const std_msgs::Int32& msg);
-    void detect_rect_callback(const yidamsg::Detect_Result& msg);
+    void detect_rect_callback(const fixed_msg::detect_result& msg);
     void update();
     void reset();
     void read_calibration(std::string _choose_file,cv::Mat &out_RT);
