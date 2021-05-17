@@ -38,6 +38,36 @@ Type: fixed_msg/platform_transfer
 int32 flag
 string data
 ```
+##  开始着色任务
+Topic: /infrared_survey_parm  
+Type: fixed_msg::inspected_result    
+```json
+int32 camid
+int32 picid
+float32 x
+float32 y
+float32 z
+uint8[] equipimage
+uint8[] nameplates
+string equipid
+string result
+bool success
+```
+##  开始抄表任务
+Topic: /visible_survey_parm  
+Type: fixed_msg::inspected_result  
+```json
+int32 camid
+int32 picid
+float32 x
+float32 y
+float32 z
+uint8[] equipimage
+uint8[] nameplates
+string equipid
+string result
+bool success
+```
 ##  检测完成
 Topic: /ydmsg/platform/keep  
 Type: std_msgs/String  

@@ -39,15 +39,14 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     ptz_sub = nh_.subscribe("/fixed/yuntai/position", 1, &visible_control::ptz_callback, this);
 	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
 	camera_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("/camera_pose", 1);
-    readyimage_pub = nh_.advertise<fixed_msg::detect_result>("/visible_survey_parm", 1);
+    readyimage_pub = nh_.advertise<fixed_msg::inspected_result>("/visible_survey_parm", 1);
 	goal_sub = nh_.subscribe("/goal", 1, &visible_control::target_callback,this);
 	init(camera_file);
 }
 
 visible_control::~visible_control(){}
 
-void visible_control::update(){
-}
+void visible_control::update(){}
 
 void visible_control::init(std::string camera_file){
 	cv::Mat color_lidar_exRT;
