@@ -153,3 +153,13 @@ string plan
 ---
 bool status
 ```
+##  任务控制
+Topic: /fixed/control/task_control  
+Type: fixed_msg/task_control    
+```json
+int16 device_id
+int32 task_id
+int16 flag
+---
+bool success
+```
