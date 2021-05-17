@@ -122,7 +122,12 @@ void pt_control::write_hk(){
             int id = atoi(cmd_value_strv[0].c_str());
             int action = atoi(cmd_value_strv[1].c_str());
             int type = atoi(cmd_value_strv[2].c_str());
-            int value = 36000 - atoi(cmd_value_strv[3].c_str());
+            int value = 0;
+            if(type==0){
+                value = 36000 - atoi(cmd_value_strv[3].c_str());
+            }else if(type==1){
+                value = atoi(cmd_value_strv[3].c_str());
+            }
             //此处分开设置水平、垂直及变倍值是为兼容通过485遵循pelco-d协议设置的方式
             if(action == 1){
                 this->set_action(id, type, value, 0, 0, 0);

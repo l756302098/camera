@@ -5,7 +5,7 @@ from std_msgs.msg import String
 from time import sleep
 import math
 import threading
-import queue
+import Queue
 from onvif_sdk import camera
 from fixed_msg.srv import cp_control,cp_controlResponse
 from nav_msgs.msg import Odometry
@@ -13,7 +13,7 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import Int32
 
 camera_object = camera('192.168.1.64', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
-cmd_queue = queue.PriorityQueue(maxsize=10)
+cmd_queue = Queue.PriorityQueue(maxsize=10)
 device_id = 1
 #ptz status
 pan = 0

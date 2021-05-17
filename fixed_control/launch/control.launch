@@ -1,5 +1,6 @@
 <launch>
   <node pkg="fixed_control" type="fixed_control_node" name="fixed_control_node" output="screen" respawn="false">
       <param name="robot_id" type="int" value="1"/>
+      <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
   </node>
 </launch>

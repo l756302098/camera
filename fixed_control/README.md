@@ -39,10 +39,9 @@ int32 flag
 string data
 ```
 ##  检测完成
-Topic: /meter_flag  
-Type: fixed_msg/platform_transfer  
+Topic: /ydmsg/platform/keep  
+Type: std_msgs/String  
 ```json
-int32 flag
 string data
 ```
 ##  红外数据

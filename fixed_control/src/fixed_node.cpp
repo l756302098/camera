@@ -48,22 +48,15 @@ void test(){
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, __app_name__);
-    ros::NodeHandle nh_;
+    ros::NodeHandle nh_("~");
     ROS_INFO("node started...");
     signal(SIGINT, signalHandler);
     is_running = true;
     status_control control;
-    // std::string path = "/home/li/catkin_ws/src/fixed_control/launch/2_3071_471.json";
-    // control.load(path);
-    // ros
-    // ros::Rate rate(10);
-    // while (ros::ok() && is_running)
-    // {
-    //     control.update();
-    //     ros::spinOnce();
-    //     rate.sleep();
-    // }
-    ros::Subscriber meter_sub = nh_.subscribe("/meter_flag", 1, &status_control::meter_cb,&control);
+    std::string finish_topic;
+    nh_.param<std::string>("finish_topic",finish_topic,"/meter_flag");
+    std::cout << "subscribe topic " << finish_topic << std::endl;
+    ros::Subscriber meter_sub = nh_.subscribe(finish_topic, 1, &status_control::meter_cb,&control);
     ros::Subscriber mode_sub = nh_.subscribe("/fixed/control/mode_control", 1, &status_control::mode_cb,&control);
     ros::ServiceServer task_server = nh_.advertiseService("/fixed/control/task", &status_control::task_srv, &control);
     ros::ServiceServer clear_server = nh_.advertiseService("/fixed/control/task_control", &status_control::task_clear_srv, &control);

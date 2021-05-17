@@ -5,7 +5,7 @@ from std_msgs.msg import String
 from time import sleep
 import math
 import threading
-import queue
+import Queue
 from onvif_sdk import camera
 from fixed_msg.srv import cp_control,cp_controlResponse
 from nav_msgs.msg import Odometry
@@ -14,7 +14,7 @@ from std_msgs.msg import Int32
 from std_msgs.msg import Float32
 
 camera_object = camera('192.168.1.64', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
-cmd_queue = queue.PriorityQueue(maxsize=10)
+cmd_queue = Queue.PriorityQueue(maxsize=10)
 device_id = 1
 #ptz status
 pan = 0
@@ -127,7 +127,7 @@ def timer_callback(event):
 	#print 'Timer called at:' + str(event.current_real)
 
 def zoom_callback(data):
-    rospy.loginfo(rospy.get_caller_id() + "get zoom %f", data.data)
+    rospy.loginfo(rospy.get_caller_id() + " get zoom %f", data.data)
     set_camera(0,0,0,data.data)
 
 if __name__ == '__main__':
