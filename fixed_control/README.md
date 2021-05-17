@@ -93,6 +93,14 @@ geometry_msgs/TwistWithCovariance twist
       float64 z
   float64[36] covariance
 ```
+##  云台到达制定位置
+Topic: /fixed/platform/isreach  
+Type: std_msgs/Int32  
+```json
+int32 data
+```
+1：转到制定位置
+
 #  服务
 ##  云台控制命令
 Topic: /fixed/platform/cmd  

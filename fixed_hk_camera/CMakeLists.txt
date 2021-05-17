@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(fixed_hk_camera)
-set(SDK_PATH /usr/local/lib/thirdparty_lib)
+set(SDK_PATH /home/li/fixed_ws/src/hksdk_lib)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
