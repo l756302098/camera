@@ -1,0 +1,2 @@
+sudo apt-get install ffmpeg
+sudo apt-get install libavdevice-dev
