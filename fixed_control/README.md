@@ -135,11 +135,11 @@ int32 data
 Topic: /fixed/platform/cmd  
 Type: fixed_msg/cp_control  
 ```json
-int16 device_id
-int32 id
-int32 action
-int32 type
-int32 value
+int16 device_id #设备id
+int32 id        #云台id
+int32 action    #设置1
+int32 type      #水平0 垂直1 变倍2
+int32 value     #设置值(0-36000)
 uint32[] allvalue
 ---
 int32 result
