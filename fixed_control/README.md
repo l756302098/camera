@@ -74,8 +74,38 @@ Type: std_msgs/String
 ```json
 string data
 ```
-##  红外数据
+##  红外温度数据
 Topic: /fixed/infrared/raw  
+Type: sensor_msgs/Image  
+```json
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint32 height
+uint32 width
+string encoding
+uint8 is_bigendian
+uint32 step
+uint8[] data
+```
+##  红外图像
+Topic: /fixed/decoder/infrared  
+Type: sensor_msgs/Image  
+```json
+std_msgs/Header header
+  uint32 seq
+  time stamp
+  string frame_id
+uint32 height
+uint32 width
+string encoding
+uint8 is_bigendian
+uint32 step
+uint8[] data
+```
+##  可见光图像
+Topic: /fixed/decoder/visible  
 Type: sensor_msgs/Image  
 ```json
 std_msgs/Header header
