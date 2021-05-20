@@ -13,7 +13,7 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import Int32
 from std_msgs.msg import Float32
 
-camera_object = camera('192.168.1.64', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
+camera_object = camera('192.168.1.1', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
 cmd_queue = Queue.PriorityQueue(maxsize=10)
 device_id = 1
 #ptz status

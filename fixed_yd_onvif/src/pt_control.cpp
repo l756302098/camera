@@ -12,7 +12,7 @@ pt_control::pt_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal
     nh_.param<std::string>("device_ip", device_ip, "192.168.1.4");
     nh_.param<int>("device_port", device_port, 1001);
     std::cout << "ip:" << device_ip << " port:" << device_port << std::endl;
-    nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/yuntai/position");
+    nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/platform/position");
     nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
     motor_sub = nh_.subscribe("motor/cmd", 1, &pt_control::motor_callback, this);
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);

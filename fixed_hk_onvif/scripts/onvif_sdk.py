@@ -268,6 +268,9 @@ class camera(object):
 
     def is_camera_created( self ):
         return self.camera_creation_status
+    
+    def update( self , host, port):
+        return self.camera_device.onvif_update(host, port)
 
 class camera_onvif(object):
 
@@ -596,3 +599,5 @@ class camera_onvif(object):
     def onvif_reboot_camera( self ):
         response = self.my_camera.devicemgmt.SystemReboot()
         return STATUS_OK, response
+    def onvif_update( self, host, port ):
+        self.my_camera.update_url(host, port)

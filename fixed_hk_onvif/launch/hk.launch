@@ -1,0 +1,10 @@
+<launch>
+
+  <include file="$(find fixed_hk_onvif)/launch/onvif.launch"/>
+  <include file="$(find fixed_hk_onvif)/launch/infrared_cli.launch"/>
+  <include file="$(find fixed_hk_onvif)/launch/visible_cli.launch"/>
+  <include file="$(find fixed_hk_onvif)/launch/raw_temp.launch"/>
+
+</launch>
+
+

@@ -3,9 +3,9 @@
   <arg name="arg1" default="true"/>
   <node pkg="fixed_hk_camera" type="fixed_hk_camera_node" name="fixed_hk_camera_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
-      <param name="sdkcom_dir" value="/usr/local/lib/thirdparty_lib"/>
+      <param name="sdkcom_dir" value="/home/li/fixed_ws/src/hksdk_lib"/>
       <param name="heartbeat_topic_string" value="/yd/heartbeat"/>
-      <param name="device_ip" value="192.168.1.66"/>
+      <param name="device_ip" value="192.168.1.129"/>
       <param name="device_port" value="8000"/>
       <param name="device_username" value="admin"/>
       <param name="device_password" value="abcd1234"/>
@@ -20,7 +20,7 @@
       <param name="raw_temp_topic" value="/fixed/infrared/raw"/>
       <param name="auto_zoom" type="bool" value="$(arg arg1)"/>
   </node>
-
+<!--
   <node pkg="fixed_hk_camera" type="visible_node" name="visible_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
       <param name="cali_offset_h" type="int" value="90"/>
@@ -45,7 +45,7 @@
       <param name="cali_offset_v" type="int" value="0"/>
       <param name="camera_file" value="$(find fixed_hk_camera)/launch/66color_map0_-10.yaml"/>
   </node>
-  
+  -->
 </launch>
 
 

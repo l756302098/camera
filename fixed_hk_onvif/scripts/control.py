@@ -12,7 +12,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import Int32
 
-camera_object = camera('192.168.1.64', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
+camera_object = camera('192.168.1.1', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
 cmd_queue = Queue.PriorityQueue(maxsize=10)
 device_id = 1
 #ptz status
@@ -135,6 +135,7 @@ if __name__ == '__main__':
         device_password = rospy.get_param("/control_onvif/device_password")
         print(device_ip,device_port,device_username,device_password)
         if camera_object.is_camera_created() != 0:
+            del camera_object
             camera_object = camera(device_ip, device_port, device_username, device_password, 0, 0, 0, 0, 0, 0 )
         read_thread = threading.Thread(target = read_ptz,name='read_ptz_thread',args=(cmd_queue, ))
         read_thread.daemon = True
@@ -144,7 +145,7 @@ if __name__ == '__main__':
         write_thread.start()
         global isreach_pub
         isreach_pub = rospy.Publisher('/fixed/platform/isreach', Int32, queue_size=1)
-        ptz_pub = rospy.Publisher('/fixed/yuntai/position', Odometry, queue_size=1)
+        ptz_pub = rospy.Publisher('/fixed/platform/position', Odometry, queue_size=1)
         ptz_server = rospy.Service('/fixed/platform/cmd', cp_control, handle_ptz)
         rospy.init_node('onvif_control_node', anonymous=True)
         rospy.Timer(rospy.Duration(0.1),timer_callback)
