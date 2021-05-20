@@ -56,8 +56,8 @@ private:
     unsigned int g_now_zoom = 0;
     unsigned int g_action = 0;
     unsigned int g_control_type = 0;
-    unsigned int g_xy_goal = 0;
-    unsigned int g_z_goal = 0;
+    int g_xy_goal = 0;
+    int g_z_goal = 0;
     unsigned int g_reach_flag = 0;
     unsigned int g_xy_reach_flag = 0;
     unsigned int g_z_reach_flag = 0;
@@ -85,7 +85,10 @@ public:
     bool set_action(int id, int type, int value, int xy_value, int z_value, int zoom_value);
     void crc_check(std::vector<unsigned char> &data);
     void motor_callback(const std_msgs::String::ConstPtr& msg);
-    void motor_ctr(char motor_id,int angle);
+    //绝对角度
+    void motor_absolute_angle(char motor_id,int angle);
+    //相对角度
+    void motor_relat_angle(char motor_id,int angle);
     //电机按照最短的距离回到设定的原点
     void motor_back(char motor_id);
     //关闭电机,电机进入关闭模式

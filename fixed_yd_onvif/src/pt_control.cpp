@@ -102,13 +102,33 @@ void pt_control::write_hk(){
                 std::cout << "id: " << id << ", action: " << action << ", type: " << type << ", value: " << value << std::endl;
 
                 g_action = action;
-                if((type == 0) || (type == 1))
+                if(type == 0 || type == 1)
                 {
                     g_control_type = type;
                     if(g_control_type == 0)
                         g_xy_goal = 36000 - value;
                     else if(g_control_type == 1)
                         g_z_goal = value;
+                }else if(type == 3 || type == 4){
+                    g_control_type = type;
+                    if(g_control_type == 3){
+                        g_xy_goal = g_now_xyposition - value;
+                        if(g_xy_goal<0){
+                            g_xy_goal += 36000;
+                        }else if(g_xy_goal>36000){
+                            g_xy_goal -= 36000;
+                        }
+                        std::cout << "relative xy angle " << g_now_xyposition << " to:" << g_xy_goal << std::endl;
+                    }
+                    else if(g_control_type == 4){
+                        g_z_goal = g_now_zposition + value;
+                        if(g_z_goal<0){
+                            g_z_goal += 36000;
+                        }else if(g_z_goal>36000){
+                            g_z_goal -= 36000;
+                        }
+                        std::cout << "relative z angle "<< g_now_zposition << " to:" << g_z_goal << std::endl;
+                    }
                 }
             }
         }
@@ -125,7 +145,9 @@ void pt_control::write_hk(){
             int value = 0;
             if(type==0){
                 value = 36000 - atoi(cmd_value_strv[3].c_str());
-            }else if(type==1){
+            }else if(type==3){
+                value = -1 * atoi(cmd_value_strv[3].c_str());
+            }else{
                 value = atoi(cmd_value_strv[3].c_str());
             }
             //此处分开设置水平、垂直及变倍值是为兼容通过485遵循pelco-d协议设置的方式
@@ -159,7 +181,7 @@ void pt_control::read_hk(){
         }
         //std::cout << "xy:" << g_now_xyposition << " z:" << g_now_zposition << std::endl;
 
-        if((g_action == 1) &&   ((g_control_type == 0) || (g_control_type == 1) || (g_control_type == 3) || (g_control_type == 4)))
+        if((g_action == 1) &&   (g_control_type == 0 || g_control_type == 1 || g_control_type == 3 || g_control_type == 4 ))
         {
             if(g_xy_goal != -1){
                 xy_diff_val = g_xy_goal - g_now_xyposition;
@@ -175,9 +197,9 @@ void pt_control::read_hk(){
                 }
             }else if (g_z_goal != -1){
                 z_diff_val = g_z_goal - g_now_zposition;
-                // std::cout << "g_z_goal: " << g_z_goal << std::endl;
-                // std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
-                // std::cout << "z_val: " << z_diff_val << std::endl;
+                std::cout << "g_z_goal: " << g_z_goal << std::endl;
+                std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
+                std::cout << "z_val: " << z_diff_val << std::endl;
                 if((z_diff_val > 35900) || (z_diff_val < -35900))
                     z_diff_val = 0;
                 if(abs(z_diff_val)<550){
@@ -191,47 +213,27 @@ void pt_control::read_hk(){
 }
 
 bool pt_control::set_action(int id, int type, int value, int xy_value, int z_value, int zoom_value){
-    //设置水平、垂直、变倍
-    float z_degree = 0.0;
-    float xy_degree = 0.0;
-    float focus_adjust = 0.0;
-    if(type == 0){
-        xy_degree = value;
-    }
-    else if(type == 1){
-        z_degree = value;
-    }
-    else if(type == 2){
-        focus_adjust = value;   
-    }
-    else if(type == 3){
-        xy_degree = xy_value;
-        z_degree = z_value;
-    }
-    else if(type == 4){
-        xy_degree = xy_value;
-        z_degree = z_value;
-        focus_adjust = zoom_value;
-    }
-    int xy_idegree = xy_degree/100;
-    int z_idegree = z_degree/100;
-    int focus_iadjust = focus_adjust / 100;
-    std::cout << "wPanPos:" << xy_idegree << std::endl;
-    std::cout << "wTiltPos:" << z_idegree << std::endl;
-    std::cout << "wZoomPos:" << focus_iadjust << std::endl;
     //wPanPos   1号电机
     //wTiltPos  2号电机
     if(type == 0){
         motor_id = 0x01;
-        motor_ctr(0x01,xy_idegree);
+        motor_absolute_angle(0x01,value / 100);
     }else if(type == 1){
         motor_id = 0x02;
-        motor_ctr(0x02,z_idegree);
+        motor_absolute_angle(0x02,value / 100);
     }else if(type == 2){
         //set zoom
         std_msgs::Float32 data;
-        data.data = focus_iadjust;
+        data.data = value / 100;
         zoom_pub_.publish(data);
+    }else if(type == 3){
+        //相对运动
+        motor_id = 0x01;
+        motor_relat_angle(0x01,value / 100);
+    }else if(type == 4){
+        //相对运动
+        motor_id = 0x02;
+        motor_relat_angle(0x02,value / 100);
     }
 }
 
@@ -272,7 +274,24 @@ void pt_control::motor_callback(const std_msgs::String::ConstPtr& msg){
     }
 }
 
-void pt_control::motor_ctr(char motor_id,int angle){
+void pt_control::motor_relat_angle(char motor_id,int angle){
+    std::vector<unsigned char> cmd;
+    cmd.push_back(0x3E);
+    cmd.push_back(0x00);
+    cmd.push_back(motor_id);
+    cmd.push_back(0x56);
+    cmd.push_back(0x02);
+    int rotate = MOTOR_ROTATE / 360 * angle;
+    char byte1 =  rotate & 0x00FF;
+    char byte2 =  (rotate >> 8) & 0x00FF;
+    std::cout << "rotate:" << rotate << " byte1:" << byte1<< " byte2:" << byte2 << std::endl;
+    cmd.push_back(byte1);
+    cmd.push_back(byte2);
+    crc_check(cmd);
+    tcp_ptr->send_bytes(cmd);
+}
+
+void pt_control::motor_absolute_angle(char motor_id,int angle){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);

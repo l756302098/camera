@@ -168,8 +168,8 @@ Type: fixed_msg/cp_control
 int16 device_id #设备id
 int32 id        #云台id
 int32 action    #设置1
-int32 type      #水平0 垂直1 变倍2
-int32 value     #设置值(0-36000)
+int32 type      #水平0 垂直1 变倍2 水平相对转动3 垂直相对转动4
+int32 value     #设置值(0-36000)/相对转动(value>0顺时针转动 value<0逆时针转动)
 uint32[] allvalue
 ---
 int32 result
