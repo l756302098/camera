@@ -36,7 +36,7 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     transfer_sub = nh_.subscribe("/fixed/platform/platform_transfer", 1, &visible_control::transfer_callback, this);
     isreach_sub = nh_.subscribe("/fixed/platform/isreach", 1, &visible_control::isreach_callback, this);
     detectresult_sub = nh_.subscribe("/detect_rect", 1, &visible_control::detect_rect_callback, this);
-    ptz_sub = nh_.subscribe("/fixed/yuntai/position", 1, &visible_control::ptz_callback, this);
+    ptz_sub = nh_.subscribe("/fixed/platform/position", 1, &visible_control::ptz_callback, this);
 	ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
 	camera_pose_pub = nh_.advertise<geometry_msgs::PoseStamped>("/camera_pose", 1);
     readyimage_pub = nh_.advertise<fixed_msg::inspected_result>("/visible_survey_parm", 1);

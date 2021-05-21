@@ -53,6 +53,7 @@ string equipid
 string result
 bool success
 ```
+
 ##  开始抄表任务
 Topic: /visible_survey_parm  
 Type: fixed_msg::inspected_result  
@@ -182,6 +183,41 @@ int16 device_id
 string plan
 ---
 bool status
+```
+example  
+10003                           部件id  
+5                               识别类型：5红外  
+21.160200,6.331850,-134.537994  观测目标坐标  
+10010001                        设备id  
+1                               机器人id  
+348                             任务id
+```json
+{
+            "Align":"",
+            "CameraPose":"10003:5/21.160200,6.331850,-134.537994/10010001/1/348",
+            "Id":"0",
+            "IsAnterograde":false,
+            "TLine":"0.0,0.0,0.0/0.0,0.0,0.0",
+            "TLoc":"0.0;0.0;0.0",
+            "TLocType":"transfer",
+            "TLocWidth":0,
+            "TableInfo":"",
+            "TurnAngle":"",
+            "Watchs":[
+                {
+                    "Assemblys":[
+                        {
+                            "AssemblyId":10003,
+                            "ReconParam":"10010001",
+                            "ReconType":5
+                        }
+                    ],
+                    "WatchId":8,
+                    "WatchPos":"21.160200,6.331850,-134.537994",
+                    "WatchType":"fixed"
+                }
+            ]
+        }
 ```
 ##  任务控制
 Topic: /fixed/control/task_control  

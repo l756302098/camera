@@ -126,7 +126,7 @@ if __name__ == '__main__':
         write_thread.start()
         global isreach_pub
         isreach_pub = rospy.Publisher('/fixed/platform/isreach', Int32, queue_size=1)
-        ptz_pub = rospy.Publisher('/fixed/yuntai/position', Odometry, queue_size=1)
+        ptz_pub = rospy.Publisher('/fixed/platform/position', Odometry, queue_size=1)
         ptz_server = rospy.Service('/fixed/platform/cmd', cp_control, handle_ptz)
         rospy.init_node('onvif_control_node', anonymous=True)
         rospy.Timer(rospy.Duration(0.1),timer_callback)

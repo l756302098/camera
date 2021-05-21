@@ -126,7 +126,6 @@ include_directories(
 ## Declare a C++ library
 add_library(lib-${PROJECT_NAME}
   src/status_control.cpp
-  src/mathc.c
 )
 
 ## Add cmake target dependencies of the library

@@ -14,7 +14,7 @@ pt_control::pt_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal
     std::cout << "ip:" << device_ip << " port:" << device_port << std::endl;
     nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/platform/position");
     nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
-    motor_sub = nh_.subscribe("motor/cmd", 1, &pt_control::motor_callback, this);
+    motor_sub = nh_.subscribe("/fixed/motor/cmd", 1, &pt_control::motor_callback, this);
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
     zoom_pub_ = nh_.advertise<std_msgs::Float32>("/fixed/visible/zoom", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
@@ -319,7 +319,7 @@ void pt_control::motor_back(char motor_id){
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
     cmd.push_back(motor_id);
-    cmd.push_back(0x52);
+    cmd.push_back(0x51);
     cmd.push_back(0x00);
     crc_check(cmd);
     tcp_ptr->send_bytes(cmd);

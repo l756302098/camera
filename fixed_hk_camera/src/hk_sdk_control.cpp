@@ -25,7 +25,7 @@ hk_sdk_control::hk_sdk_control(const ros::NodeHandle &nh):nh_(nh)
     nh_.param<std::string>("image_height", m_image_height, "1080");
     nh_.param<bool>("set_infrared_focus", m_set_infrared_focus, true);
     nh_.param<int>("set_infrared_focus_waittime", _set_infrared_focus_waittime, 30);
-    nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/yuntai/position");
+    nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/platform/position");
     nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
     nh_.param<bool>("pub_raw_temp", pub_raw_temp, true);
     nh_.param<std::string>("raw_temp_topic", raw_temp_topic, "/fixed/internal/temperature");
