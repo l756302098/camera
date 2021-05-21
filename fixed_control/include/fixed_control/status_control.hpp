@@ -87,7 +87,7 @@ private:
     }
 public:
     //void load_from_stream(std::ifstream &in){
-    void load_from_stream(std::string &in){
+    int load_from_stream(std::string &in){
     road_tasks.clear();
     std::cout << "out:" << std::endl;
     std::cout << in << std::endl;
@@ -99,7 +99,7 @@ public:
     if (doc.ParseStream(ss).HasParseError())
     {
         ROS_ERROR("Failed to parse json ");
-        return;
+        return -1;
     }
     // if (doc.ParseStream(eis).HasParseError())
     // {
@@ -109,14 +109,14 @@ public:
     if (!doc.HasMember("Tasks"))
     {
         ROS_WARN("No 'Tasks' field");
-        return;
+        return -1;
     }
 
     const rapidjson::Value &tasks = doc["Tasks"];
     if (!tasks.IsArray())
     {
         ROS_WARN("Invalid 'Tasks' field");
-        return;
+        return -1;
     }
     const rapidjson::Value &iid = doc["InspectId"];
     if(iid.IsString()){

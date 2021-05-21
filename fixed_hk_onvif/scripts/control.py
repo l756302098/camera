@@ -109,16 +109,8 @@ def handle_ptz(req):
         print("type 2")
     elif req.type == 3:
         read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1])
-        if req.allvalue[0] < 0  or req.allvalue[0] > 36000:
-            return cp_controlResponse(0)
-        if req.allvalue[1] < 0  or req.allvalue[1] > 360:
-            return cp_controlResponse(0)
     elif req.type == 4:
         read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1]) + "/" + str(req.allvalue[2])
-        if req.allvalue[0] < 0  or req.allvalue[0] > 36000:
-            return cp_controlResponse(0)
-        if req.allvalue[1] < 0  or req.allvalue[1] > 36000:
-            return cp_controlResponse(0)
     cmd_queue.put([1,read_cmd])
     return cp_controlResponse(1)
 

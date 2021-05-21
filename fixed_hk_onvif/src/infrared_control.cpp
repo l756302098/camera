@@ -95,6 +95,7 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
         std::string str_devicepoint = msg.data;
         msg_list.clear();
     	SplitString(str_devicepoint, msg_list, "/");
+        std::cout << "SplitString size:" << msg_list.size() << std::endl;
         if(msg_list.size()<5) return;
         //set value
         if(msg_list[3] == "2" || msg_list[3] == "5"){

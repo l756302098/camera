@@ -36,8 +36,13 @@ bool status_control::task_srv(fixed_msg::task::Request &req, fixed_msg::task::Re
 		std::string list = req.plan;
 		std::cout << req.plan << std::endl;
         //std::ifstream in(req.plan,ios::in|ios::binary);
-        load_from_stream(list);
-		res.status = true;
+        int r = load_from_stream(list);
+        if(r==-1){
+            res.status = false;
+        }else{
+            res.status = true;
+        }
+        return true;
 	}
 	else
 	{
