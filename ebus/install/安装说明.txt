@@ -1,0 +1,13 @@
+1、安装ros的相关package
+   sudo apt-get install ros-kinetic-image-view
+   sudo apt-get install ros-kinetic-image-transport
+   sudo apt-get install ros-kinetic-compressed-image-transport
+   sudo apt-get install ros-kinetic-theora-image-transport
+   **********http://wiki.ros.org/image_transport**********
+   image_transport ("raw") - The default transport, sending sensor_msgs/Image through ROS.
+   compressed_image_transport ("compressed") - JPEG or PNG image compression.
+   theora_image_transport ("theora") - Streaming video using the Theora codec.
+2、安装eBUs驱动以支持genicam协议并修改.bashrc
+   sudo dpkg -i eBUS_SDK_Ubuntu-x86_64-5.1.5-4563.deb
+   在.bashrc中添加环境变量
+   export GENICAM_ROOT_V3_0=/opt/pleora/ebus_sdk/Ubuntu-x86_64/lib/genicam

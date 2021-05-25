@@ -61,10 +61,10 @@ bool pt_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed
     std::stringstream ss;
 	ss.str("");
 	ss << req.id << "/" << req.action << "/" << req.type << "/" << req.value;
-    if(req.type == 3){
+    if(req.type == 5){
         ss << "/" << req.allvalue[0] << "/" << req.allvalue[1];
     }
-    if(req.type == 4){
+    if(req.type == 6){
         std::cout << "1111111111111" << std::endl;
         ss << "/" << req.allvalue[0] << "/" << req.allvalue[1] << "/" << req.allvalue[2];
     }
@@ -129,6 +129,16 @@ void pt_control::write_hk(){
                         }
                         std::cout << "relative z angle "<< g_now_zposition << " to:" << g_z_goal << std::endl;
                     }
+                }else if(type == 5){
+                    g_control_type = type;
+                    int xy_value = atoi(cmd_value_strv[4].c_str());
+                    int z_value = atoi(cmd_value_strv[5].c_str());
+                    g_xy_goal = 36000 - xy_value;
+                    g_z_goal = z_value;
+                    std::cout << "now  xy_value:" << g_now_xyposition << " z_value:" << g_now_zposition << std::endl;
+                    std::cout << "goal xy_value:" << g_xy_goal << " z_value:" << g_z_goal << std::endl;
+                    //optio
+                    ready = true;
                 }
             }
         }
@@ -142,17 +152,22 @@ void pt_control::write_hk(){
             int id = atoi(cmd_value_strv[0].c_str());
             int action = atoi(cmd_value_strv[1].c_str());
             int type = atoi(cmd_value_strv[2].c_str());
-            int value = 0;
+            int value,xy_value,z_value;
+            value = xy_value = z_value = 0;
             if(type==0){
                 value = 36000 - atoi(cmd_value_strv[3].c_str());
             }else if(type==3){
                 value = -1 * atoi(cmd_value_strv[3].c_str());
-            }else{
+            }else if(type==1 || type==2 || type==4){
                 value = atoi(cmd_value_strv[3].c_str());
+            }else if(type==5){
+                xy_value = atoi(cmd_value_strv[4].c_str());
+                xy_value = 36000 - xy_value;
+                z_value = atoi(cmd_value_strv[5].c_str());
             }
             //此处分开设置水平、垂直及变倍值是为兼容通过485遵循pelco-d协议设置的方式
             if(action == 1){
-                this->set_action(id, type, value, 0, 0, 0);
+                this->set_action(id, type, value, xy_value, z_value, 0);
             }
         }
     }
@@ -180,8 +195,22 @@ void pt_control::read_hk(){
              //printf("%x号电机运行状态:%x \n",0x02,cmd[17]);
         }
         //std::cout << "xy:" << g_now_xyposition << " z:" << g_now_zposition << std::endl;
-
-        if((g_action == 1) &&   (g_control_type == 0 || g_control_type == 1 || g_control_type == 3 || g_control_type == 4 ))
+        if(ready && g_action == 1 && g_control_type == 5){
+            if(g_xy_goal != -1){
+                xy_diff_val = g_xy_goal - g_now_xyposition;
+                std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
+                std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
+                std::cout << "xy_val: " << xy_diff_val << std::endl;
+                if((xy_diff_val > 35900) || (xy_diff_val < -35900))
+                    xy_diff_val = 0;
+                if(abs(xy_diff_val)<550){
+                    std::unique_lock <std::mutex> lck(mtx);
+                    ready = false;
+                    cv.notify_all();
+                }
+            }  
+        }
+        if((g_action == 1) &&   (g_control_type == 0 || g_control_type == 1 || g_control_type == 3 || g_control_type == 4 || g_control_type == 5 ))
         {
             if(g_xy_goal != -1){
                 xy_diff_val = g_xy_goal - g_now_xyposition;
@@ -234,6 +263,22 @@ bool pt_control::set_action(int id, int type, int value, int xy_value, int z_val
         //相对运动
         motor_id = 0x02;
         motor_relat_angle(0x02,value / 100);
+    }else if(type == 5){
+        //相对运动
+        motor_id = 0x01;
+        motor_absolute_angle(0x01,xy_value / 100);
+        //sleep(5);
+        //optimization:use time lock
+        ros::Time start_time  = ros::Time::now();
+        std::unique_lock <std::mutex> lck(mtx);
+        while(ready && ros::Time::now() - start_time < ros::Duration(5)){
+            std::cout << "wait for xydegree." << std::endl;
+            cv.wait(lck);
+        }
+        std::cout << "write thread wake." << std::endl;
+        ready = false;
+        motor_id = 0x02;
+        motor_absolute_angle(0x02,z_value / 100);
     }
 }
 

@@ -97,14 +97,14 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
     	SplitString(str_devicepoint, msg_list, "/");
         std::cout << "SplitString size:" << msg_list.size() << std::endl;
         if(msg_list.size()<5) return;
+        vector<std::string> device_point;
+		SplitString(msg_list[4], device_point, ",");
+		float x_device = atof(device_point[0].c_str());
+		float y_device = atof(device_point[1].c_str());
+		float z_device = atof(device_point[2].c_str());
+		std::cout << "=====x_device, y_device, z_device value is: " << x_device << " " << y_device << " " << z_device << " .=====" << std::endl;    
         //set value
         if(msg_list[3] == "2" || msg_list[3] == "5"){
-            vector<std::string> device_point;
-			SplitString(msg_list[4], device_point, ",");
-			float x_device = atof(device_point[0].c_str());
-			float y_device = atof(device_point[1].c_str());
-			float z_device = atof(device_point[2].c_str());
-			std::cout << "=====x_device, y_device, z_device value is: " << x_device << " " << y_device << " " << z_device << " .=====" << std::endl;
             t_pos.pose.position.x = x_device;
             t_pos.pose.position.y = y_device;
             t_pos.pose.position.z = z_device;
@@ -152,6 +152,21 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
 	        else
 		        std::cout << "set xy degree failed!" << std::endl;
             //read callback
+            do_task = true;
+        }else if(msg_list[3] == "7"){
+            fixed_msg::cp_control ptz_cmd;
+	        ptz_cmd.request.id = 1;
+	        ptz_cmd.request.action = 1;
+            ptz_cmd.request.type = 5;
+	        std::vector<unsigned int> quavalue;
+	        quavalue.push_back(x_device * 100);
+	        quavalue.push_back(y_device * 100);
+	        ptz_cmd.request.allvalue = quavalue;
+	        if(ptz_client.call(ptz_cmd))
+		        std::cout << "set xy degree success!" << std::endl;
+	        else
+		        std::cout << "set xy degree failed!" << std::endl;
+			//read callback
             do_task = true;
         }
     }

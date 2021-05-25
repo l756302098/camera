@@ -115,17 +115,17 @@ void visible_control::transfer_callback(const fixed_msg::platform_transfer& msg)
         msg_list.clear();
     	SplitString(str_devicepoint, msg_list, "/");
         if(msg_list.size()<5) return;
+        vector<std::string> device_point;
+		SplitString(msg_list[4], device_point, ",");
+		float x_device = atof(device_point[0].c_str());
+		float y_device = atof(device_point[1].c_str());
+		float z_device = atof(device_point[2].c_str());
+		int device_width = atoi(device_point[3].c_str());
+		int device_height = atoi(device_point[4].c_str());
+		std::cout << "=====x_device, y_device, z_device value is: " << x_device << " " << y_device << " " << z_device << " .=====" << std::endl;    
         //set value
         if(msg_list[3] == "1"){
-            vector<std::string> device_point;
-			SplitString(msg_list[4], device_point, ",");
-			float x_device = atof(device_point[0].c_str());
-			float y_device = atof(device_point[1].c_str());
-			float z_device = atof(device_point[2].c_str());
-			int device_width = atoi(device_point[3].c_str());
-			int device_height = atoi(device_point[4].c_str());
-			device_type = atoi(device_point[5].c_str());
-			std::cout << "=====x_device, y_device, z_device value is: " << x_device << " " << y_device << " " << z_device << " .=====" << std::endl;
+            device_type = atoi(device_point[5].c_str());
             t_pos.pose.position.x = x_device;
             t_pos.pose.position.y = y_device;
             t_pos.pose.position.z = z_device;

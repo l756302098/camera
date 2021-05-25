@@ -11,12 +11,17 @@
 status_control::status_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(false),watch_flag(false),task_pause(false)
 {
     //get param
+    std::string test_file;
     nh_.param<int>("robot_id", robot_id, 1);
+    nh_.param<std::string>("test_file", test_file, "");
     std::cout << "robot_id:" << robot_id << std::endl;
-    std::cout << "nh_.advertise" << std::endl;
+    std::cout << "test_file:" << test_file << std::endl;
     transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
     control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
     task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control/task_status", 1);
+    if(!test_file.empty()){
+        load_from_file(test_file);
+    }
 }
 
 status_control::~status_control()
@@ -148,26 +153,28 @@ void status_control::update(){
             break;
         }
         task_running = true;
-        ROAD_PLAN ctask = road_tasks[i];
+        std::shared_ptr<ROAD_PLAN> ctask = road_tasks[i];
         ROS_INFO("run %i task",i);
         state = 0;
         cpoint = 0;
         watch_flag = false;
         is_finish = false;
-        if(ctask.nType == (int)TASK_TYPE::TASK_TYPE_TRANSFER){
+        if(ctask->nType == (int)TASK_TYPE::TASK_TYPE_TRANSFER){
             // "CameraPose" : "120000:5/21.4207859039,6.13516521454,-131.956115723/10010012/2/4869",
-            std::vector<std::string> lists = split_str(ctask.cameraPose[cpoint], "/");
+            std::vector<std::string> lists = split_str(ctask->cameraPose[cpoint], "/");
 			std::vector<std::string> task_camera = split_str(lists[0], ":");
 			int point_type = stoi(task_camera[1]);
-            int watch_point = ctask.cameraPose.size();
+            int watch_point = ctask->cameraPose.size();
             while (!is_finish)
             {
                 if(cpoint<watch_point){
                     if(state==0){
                         /* 如果是着色点 */
                         if(point_type==5){}
+                        /* 按角度旋转 */
+                        if(point_type==7){}
                         sleep(1);
-					    transfer(lists, task_camera, ctask.transfer_id, 0);
+					    transfer(lists, task_camera, ctask->transfer_id, 0);
                         last = ros::Time::now();
                         state++;
                     }else{

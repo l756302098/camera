@@ -31,6 +31,8 @@
 #include "fixed_yd_onvif/common.hpp"
 #include "fixed_yd_onvif/asio_client.hpp"
 #include <thread>
+#include <mutex>                // std::mutex, std::unique_lock
+#include <condition_variable>    // std::condition_variable
 
 using namespace std;
 #define MOTOR_ROTATE 16384
@@ -74,6 +76,10 @@ public:
     std::string device_id,ptz_topic,ptz_server_name;
     std::deque<string> _cmd_control_queue;
     std::mutex write_mtx;
+
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool ready = false;
     
 public:
     pt_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));

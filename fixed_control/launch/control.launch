@@ -2,5 +2,7 @@
   <node pkg="fixed_control" type="fixed_control_node" name="fixed_control_node" output="screen" respawn="false">
       <param name="robot_id" type="int" value="1"/>
       <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
+      <!-- <param name="test_file" value="$(find fixed_control)/launch/task.json"/> -->
+      <param name="test_file" value=""/>
   </node>
 </launch>
