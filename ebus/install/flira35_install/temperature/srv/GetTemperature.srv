@@ -1,4 +1,0 @@
-uint16[] spot_x
-uint16[] spot_y
----
-float32 temperature_c

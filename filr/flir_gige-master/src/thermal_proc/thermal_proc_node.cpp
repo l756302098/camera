@@ -15,9 +15,16 @@ ThermalProcNode::ThermalProcNode(const ros::NodeHandle &nh,
   std::string topic;
   pnh.param<std::string>("temp_topic", topic, "");
   //ros::spin();
-  image_transport::SubscriberStatusCallback connect_cb =
-      boost::bind(&ThermalProcNode::ConnectCb, this);
-  pub_proc_ = it_.advertise("/fixed/decoder/infrared", 1, connect_cb, connect_cb);
+  if (!sub_camera_) {
+    image_transport::TransportHints hints("raw", ros::TransportHints(), nh_);
+    sub_camera_ = it_.subscribeCamera("image_raw", 2,
+                                      &ThermalProcNode::CameraCb, this, hints);
+  }
+  pub_proc_ = it_.advertise("/fixed/decoder/infrared", 1);
+
+  // image_transport::SubscriberStatusCallback connect_cb =
+  //     boost::bind(&ThermalProcNode::ConnectCb, this);
+  // pub_proc_ = it_.advertise("/fixed/decoder/infrared", 1, connect_cb, connect_cb);
   cfg_server_.setCallback(
       boost::bind(&ThermalProcNode::ConfigCb, this, _1, _2));
     temperature_buffer_pub_ = nh_.advertise<sensor_msgs::Image>(topic, 1);
@@ -69,10 +76,7 @@ bool ThermalProcNode::GetTemperature(temperature::GetTemperature::Request &req,
 
 void ThermalProcNode::ConnectCb() {
   std::lock_guard<std::mutex> lock(connect_mutex_);
-  if (!pub_proc_.getNumSubscribers()){
-    //sub_camera_.shutdown();
-  }
-  else if (!sub_camera_) {
+  if (!sub_camera_) {
     image_transport::TransportHints hints("raw", ros::TransportHints(), nh_);
     sub_camera_ = it_.subscribeCamera("image_raw", 2,
                                       &ThermalProcNode::CameraCb, this, hints);

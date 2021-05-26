@@ -105,8 +105,10 @@ void pt_control::write_hk(){
                 if(type == 0 || type == 1)
                 {
                     g_control_type = type;
-                    if(g_control_type == 0)
+                    if(g_control_type == 0){
+                        if(value==0) value = 36000;
                         g_xy_goal = 36000 - value;
+                    }
                     else if(g_control_type == 1)
                         g_z_goal = value;
                 }else if(type == 3 || type == 4){
@@ -133,6 +135,7 @@ void pt_control::write_hk(){
                     g_control_type = type;
                     int xy_value = atoi(cmd_value_strv[4].c_str());
                     int z_value = atoi(cmd_value_strv[5].c_str());
+                    if(xy_value==0) xy_value = 36000;
                     g_xy_goal = 36000 - xy_value;
                     g_z_goal = z_value;
                     std::cout << "now  xy_value:" << g_now_xyposition << " z_value:" << g_now_zposition << std::endl;
@@ -155,13 +158,16 @@ void pt_control::write_hk(){
             int value,xy_value,z_value;
             value = xy_value = z_value = 0;
             if(type==0){
-                value = 36000 - atoi(cmd_value_strv[3].c_str());
+                value = atoi(cmd_value_strv[3].c_str());
+                if(value==0) value = 36000;
+                value = 36000 - value;
             }else if(type==3){
                 value = -1 * atoi(cmd_value_strv[3].c_str());
             }else if(type==1 || type==2 || type==4){
                 value = atoi(cmd_value_strv[3].c_str());
             }else if(type==5){
                 xy_value = atoi(cmd_value_strv[4].c_str());
+                if(xy_value==0) xy_value = 36000;
                 xy_value = 36000 - xy_value;
                 z_value = atoi(cmd_value_strv[5].c_str());
             }

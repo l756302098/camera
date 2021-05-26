@@ -19,9 +19,7 @@ CalibProcNode::CalibProcNode(const ros::NodeHandle &nh,
 
 void CalibProcNode::ConnectCb() {
   std::lock_guard<std::mutex> lock(connect_mutex_);
-  if (!pub_calib_.getNumSubscribers()) {
-    sub_image_.shutdown();
-  } else if (!sub_image_) {
+  if (!sub_image_) {
     image_transport::TransportHints hints("raw", ros::TransportHints(), nh_);
     sub_image_ =
         it_.subscribe("image_raw", 2, &CalibProcNode::ImageCb, this, hints);
