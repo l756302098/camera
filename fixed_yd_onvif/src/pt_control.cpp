@@ -22,7 +22,7 @@ pt_control::pt_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal
     std::unique_ptr<client> ptr (new client(device_ip,device_port));
     tcp_ptr = std::move(ptr);
     sock_thread = new std::thread(std::bind(&client::run,tcp_ptr.get()));
-    std::cout << "pt_control init finish" << std::endl;
+    std::cout << "pt_control network init finish" << std::endl;
 }
 
 pt_control::~pt_control(){
@@ -33,8 +33,12 @@ pt_control::~pt_control(){
 void pt_control::update(){
     motor_temp_id++;
     unsigned char query_id = motor_temp_id % 2 == 0 ? 0x01 : 0x02;
+    if(!tcp_ptr->is_open()){
+        std::cout << "network error reconnect ..." << std::endl;
+        sleep(1);
+        tcp_ptr->start();
+    }
     motor_status(query_id);
-
     nav_msgs::Odometry pose;
 	pose.header.stamp = ros::Time::now();
 	pose.pose.pose.position.x = g_now_xyposition;

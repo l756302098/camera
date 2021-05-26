@@ -68,7 +68,7 @@ private:
     int tilt_max,tilt_min;
 
     std::thread *sock_thread;
-    std::shared_ptr<client> tcp_ptr;
+    std::unique_ptr<client> tcp_ptr;
     
 public:
     std::string device_ip;

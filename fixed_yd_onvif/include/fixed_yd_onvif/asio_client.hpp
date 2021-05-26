@@ -35,10 +35,12 @@ private:
     sock_ptr sock;
     std::mutex mtx;
     std::deque<vector<unsigned char>> receive_msg;
+    bool socket_status;
     
 public:
     bool is_open(){
-        return sock->is_open();
+        //return sock->is_open();
+        return socket_status;
     }
     vector<unsigned char> queue_pop(){
         if(!receive_msg.empty() && mtx.try_lock()){
@@ -52,7 +54,7 @@ public:
     client(): m_buf(256, '\n'), m_ep(address_type::from_string("192.168.1.7"), 8234)
     {    start();    }
 
-    client(string ip,int port): m_buf(256, '\n'), m_ep(address_type::from_string(ip), port)
+    client(string ip,int port): m_buf(256, '\n'), m_ep(address_type::from_string(ip), port),socket_status(false)
     {    
         std::cout << "ip:" << ip << " port:" << port << std::endl; 
         start();    
@@ -60,15 +62,31 @@ public:
 
     void run()
     {   
-        boost::asio::io_service::work work(m_io);
-        m_io.run();
+        try
+        {
+            boost::asio::io_service::work work(m_io);
+            m_io.run();   
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "run error:"<< e.what() << '\n';
+            m_io.stop();
+        }
     }
 
     void start()
     {
-        sock_ptr sock_t(new socket_type(m_io));
-        sock = std::move(sock_t);
-        sock->async_connect(m_ep, boost::bind(&this_type::conn_handler, this, boost::asio::placeholders::error, sock));
+        try
+        {
+            sock_ptr sock_t(new socket_type(m_io));
+            sock = std::move(sock_t);
+            sock->async_connect(m_ep, boost::bind(&this_type::conn_handler, this, boost::asio::placeholders::error, sock));
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "start error:" << e.what() << '\n';
+            sock->close();
+        }
     }
 
     void conn_handler(const boost::system::error_code&ec, sock_ptr sock)
@@ -76,8 +94,10 @@ public:
         if (ec)
         {
             std::cout << "connect error:" << ec << std::endl;
+            socket_status = false;
             return;
         }
+        socket_status = true;
         cout<<"Receive from "<<sock->remote_endpoint().address()<<": "<<endl;
         sock->async_read_some(buffer(m_buf), boost::bind(&client::read_handler, this, boost::asio::placeholders::error, sock));
     }
@@ -121,7 +141,8 @@ public:
     }
 
     void send(std::string &message){
-        sock->write_some(boost::asio::buffer(message));
+        if(is_open())
+            sock->write_some(boost::asio::buffer(message));
     }
 
     void send_bytes(std::vector<unsigned char> data){
@@ -130,6 +151,8 @@ public:
         //     printf(" %x ",data[i]);
         // }
         // printf("\n");
-        sock->write_some(boost::asio::buffer(data));
+        //std::cout << "isopen:" << is_open() << std::endl;
+        if(is_open())
+            sock->write_some(boost::asio::buffer(data));
     }
 };
