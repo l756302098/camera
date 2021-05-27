@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding = "UTF-8"?>
+<PTZAbsoluteEx version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+<elevation>4.000</elevation>
+<azimuth>359.380</azimuth>
+<absoluteZoom>1.00</absoluteZoom>
+<focus>25724</focus>
+<focalLen>520</focalLen>
+<horizontalSpeed>0.00</horizontalSpeed>
+<verticalSpeed>0.00</verticalSpeed>
+<verticalSpeed>0.00</verticalSpeed>
+<objectDistance>0.00</objectDistance>
+<isContinuousTrackingEnabled>false</isContinuousTrackingEnabled>
+</PTZAbsoluteEx>
