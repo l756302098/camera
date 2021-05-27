@@ -65,10 +65,10 @@ bool pt_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed
     std::stringstream ss;
 	ss.str("");
 	ss << req.id << "/" << req.action << "/" << req.type << "/" << req.value;
-    if(req.type == 5){
+    if(req.type == 3){
         ss << "/" << req.allvalue[0] << "/" << req.allvalue[1];
     }
-    if(req.type == 6){
+    if(req.type == 4){
         std::cout << "1111111111111" << std::endl;
         ss << "/" << req.allvalue[0] << "/" << req.allvalue[1] << "/" << req.allvalue[2];
     }
@@ -114,27 +114,29 @@ void pt_control::write_hk(){
                     }
                     else if(g_control_type == 1)
                         g_z_goal = value;
-                }else if(type == 3 || type == 4){
-                    g_control_type = type;
-                    if(g_control_type == 3){
-                        g_xy_goal = g_now_xyposition - value;
-                        if(g_xy_goal<0){
-                            g_xy_goal += 36000;
-                        }else if(g_xy_goal>36000){
-                            g_xy_goal -= 36000;
-                        }
-                        std::cout << "relative xy angle " << g_now_xyposition << " to:" << g_xy_goal << std::endl;
-                    }
-                    else if(g_control_type == 4){
-                        g_z_goal = g_now_zposition + value;
-                        if(g_z_goal<0){
-                            g_z_goal += 36000;
-                        }else if(g_z_goal>36000){
-                            g_z_goal -= 36000;
-                        }
-                        std::cout << "relative z angle "<< g_now_zposition << " to:" << g_z_goal << std::endl;
-                    }
-                }else if(type == 5){
+                }
+                // else if(type == 3 || type == 4){
+                //     g_control_type = type;
+                //     if(g_control_type == 3){
+                //         g_xy_goal = g_now_xyposition - value;
+                //         if(g_xy_goal<0){
+                //             g_xy_goal += 36000;
+                //         }else if(g_xy_goal>36000){
+                //             g_xy_goal -= 36000;
+                //         }
+                //         std::cout << "relative xy angle " << g_now_xyposition << " to:" << g_xy_goal << std::endl;
+                //     }
+                //     else if(g_control_type == 4){
+                //         g_z_goal = g_now_zposition + value;
+                //         if(g_z_goal<0){
+                //             g_z_goal += 36000;
+                //         }else if(g_z_goal>36000){
+                //             g_z_goal -= 36000;
+                //         }
+                //         std::cout << "relative z angle "<< g_now_zposition << " to:" << g_z_goal << std::endl;
+                //     }
+                // }
+                else if(type == 3){
                     g_control_type = type;
                     int xy_value = atoi(cmd_value_strv[4].c_str());
                     int z_value = atoi(cmd_value_strv[5].c_str());
@@ -172,15 +174,8 @@ void pt_control::write_hk(){
                 g_z_reach_flag = 0;
             }else if(type==2){
                 value = atoi(cmd_value_strv[3].c_str());
-            }else if(type==3){
-                value = -1 * atoi(cmd_value_strv[3].c_str());
-                g_xy_reach_flag = 0;
-                g_z_reach_flag = 1;
-            }else if(type==4){
-                value = atoi(cmd_value_strv[3].c_str());
-                g_xy_reach_flag = 1;
-                g_z_reach_flag = 0;
-            }else if(type==5){
+            }
+            else if(type==3){
                 xy_value = atoi(cmd_value_strv[4].c_str());
                 if(xy_value==0) xy_value = 36000;
                 xy_value = 36000 - xy_value;
@@ -188,6 +183,23 @@ void pt_control::write_hk(){
                 g_xy_reach_flag = 0;
                 g_z_reach_flag = 0;
             }
+            // else if(type==3){
+            //     value = -1 * atoi(cmd_value_strv[3].c_str());
+            //     g_xy_reach_flag = 0;
+            //     g_z_reach_flag = 1;
+            // }else if(type==4){
+            //     value = atoi(cmd_value_strv[3].c_str());
+            //     g_xy_reach_flag = 1;
+            //     g_z_reach_flag = 0;
+            // }else if(type==5){
+            //     xy_value = atoi(cmd_value_strv[4].c_str());
+            //     if(xy_value==0) xy_value = 36000;
+            //     xy_value = 36000 - xy_value;
+            //     z_value = atoi(cmd_value_strv[5].c_str());
+            //     g_xy_reach_flag = 0;
+            //     g_z_reach_flag = 0;
+            // }
+            
             //此处分开设置水平、垂直及变倍值是为兼容通过485遵循pelco-d协议设置的方式
             if(action == 1){
                 this->set_action(id, type, value, xy_value, z_value, 0);
@@ -266,15 +278,17 @@ bool pt_control::set_action(int id, int type, int value, int xy_value, int z_val
         std_msgs::Float32 data;
         data.data = value / 100;
         zoom_pub_.publish(data);
-    }else if(type == 3){
-        //相对运动
-        motor_id = 0x01;
-        motor_relat_angle(0x01,value / 100);
-    }else if(type == 4){
-        //相对运动
-        motor_id = 0x02;
-        motor_relat_angle(0x02,value / 100);
-    }else if(type == 5){
+    }
+    // else if(type == 3){
+    //     //相对运动
+    //     motor_id = 0x01;
+    //     motor_relat_angle(0x01,value / 100);
+    // }else if(type == 4){
+    //     //相对运动
+    //     motor_id = 0x02;
+    //     motor_relat_angle(0x02,value / 100);
+    // }
+    else if(type == 3){
         //相对运动
         motor_id = 0x01;
         motor_absolute_angle(0x01,xy_value / 100);

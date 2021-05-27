@@ -142,7 +142,7 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
 	        fixed_msg::cp_control ptz_cmd;
 	        ptz_cmd.request.id = camera_id;
 	        ptz_cmd.request.action = 1;
-	        ptz_cmd.request.type = 5;
+	        ptz_cmd.request.type = 3;
 	        std::vector<unsigned int> quavalue;
 	        quavalue.push_back(roll_angle * 100);
 	        quavalue.push_back(pitch_angle * 100);
@@ -157,7 +157,7 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
             fixed_msg::cp_control ptz_cmd;
 	        ptz_cmd.request.id = 1;
 	        ptz_cmd.request.action = 1;
-            ptz_cmd.request.type = 5;
+            ptz_cmd.request.type = 3;
 	        std::vector<unsigned int> quavalue;
 	        quavalue.push_back(x_device * 100);
 	        quavalue.push_back(y_device * 100);
