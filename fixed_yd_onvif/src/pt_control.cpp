@@ -233,15 +233,15 @@ void pt_control::tick(const ros::TimerEvent &event){
     {
         if(g_xy_goal != -1){
             xy_diff_val = g_xy_goal - g_now_xyposition;
-            // std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
-            // std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
-            // std::cout << "xy_val: " << xy_diff_val << std::endl;
+            std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
+            std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
+            std::cout << "xy_val: " << xy_diff_val << std::endl;
             if(abs(xy_diff_val) > 35700)
                 xy_diff_val = 0;
             if(abs(xy_diff_val)<300){
                 g_xy_goal = -1;
                 g_xy_reach_flag = 1;
-                if(ready && g_control_type==5){
+                if(ready && g_control_type==3){
                     std::unique_lock <std::mutex> lck(mtx);
                     ready = false;
                     cv.notify_one();
@@ -251,9 +251,9 @@ void pt_control::tick(const ros::TimerEvent &event){
         }
         if (g_z_goal != -1){
             z_diff_val = g_z_goal - g_now_zposition;
-            // std::cout << "g_z_goal: " << g_z_goal << std::endl;
-            // std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
-            // std::cout << "z_val: " << z_diff_val << std::endl;
+            std::cout << "g_z_goal: " << g_z_goal << std::endl;
+            std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
+            std::cout << "z_val: " << z_diff_val << std::endl;
             if(abs(z_diff_val)>35700)
                 z_diff_val = 0;
             if(abs(z_diff_val)<300){
