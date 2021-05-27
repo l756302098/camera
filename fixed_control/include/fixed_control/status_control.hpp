@@ -215,6 +215,7 @@ public:
             road_tasks.push_back(task);
         }
         pub_task_status(task_id,3);
+        return 1;
     }
     
     void mode_cb(const fixed_msg::control_mode msg)
