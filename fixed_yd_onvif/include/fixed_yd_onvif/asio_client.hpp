@@ -45,17 +45,19 @@ public:
     vector<unsigned char> queue_pop(){
         if(!receive_msg.empty() && mtx.try_lock()){
             auto msg = receive_msg.front();
-            mtx.unlock();
             receive_msg.pop_front();
+            mtx.unlock();
             return msg;
         }
         return {};
     }
-    client(): m_buf(256, '\n'), m_ep(address_type::from_string("192.168.1.7"), 8234)
+    client(): m_buf(64, '/n'), m_ep(address_type::from_string("192.168.1.7"), 8234)
     {    start();    }
 
-    client(string ip,int port): m_buf(256, '\n'), m_ep(address_type::from_string(ip), port),socket_status(false)
+    client(string ip,int port): m_buf(64, '/n'), m_ep(address_type::from_string(ip), port),socket_status(false)
     {    
+        std::cout << "client start " << std::endl;
+        printf("%x == %x \n",'/n',m_buf[0]);
         std::cout << "ip:" << ip << " port:" << port << std::endl; 
         start();    
     }
@@ -117,13 +119,16 @@ public:
         for (size_t i = 0; i < s; i++)
         {
             unsigned char d = *p;
-            if(d == '\n') break;
-            //printf("%i : %x ",i,d);
+            if(d == '/n') break;
             response.push_back(d);
             p++;
         }
         //printf("\n");
         mtx.lock();
+        while (receive_msg.size()>10)
+        {
+            receive_msg.pop_front();
+        }
         receive_msg.push_back(response);
         mtx.unlock();
         //int index = m_buf.size() - 1;

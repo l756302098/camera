@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="fixed_infrared" type="fixed_infrared_node" name="fixed_infrared_node" respawn="true" output="screen">
+  <node pkg="fixed_infrared" type="fixed_infrared_node" name="fixed_infrared_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
       <param name="cali_offset_h" type="int" value="60"/>
       <param name="cali_offset_v" type="int" value="10"/>

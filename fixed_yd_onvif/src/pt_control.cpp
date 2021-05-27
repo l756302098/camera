@@ -73,7 +73,7 @@ bool pt_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed
         ss << "/" << req.allvalue[0] << "/" << req.allvalue[1] << "/" << req.allvalue[2];
     }
     std::string s_cmd = ss.str();
-    std::cout << s_cmd << std::endl;
+    std::cout << "handle message:" <<  s_cmd << std::endl;
     _cmd_control_queue.push_back(s_cmd);
     this->write_mtx.unlock();
 	return true;
@@ -84,7 +84,7 @@ void pt_control::write_hk(){
     {
         sleep(0.1);
         std::string work_cmd = "";
-        //std::cout << "this:" << this << std::endl;
+        //std::cout << "_cmd_control_queue size:" << this->_cmd_control_queue.size() << std::endl;
         if(this->_cmd_control_queue.size() > 0)
         {
             this->write_mtx.lock();
@@ -104,7 +104,6 @@ void pt_control::write_hk(){
                 int type = atoi(cmd_value_strv[2].c_str());
                 int value = atoi(cmd_value_strv[3].c_str());
                 std::cout << "id: " << id << ", action: " << action << ", type: " << type << ", value: " << value << std::endl;
-
                 g_action = action;
                 if(type == 0 || type == 1)
                 {
@@ -144,7 +143,7 @@ void pt_control::write_hk(){
                     g_z_goal = z_value;
                     std::cout << "now  xy_value:" << g_now_xyposition << " z_value:" << g_now_zposition << std::endl;
                     std::cout << "goal xy_value:" << g_xy_goal << " z_value:" << g_z_goal << std::endl;
-                    //optio
+                    //ready for wait
                     ready = true;
                 }
             }
@@ -165,15 +164,29 @@ void pt_control::write_hk(){
                 value = atoi(cmd_value_strv[3].c_str());
                 if(value==0) value = 36000;
                 value = 36000 - value;
+                g_xy_reach_flag = 0;
+                g_z_reach_flag = 1;
+            }else if(type==1){
+                value = atoi(cmd_value_strv[3].c_str());
+                g_xy_reach_flag = 1;
+                g_z_reach_flag = 0;
+            }else if(type==2){
+                value = atoi(cmd_value_strv[3].c_str());
             }else if(type==3){
                 value = -1 * atoi(cmd_value_strv[3].c_str());
-            }else if(type==1 || type==2 || type==4){
+                g_xy_reach_flag = 0;
+                g_z_reach_flag = 1;
+            }else if(type==4){
                 value = atoi(cmd_value_strv[3].c_str());
+                g_xy_reach_flag = 1;
+                g_z_reach_flag = 0;
             }else if(type==5){
                 xy_value = atoi(cmd_value_strv[4].c_str());
                 if(xy_value==0) xy_value = 36000;
                 xy_value = 36000 - xy_value;
                 z_value = atoi(cmd_value_strv[5].c_str());
+                g_xy_reach_flag = 0;
+                g_z_reach_flag = 0;
             }
             //此处分开设置水平、垂直及变倍值是为兼容通过485遵循pelco-d协议设置的方式
             if(action == 1){
@@ -183,69 +196,57 @@ void pt_control::write_hk(){
     }
 }
 
-void pt_control::read_hk(){
-    int z_diff_val = 0, xy_diff_val = 0;
-    while(true)
+void pt_control::tick(const ros::TimerEvent &event){
+    vector<unsigned char> cmd = tcp_ptr->queue_pop();
+    if(cmd.empty() || cmd.size()<20) return;
+    if(cmd[3]!=0x0B) return;
+    if(cmd[2]==0x01){
+        //printf("%x号电机 ",cmd[2]);
+        uint16_t single_value = cmd[5] + (cmd[6] << 8);
+        uint32_t multi_value = cmd[7] + (cmd[8] << 8) + (cmd[9] << 16)+ (cmd[10] << 24);
+        g_now_xyposition = single_value * 360 / MOTOR_ROTATE * 100 ;
+        // printf(" 运行状态:%x \n",cmd[17]);
+        //printf(" single_value=%i single_angle=%i multi_value=%i \n",single_value,g_now_xyposition,multi_value);
+    }else{
+        uint16_t single_value = cmd[5] + (cmd[6] << 8);
+        uint32_t multi_value = cmd[7] + (cmd[8] << 8) + (cmd[9] << 16)+ (cmd[10] << 24);
+        g_now_zposition = single_value * 360 / MOTOR_ROTATE * 100;
+        // printf(" 运行状态:%x \n",cmd[17]);
+        //printf(" single_value=%i single_angle=%i multi_value=%i \n",single_value,g_now_zposition,multi_value);
+    }
+    // std::cout << "g_xy_reach_flag:" << g_xy_reach_flag << " g_z_reach_flag:" << g_z_reach_flag << std::endl;
+    // std::cout << "g_action:" << g_action << " g_control_type:" << g_control_type << std::endl;
+    // std::cout << "g_xy_goal:" << g_xy_goal << " g_z_goal:" << g_z_goal << std::endl;
+    if(g_action == 1 &&   g_control_type != 2 )
     {
-        sleep(0.1);
-        vector<unsigned char> cmd = tcp_ptr->queue_pop();
-        if(cmd.empty() || cmd.size()<20) continue;
-        if(cmd[3]!=0x0B) continue;
-        if(cmd[2]==0x01){
-            uint16_t single_value = cmd[5] + (cmd[6] << 8);
-            uint32_t multi_value = cmd[7] + (cmd[8] << 8) + (cmd[9] << 16)+ (cmd[10] << 24);
-            g_now_xyposition = single_value * 360 / MOTOR_ROTATE * 100 ;
-            //printf(" single_value=%i single_angle=%f multi_value=%i \n",single_value,single_angle,multi_value);
-            //printf("%x号电机运行状态:%x \n",0x01,cmd[17]);
-        }else{
-            uint16_t single_value = cmd[5] + (cmd[6] << 8);
-            uint32_t multi_value = cmd[7] + (cmd[8] << 8) + (cmd[9] << 16)+ (cmd[10] << 24);
-            g_now_zposition = single_value * 360 / MOTOR_ROTATE * 100;
-            //printf(" single_value=%i single_angle=%f multi_value=%i \n",single_value,single_angle,multi_value);
-             //printf("%x号电机运行状态:%x \n",0x02,cmd[17]);
-        }
-        //std::cout << "xy:" << g_now_xyposition << " z:" << g_now_zposition << std::endl;
-        if(ready && g_action == 1 && g_control_type == 5){
-            if(g_xy_goal != -1){
-                xy_diff_val = g_xy_goal - g_now_xyposition;
-                std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
-                std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
-                std::cout << "xy_val: " << xy_diff_val << std::endl;
-                if((xy_diff_val > 35900) || (xy_diff_val < -35900))
-                    xy_diff_val = 0;
-                if(abs(xy_diff_val)<550){
+        if(g_xy_goal != -1){
+            xy_diff_val = g_xy_goal - g_now_xyposition;
+            // std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
+            // std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
+            // std::cout << "xy_val: " << xy_diff_val << std::endl;
+            if(abs(xy_diff_val) > 35700)
+                xy_diff_val = 0;
+            if(abs(xy_diff_val)<300){
+                g_xy_goal = -1;
+                g_xy_reach_flag = 1;
+                if(ready && g_control_type==5){
                     std::unique_lock <std::mutex> lck(mtx);
                     ready = false;
-                    cv.notify_all();
+                    cv.notify_one();
+                    std::cout << "notify_one" << std::endl;
                 }
-            }  
+            }
         }
-        if((g_action == 1) &&   (g_control_type == 0 || g_control_type == 1 || g_control_type == 3 || g_control_type == 4 || g_control_type == 5 ))
-        {
-            if(g_xy_goal != -1){
-                xy_diff_val = g_xy_goal - g_now_xyposition;
-                std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
-                std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
-                std::cout << "xy_val: " << xy_diff_val << std::endl;
-                if((xy_diff_val > 35900) || (xy_diff_val < -35900))
-                    xy_diff_val = 0;
-                if(abs(xy_diff_val)<550){
-                    g_action = -1;
-                    g_xy_reach_flag = 1;
-                    g_z_reach_flag = 1;
-                }
-            }else if (g_z_goal != -1){
-                z_diff_val = g_z_goal - g_now_zposition;
-                std::cout << "g_z_goal: " << g_z_goal << std::endl;
-                std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
-                std::cout << "z_val: " << z_diff_val << std::endl;
-                if((z_diff_val > 35900) || (z_diff_val < -35900))
-                    z_diff_val = 0;
-                if(abs(z_diff_val)<550){
-                    g_action = -1;
-                    g_xy_reach_flag = 1;
-                    g_z_reach_flag = 1;
-                }
+        if (g_z_goal != -1){
+            z_diff_val = g_z_goal - g_now_zposition;
+            // std::cout << "g_z_goal: " << g_z_goal << std::endl;
+            // std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
+            // std::cout << "z_val: " << z_diff_val << std::endl;
+            if(abs(z_diff_val)>35700)
+                z_diff_val = 0;
+            if(abs(z_diff_val)<300){
+                g_z_reach_flag = 1;
+                g_z_goal = -1;
             }
         }
     }
@@ -277,13 +278,10 @@ bool pt_control::set_action(int id, int type, int value, int xy_value, int z_val
         //相对运动
         motor_id = 0x01;
         motor_absolute_angle(0x01,xy_value / 100);
-        //sleep(5);
-        //optimization:use time lock
-        ros::Time start_time  = ros::Time::now();
         std::unique_lock <std::mutex> lck(mtx);
-        while(ready && ros::Time::now() - start_time < ros::Duration(5)){
-            std::cout << "wait for xydegree." << std::endl;
-            cv.wait(lck);
+        std::cout << "wait for xydegree." << std::endl;
+        if(cv.wait_for(lck,std::chrono::seconds(10)) == std::cv_status::timeout){
+            std::cout << "wait timeout." << std::endl;
         }
         std::cout << "write thread wake." << std::endl;
         ready = false;
@@ -431,6 +429,7 @@ void pt_control::motor_status(char motor_id){
     cmd.push_back(0x0B);
     cmd.push_back(0x00);
     crc_check(cmd);
+    //printf("3E 00 %x 0B 00 %x %x \n",motor_id,cmd[5],cmd[6]);
     //std::cout << "start tcp send bytes" << std::endl;
     tcp_ptr->send_bytes(cmd);
     //std::cout << "end tcp send bytes" << std::endl;

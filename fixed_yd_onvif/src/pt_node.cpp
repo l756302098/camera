@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     is_running = true;
     std::shared_ptr<pt_control> ptr(new pt_control);
     std::thread *write_thread = new std::thread(std::bind(&pt_control::write_hk, ptr));
-    std::thread *read_thread = new std::thread(std::bind(&pt_control::read_hk, ptr));
+    ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &pt_control::tick, ptr.get(), false);
     //ros
     ros::Rate rate(10);
     while (ros::ok() && is_running)
@@ -46,7 +46,5 @@ int main(int argc, char **argv)
     ROS_INFO("exit...");
     if(write_thread)
         delete write_thread;
-    if(read_thread)
-        delete read_thread;
     return 0;
 }

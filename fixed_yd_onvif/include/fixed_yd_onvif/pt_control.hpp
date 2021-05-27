@@ -35,7 +35,7 @@
 #include <condition_variable>    // std::condition_variable
 
 using namespace std;
-#define MOTOR_ROTATE 16384
+#define MOTOR_ROTATE 16384.0
 
 class pt_control
 {
@@ -56,8 +56,8 @@ private:
     unsigned int g_now_xyposition = 0;
     unsigned int g_now_zposition = 0;
     unsigned int g_now_zoom = 0;
-    unsigned int g_action = 0;
     unsigned int g_control_type = 0;
+    int g_action = 0;
     int g_xy_goal = 0;
     int g_z_goal = 0;
     unsigned int g_reach_flag = 0;
@@ -66,6 +66,7 @@ private:
     float g_temperature_c = 0.0;
     int pan_max,pan_min;
     int tilt_max,tilt_min;
+    int z_diff_val = 0, xy_diff_val = 0;
 
     std::thread *sock_thread;
     std::unique_ptr<client> tcp_ptr;
@@ -86,8 +87,8 @@ public:
     ~pt_control();
     bool handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res);
     void update();
+    void tick(const ros::TimerEvent &event);
     void write_hk();
-    void read_hk();
     bool set_action(int id, int type, int value, int xy_value, int z_value, int zoom_value);
     void crc_check(std::vector<unsigned char> &data);
     void motor_callback(const std_msgs::String::ConstPtr& msg);
