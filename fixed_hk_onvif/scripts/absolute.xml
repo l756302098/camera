@@ -4,8 +4,8 @@
   <!--opt, object, PTZ数据, attr:version{req, string, 协议版本, range:[,]}-->
   <AbsoluteHigh>
     <!--opt, object, 绝对高度-->
-    <elevation>0</elevation>
-    <azimuth>0</azimuth>
-    <absoluteZoom>0</absoluteZoom>
+    <elevation>900</elevation>
+    <azimuth>900</azimuth>
+    <absoluteZoom>100</absoluteZoom>
   </AbsoluteHigh>
 </PTZData>

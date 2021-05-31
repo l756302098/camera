@@ -1,6 +1,6 @@
 #!/bin/sh
 
-WORKSPACE_PATH=`echo /home/li/catkin_ws`
+WORKSPACE_PATH=`echo /home/yd/catkin_ws`
 LOCAL_IP=192.168.1.115
 MASTER_IP=192.168.1.115
 echo "[YDRobot] Configuring dependencies......"
@@ -23,8 +23,22 @@ else
 	roscore &
 	sleep 5
 fi
+#rosbridge
+roslaunch rosbridge_server rosbridge_websocket.launch &
+#flir
 roslaunch flir_gige node.launch &
 roslaunch flir_gige thermal_proc.launch &
+#control
+roslaunch fixed_control control.launch &
+#visible control
+roslaunch fixed_visible client.launch
+#infrared control
+roslaunch fixed_infrared client.launch
+#motor
+roslaunch fixed_yd_onvif motor.launch &
+#decoder
+roslaunch fixed_decoder 131.launch &
+#lidar
 roslaunch livox_ros_driver livox_lidar.launch
 echo "[YDRobot] System is running now......"
 

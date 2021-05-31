@@ -1,57 +1,26 @@
 #!/usr/bin/env python
-
+#coding=utf-8
 import rospy
 from std_msgs.msg import String
 from time import sleep
 import math
 import threading
 import Queue
-from onvif_sdk import camera
 from fixed_msg.srv import cp_control,cp_controlResponse
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import Int32
+from isapi import HK_Api
 
-camera_object = camera('192.168.1.1', 80, 'admin', 'abcd1234', 0, 0, 0, 0, 0, 0 )
 cmd_queue = Queue.PriorityQueue(maxsize=10)
-device_id = 1
-#ptz status
-pan = 0
-tilt = 0
-zoom = 0
-status_pt = ""
-status_z = ""
-moving = False
-
-def set_camera(ttype,xy_value,z_value,zoom_value):
-    v = [ttype,xy_value,z_value,zoom_value]
-    print("set camera:",v)
-    r = camera_object.move_camera_ptz(xy_value,z_value,zoom_value)
-    if r == 0:
-        global moving
-        moving = True
+api = HK_Api()
 
 def read_ptz(bq):
     print("read ptz")
     while True:
         #get current ptz
-        status, t_pan, t_tilt, t_zoom, move_status_pt, move_status_z = camera_object.get_position()
-        V = [status, t_pan, t_tilt, t_zoom, move_status_pt, move_status_z]
-        if move_status_pt == "IDLE" and move_status_z == "IDLE":
-            global moving
-            if moving:
-                print("stop move")
-                global isreach_pub
-                isreach_pub.publish(data=1)
-                moving = False
-        #print(V)
-        global pan,tilt,zoom,status_pt,status_z
-        pan = t_pan
-        tilt = t_tilt
-        zoom = t_zoom
-        status_pt = move_status_pt
-        status_z = move_status_z
         sleep(0.1)
+        api.get_status()
 
 def write_ptz(bq):
     print("write ptz")
@@ -82,7 +51,7 @@ def write_ptz(bq):
                 pan = int(r[4]) / 100
                 tilt = int(r[5]) / 100
                 zoom = int(r[6]) / 100
-            set_camera(ttype,pan,tilt,zoom)
+            #set_camera(ttype,pan,tilt,zoom)
         sleep(0.1)
 
 def handle_ptz(req):
@@ -90,10 +59,6 @@ def handle_ptz(req):
     V = [req.action, req.type, req.value, req.allvalue]
     print(V)
     if req.action == 0:
-        return cp_controlResponse(0)
-    if status_pt != "IDLE":
-        return cp_controlResponse(0)
-    if status_z != "IDLE":
         return cp_controlResponse(0)
     read_cmd = str(req.id) + "/" + str(req.action) + "/" + str(req.type) + "/" + str(req.value)
     #ready to move
@@ -107,10 +72,6 @@ def handle_ptz(req):
             return cp_controlResponse(0)
     elif req.type == 2:
         print("type 2 zoom")
-    # elif req.type == 3:
-    #     print("type 3 absoltive ratote")
-    # elif req.type == 4:
-    #     print("type 4 absoltive ratote")
     elif req.type == 3:
         read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1])
     elif req.type == 4:
@@ -130,9 +91,6 @@ if __name__ == '__main__':
         device_username = rospy.get_param("/control_onvif/device_username")
         device_password = rospy.get_param("/control_onvif/device_password")
         print(device_ip,device_port,device_username,device_password)
-        if camera_object.is_camera_created() != 0:
-            del camera_object
-            camera_object = camera(device_ip, device_port, device_username, device_password, 0, 0, 0, 0, 0, 0 )
         read_thread = threading.Thread(target = read_ptz,name='read_ptz_thread',args=(cmd_queue, ))
         read_thread.daemon = True
         read_thread.start()
@@ -151,8 +109,8 @@ if __name__ == '__main__':
             odom = Odometry()
             odom.header.stamp = rospy.Time.now()
             odom.header.frame_id = "map"
-            odom.pose.pose.position = Point(pan * 100, zoom* 100, tilt* 100)
-            ptz_pub.publish(odom)
+            # odom.pose.pose.position = Point(pan * 100, zoom* 100, tilt* 100)
+            # ptz_pub.publish(odom)
             rate.sleep()
     except rospy.ROSInterruptException:
         pass
