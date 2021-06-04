@@ -16,10 +16,10 @@
 
 class rtsp_capture{
 public:
+    pthread_t tid = 0;
     std::string topic_str, rtsp_str;
     bool extra_data;
     ros::Publisher image_pub;
-    void create_thread();
     rtsp_capture();
     ~rtsp_capture();
     void update();

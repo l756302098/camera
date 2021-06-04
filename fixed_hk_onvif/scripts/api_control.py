@@ -11,7 +11,9 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import Int32
 from isapi import HK_Api
-
+pan = 0
+tilt = 0
+zoom = 0
 cmd_queue = Queue.PriorityQueue(maxsize=10)
 api = HK_Api()
 
@@ -19,8 +21,13 @@ def read_ptz(bq):
     print("read ptz")
     while True:
         #get current ptz
+        t_pan, t_tilt, t_zoom = api.get_status()
+        global pan,tilt,zoom,status_pt,status_z
+        pan = t_pan
+        tilt = t_tilt
+        zoom = t_zoom
         sleep(0.1)
-        api.get_status()
+        #check platform isreach
 
 def write_ptz(bq):
     print("write ptz")
@@ -101,7 +108,7 @@ if __name__ == '__main__':
         isreach_pub = rospy.Publisher('/fixed/platform/isreach', Int32, queue_size=1)
         ptz_pub = rospy.Publisher('/fixed/platform/position', Odometry, queue_size=1)
         ptz_server = rospy.Service('/fixed/platform/cmd', cp_control, handle_ptz)
-        rospy.init_node('onvif_control_node', anonymous=True)
+        rospy.init_node('isapi_control_node', anonymous=True)
         rospy.Timer(rospy.Duration(0.1),timer_callback)
         rate = rospy.Rate(30) # 30hz
         while not rospy.is_shutdown():

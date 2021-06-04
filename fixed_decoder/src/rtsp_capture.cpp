@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "fixed_decoder/rtsp_capture.hpp"
+#include <csignal>
 
 #define __app_name__ "rtsp_capture_node"
 extern "C"
@@ -13,19 +14,48 @@ extern "C"
     #include "libswresample/swresample.h"
 }
 
+bool isRunning;
+void signalHandler(int signum)
+{ 
+    std::cout << "Interrupt signal (" << signum << ") received.\n";
+    isRunning = false;
+    // 清理并关闭  
+    exit(signum);  
+}
+
+
+typedef struct {
+    time_t lasttime;
+} Runner;
+
+int interrupt_callback(void *p) {
+    Runner *r = (Runner *)p;
+    if (r->lasttime > 0) {
+		time_t offset = time(NULL) - r->lasttime;
+        if (offset > 10) {
+			printf("offset:%i \n",offset);
+			isRunning = false;
+            // 等待超过10s则中断
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void *read_h264(void *args)
 {
     rtsp_capture *_this = (rtsp_capture*)args;
-
-    std::string _error_info;
-    std::string _error_code;
-	std::string _extra_str;
 	//URL
 	const char *filepath = _this->rtsp_str.c_str();
 	av_register_all();
 	avformat_network_init();
     AVFormatContext *pFormatCtx = NULL;
 	pFormatCtx = avformat_alloc_context();
+	//set callback
+	Runner input_runner = {0};
+	pFormatCtx->interrupt_callback.opaque = &input_runner;
+	pFormatCtx->interrupt_callback.callback = interrupt_callback;
+	input_runner.lasttime = time(NULL);
 	//set option
 	AVDictionary *format_opts = NULL;
 	av_dict_set(&format_opts, "stimeout", std::to_string(30 * 1000000).c_str(), 0); //设置链接超时时间（us）
@@ -33,15 +63,13 @@ void *read_h264(void *args)
 	if (avformat_open_input(&pFormatCtx, filepath, NULL, &format_opts) != 0)  
 	{
 		printf("Couldn't open input stream.\n");
-		_error_info = "couldn't open input stream";
-		_error_code = "10101";
+		isRunning = false;
         return NULL;
 	}
 	if (avformat_find_stream_info(pFormatCtx, NULL)<0)
 	{
 		printf("Couldn't find stream information.\n");
-		_error_info = "couldn't find stream information";
-		_error_code = "10102";
+		isRunning = false;
         return NULL;
 	}
 	int videoindex = -1;
@@ -56,8 +84,7 @@ void *read_h264(void *args)
 	if (videoindex == -1)
 	{
 		printf("didn't find a video stream.\n");
-		_error_info = "didn't find a video stream";
-		_error_code = "10103";
+		isRunning = false;
         return NULL;
 	}
 	AVCodecContext *pCodecCtx = pFormatCtx->streams[videoindex]->codec;
@@ -66,15 +93,13 @@ void *read_h264(void *args)
 	if (pCodec == NULL)
 	{
 		printf("codec not found.\n");
-		_error_info = "codec not found";
-		_error_code = "10104";
+		isRunning = false;
         return NULL;
 	}
 	if (avcodec_open2(pCodecCtx, pCodec, NULL)<0)
 	{
 		printf("couldn't open codec.\n");
-		_error_info = "couldn't open codec";
-		_error_code = "10105";
+		isRunning = false;
 		return NULL;
 	}
 	AVFrame *pFrame = av_frame_alloc();
@@ -92,30 +117,39 @@ void *read_h264(void *args)
  
 	AVPacket *packet = (AVPacket *)av_malloc(sizeof(AVPacket));
     
-    unsigned char* g_buffer = NULL;
-    unsigned int g_len = 0;
-	int got_picture = 0;
-	for (;;)
+	try
 	{
-		if (av_read_frame(pFormatCtx, packet) >= 0)
+		unsigned char* g_buffer = NULL;
+    	unsigned int g_len = 0;
+		int got_picture = 0;
+		for (;;)
 		{
-			if (packet->stream_index == videoindex)
+			//printf("av_read_frame start \n");
+			if (av_read_frame(pFormatCtx, packet) >= 0)
 			{
-                //视频解码函数  解码之后的数据存储在 pFrame中
-				g_buffer = (unsigned char*)packet->data;
-                g_len = packet->size;
+				//printf("av_read_frame end \n");
+				if (packet->stream_index == videoindex)
+				{
+                	//视频解码函数  解码之后的数据存储在 pFrame中
+					g_buffer = (unsigned char*)packet->data;
+                	g_len = packet->size;
 				
-				std::vector<unsigned char> vc(g_buffer, g_buffer+g_len);
-				sensor_msgs::Image msg;
-				msg.header.stamp = ros::Time::now();
-                msg.data = vc;
-                msg.step = g_len;
-                _this->image_pub.publish(msg);
+					std::vector<unsigned char> vc(g_buffer, g_buffer+g_len);
+					sensor_msgs::Image msg;
+					msg.header.stamp = ros::Time::now();
+                	msg.data = vc;
+                	msg.step = g_len;
+                	_this->image_pub.publish(msg);
+					input_runner.lasttime = time(NULL);
+				}
+				av_free_packet(packet);
 			}
-			av_free_packet(packet);
 		}
 	}
- 
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 	av_frame_free(&pFrameYUV);
 	av_frame_free(&pFrame);
 	avcodec_close(pCodecCtx);
@@ -129,29 +163,30 @@ rtsp_capture::rtsp_capture(){
     nh_.param<std::string>("rtsp_url", rtsp_str, "rtsp://192.168.31.8:8000/165506");
 	nh_.param<bool>("extradata", extra_data, false);
     image_pub = nh_.advertise<sensor_msgs::Image>(topic_str, 10);
+	pthread_create(&tid,NULL,read_h264,(void*)this);
+}
 
-	create_thread(); 
-}
-void rtsp_capture::create_thread(){
-    pthread_t ros_thread = 0; 
-    pthread_create(&ros_thread,NULL,read_h264,(void*)this);
-}
 rtsp_capture::~rtsp_capture(){}
 void rtsp_capture::update(){}
 
 
 int main(int argc, char **argv)
 {
+	isRunning = true;
+    signal(SIGINT, signalHandler);
     ros::init(argc, argv, __app_name__);
 	rtsp_capture rtsp_capture_node;
     ros::Rate rate(25);
-
-    while (ros::ok())
+	std::cout << "start rtsp_capture_node" << std::endl;
+    while (ros::ok() && isRunning)
     {
 		rtsp_capture_node.update();
         ros::spinOnce();
         rate.sleep();
     }
-
+	pthread_cancel(rtsp_capture_node.tid);//取消线程 
+	void *ret = NULL;
+    pthread_join(rtsp_capture_node.tid, &ret);
+	std::cout << "rtsp thread exit" << std::endl;
     return 0;
 }
