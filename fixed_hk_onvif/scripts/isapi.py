@@ -9,7 +9,7 @@ def read_xml():
     读取xml文件
     :return:
     '''
-    f = open('absolute.xml',"r")
+    f = open('position.xml',"r")
     body = f.read()
     print(body)
     return body
@@ -45,7 +45,7 @@ class HK_Api(object):
         elevation = -1
         azimuth = -1
         absoluteZoom = -1
-        url = "http://192.168.1.66/ISAPI/PTZCtrl/channels/1/status"
+        url = "http://192.168.1.65/ISAPI/PTZCtrl/channels/1/status"
         res = requests.get(url,auth=HTTPDigestAuth('admin','abcd1234'))
         #print(res.text)
         root = ElementTree.fromstring(res.text)
@@ -77,7 +77,7 @@ class HK_Api(object):
         # print("elevation:",elevation)
 
     def put_status(self,p,t,z):
-        url = "http://192.168.1.66/ISAPI/PTZCtrl/channels/1/absolute"
+        url = "http://192.168.1.65/ISAPI/PTZCtrl/channels/1/absolute"
         params = {
             'elevation':t,
             'azimuth':p,
@@ -94,7 +94,15 @@ class HK_Api(object):
         r = requests.put(url,auth=HTTPDigestAuth('admin','abcd1234'),data=request_data)
         print(r.text)
 
+    def put_position(self):
+        url = "http://192.168.1.65/ISAPI/PTZCtrl/channels/1/position3D"
+        #ElementTree.dump(root)
+        #print("tostring:",ElementTree.tostring(root,encoding="utf-8",method="xml"))
+        r = requests.put(url,auth=HTTPDigestAuth('admin','abcd1234'),data=read_xml())
+        print(r.text)
+
 if __name__ == '__main__':
     api = HK_Api()
     api.get_status()
     api.put_status(0,0,0)
+    #api.put_position()

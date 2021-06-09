@@ -7,7 +7,8 @@ from sensor_msgs.msg import Image
 from requests.auth import HTTPDigestAuth
 import os 
 from io import BytesIO
-
+import sys
+print("python version:",sys.version)
 
 def timer_callback(event):
     count = 1
@@ -69,14 +70,16 @@ if __name__ == '__main__':
                         print("contain application/octet-stream")
                         data_index = len(content_list)-2
                         data_array = content_list[data_index]
-                        # print("type:",type(data_array))
+                        print("len:",len(data_array))
+                        print("type:",type(data_array))
+                        #print(data_array)
                         # b = BytesIO(data_array)
                         # print("b type:",type(b))
                         # print("getvalue:",b.getvalue())
                         # print("str array len",len(data_array))
                         image_temp=Image()
-                        image_temp.height=image_width
-                        image_temp.width=image_height
+                        image_temp.height=image_height
+                        image_temp.width=image_width
                         image_temp.encoding='rgb8'
                         image_temp.data=data_array
                         temp_pub.publish(image_temp)

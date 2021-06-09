@@ -5,6 +5,6 @@
   </node>
   <node pkg="fixed_decoder" type="decoder_h264_node" name="infrared_decoder_node" output="screen" respawn="true">
     <param name="raw_topic" type="str" value="/fixed/infrared/h264"/>
-    <param name="decode_topic" type="str" value="/fixed/decoder/infrared"/>
+    <param name="decode_topic" type="str" value="/fixed/decoder/infrared"/>g
   </node>
 </launch>
