@@ -1,86 +1,88 @@
 {
-    "InspectId":"348",
-    "RobotId":1,
-    "TaskHistoryId":348,
-    "TaskId":10,
-    "Tasks":[
-        {
-            "Align":"",
-            "CameraPose":"0:7/0,0,0/0/1/348",
-            "Id":"0",
-            "IsAnterograde":false,
-            "TLine":"0.0,0.0,0.0/0.0,0.0,0.0",
-            "TLoc":"0.0;0.0;0.0",
-            "TLocType":"transfer",
-            "TLocWidth":0,
-            "TableInfo":"",
-            "TurnAngle":"",
-            "Watchs":[
-                {
-                    "Assemblys":[
-                        {
-                            "AssemblyId":0,
-                            "ReconParam":"",
-                            "ReconType":0
-                        }
-                    ],
-                    "WatchId":0,
-                    "WatchPos":"",
-                    "WatchType":"fixed"
-                }
-            ]
-        },
-        {
-            "Align":"",
-            "CameraPose":"0:7/0,30,0/0/1/348",
-            "Id":"0",
-            "IsAnterograde":false,
-            "TLine":"0.0,0.0,0.0/0.0,0.0,0.0",
-            "TLoc":"0.0;0.0;0.0",
-            "TLocType":"transfer",
-            "TLocWidth":0,
-            "TableInfo":"",
-            "TurnAngle":"",
-            "Watchs":[
-                {
-                    "Assemblys":[
-                        {
-                            "AssemblyId":0,
-                            "ReconParam":"",
-                            "ReconType":0
-                        }
-                    ],
-                    "WatchId":0,
-                    "WatchPos":"",
-                    "WatchType":"fixed"
-                }
-            ]
-        },
-        {
-            "Align":"",
-            "CameraPose":"0:7/0,60,0/0/1/348",
-            "Id":"0",
-            "IsAnterograde":false,
-            "TLine":"0.0,0.0,0.0/0.0,0.0,0.0",
-            "TLoc":"0.0;0.0;0.0",
-            "TLocType":"transfer",
-            "TLocWidth":0,
-            "TableInfo":"",
-            "TurnAngle":"",
-            "Watchs":[
-                {
-                    "Assemblys":[
-                        {
-                            "AssemblyId":0,
-                            "ReconParam":"",
-                            "ReconType":0
-                        }
-                    ],
-                    "WatchId":0,
-                    "WatchPos":"",
-                    "WatchType":"fixed"
-                }
-            ]
-        }
+    "InspectId" : "4603",
+    "InspectType" : 1,
+    "RobotId" : 2,
+    "TaskHistoryId" : 4603,
+    "TaskId" : 481,
+    "TaskType" : 1,
+    "Tasks" : [
+       {
+          "Align" : "",
+          "CameraPose" : "10004:5/21.210199,5.621150,-134.546005/10010001/2/4603",
+          "Id" : "0",
+          "IsAnterograde" : false,
+          "TLine" : "0.0,0.0,0.0/0.0,0.0,0.0",
+          "TLoc" : "0.0;0.0;0.0",
+          "TLocType" : "transfer",
+          "TLocWidth" : 0,
+          "TableInfo" : "",
+          "TurnAngle" : "",
+          "Watchs" : [
+             {
+                "Assemblys" : [
+                   {
+                      "AssemblyId" : 10004,
+                      "ReconParam" : "10010001",
+                      "ReconType" : 5
+                   }
+                ],
+                "WatchId" : 9,
+                "WatchPos" : "21.210199,6.021150,-134.546005",
+                "WatchType" : "fixed"
+             }
+          ]
+       },
+       {
+        "Align" : "",
+        "CameraPose" : "10004:5/21.210199,6.15,-134.546005/10010001/2/4603",
+        "Id" : "0",
+        "IsAnterograde" : false,
+        "TLine" : "0.0,0.0,0.0/0.0,0.0,0.0",
+        "TLoc" : "0.0;0.0;0.0",
+        "TLocType" : "transfer",
+        "TLocWidth" : 0,
+        "TableInfo" : "",
+        "TurnAngle" : "",
+        "Watchs" : [
+           {
+              "Assemblys" : [
+                 {
+                    "AssemblyId" : 10004,
+                    "ReconParam" : "10010001",
+                    "ReconType" : 5
+                 }
+              ],
+              "WatchId" : 9,
+              "WatchPos" : "21.210199,6.021150,-134.546005",
+              "WatchType" : "fixed"
+           }
+        ]
+     },
+     {
+        "Align" : "",
+        "CameraPose" : "10004:5/21.210199,6.33,-134.546005/10010001/2/4603",
+        "Id" : "0",
+        "IsAnterograde" : false,
+        "TLine" : "0.0,0.0,0.0/0.0,0.0,0.0",
+        "TLoc" : "0.0;0.0;0.0",
+        "TLocType" : "transfer",
+        "TLocWidth" : 0,
+        "TableInfo" : "",
+        "TurnAngle" : "",
+        "Watchs" : [
+           {
+              "Assemblys" : [
+                 {
+                    "AssemblyId" : 10004,
+                    "ReconParam" : "10010001",
+                    "ReconType" : 5
+                 }
+              ],
+              "WatchId" : 9,
+              "WatchPos" : "21.210199,6.021150,-134.546005",
+              "WatchType" : "fixed"
+           }
+        ]
+     }
     ]
-}
+ }

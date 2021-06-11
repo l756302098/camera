@@ -31,7 +31,7 @@ if __name__ == '__main__':
         global temp_pub
         temp_pub = rospy.Publisher('/fixed/infrared/raw',Image,queue_size=1)
         rospy.Timer(rospy.Duration(0.1),timer_callback)
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(2)
         while not rospy.is_shutdown():
             #publish image
             try:

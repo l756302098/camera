@@ -5,7 +5,7 @@
       <param name="camera_id" type="int" value="1"/>
       <param name="sdkcom_dir" value="/home/li/fixed_ws/src/hksdk_lib"/>
       <param name="heartbeat_topic_string" value="/yd/heartbeat"/>
-      <param name="device_ip" value="192.168.1.129"/>
+      <param name="device_ip" value="192.168.1.66"/>
       <param name="device_port" value="8000"/>
       <param name="device_username" value="admin"/>
       <param name="device_password" value="abcd1234"/>

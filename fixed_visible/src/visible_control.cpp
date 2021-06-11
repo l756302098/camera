@@ -143,7 +143,7 @@ void visible_control::transfer_callback(const fixed_msg::platform_transfer& msg)
 	        float dotr = c(0) * r[0] + c(1) * r[1];
             float roll = acos(dotf/sqrt(c(0) * c(0) + c(1) * c(1)));
             yaw_first = 180 * roll / M_PI;
-	        if(dotr>0){
+	        if(dotr<0){
 		        std::cout <<" 右 " << yaw_first;
 	        }else{
                 std::cout <<" 左 " << yaw_first;

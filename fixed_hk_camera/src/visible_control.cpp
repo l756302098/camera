@@ -33,7 +33,7 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     for(int i = 0; i < camera_focus_zoom_array.size(); i++)
         camera_focus_set.push_back(atoi(camera_focus_zoom_array[i].c_str()));
         
-    transfer_sub = nh_.subscribe("/fixed/platform/platform_transfer", 1, &visible_control::transfer_callback, this);
+    transfer_sub = nh_.subscribe("/fixed/platform/transfer", 1, &visible_control::transfer_callback, this);
     isreach_sub = nh_.subscribe("/fixed/platform/isreach", 1, &visible_control::isreach_callback, this);
     detectresult_sub = nh_.subscribe("/detect_rect", 1, &visible_control::detect_rect_callback, this);
     ptz_sub = nh_.subscribe("/fixed/platform/position", 1, &visible_control::ptz_callback, this);

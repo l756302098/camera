@@ -2,7 +2,7 @@
 
   <node pkg="fixed_infrared" type="fixed_infrared_node" name="fixed_infrared_node" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
-      <param name="cali_offset_h" type="int" value="60"/>
+      <param name="cali_offset_h" type="int" value="90"/>
       <param name="cali_offset_v" type="int" value="10"/>
       <param name="camera_file" value="$(find fixed_infrared)/launch/66color_map0_-10.yaml"/>
   </node>

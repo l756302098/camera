@@ -40,6 +40,17 @@ class HK_Api(object):
             #添加为elem的子节点
             elem.append(child)
         return root
+    
+    def dict_to_xml2(self,tag):
+        root = ElementTree.Element(tag)  #使用Element创建元素
+        root.set("xmlns","http://www.hikvision.com/ver20/XMLSchema")
+        root.set("version","2.0")
+        child = ElementTree.Element("videoCodingType")
+        #child.text = str("pixel-to-pixel_thermometry_data")
+        child.text = str("real-time_raw_data")
+        #添加为elem的子节点
+        root.append(child)
+        return root
 
     def get_status(self):
         elevation = -1
@@ -100,9 +111,23 @@ class HK_Api(object):
         #print("tostring:",ElementTree.tostring(root,encoding="utf-8",method="xml"))
         r = requests.put(url,auth=HTTPDigestAuth('admin','abcd1234'),data=read_xml())
         print(r.text)
+    
+    def put_streamParam(self):
+        url = "http://192.168.1.65/ISAPI/Thermal/channels/2/streamParam"
+        root = self.dict_to_xml2('ThermalStreamParam')
+        f = BytesIO()
+        et = ElementTree.ElementTree(root)
+        et.write(f, encoding='utf-8', xml_declaration=True)
+        request_data = f.getvalue()
+        print("request_data:",request_data)
+        #ElementTree.dump(root)
+        #print("tostring:",ElementTree.tostring(root,encoding="utf-8",method="xml"))
+        r = requests.put(url,auth=HTTPDigestAuth('admin','abcd1234'),data=request_data)
+        print(r.text)
 
 if __name__ == '__main__':
     api = HK_Api()
-    api.get_status()
-    api.put_status(0,0,0)
+    #api.get_status()
+    #api.put_status(0,0,0)
     #api.put_position()
+    api.put_streamParam()
