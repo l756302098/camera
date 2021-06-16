@@ -52,12 +52,12 @@ java -jar /xxx/wvp-2.3.5.RELEASE.jar --spring.config.location=/xxx/application.y
 - 截图
 api: /index/api/getSnap  
 参数:    
-| 参数                  | 是否必选    |  释意                                   |
-| :--------              | -----:    | :----:                                 |
-| secret                | Y         |   default                                 |
-| url                   | Y         |   需要截图的url                            |
-| timeout_sec           | Y         |   截图失败超时时间，防止FFmpeg一直等待截图    |
-| expire_sec            | Y         |   截图的过期时间，该时间内产生的截图都会作为缓存返|
+| 参数        | 是否必选 | 释意                                               |
+|-------------|----------|----------------------------------------------------|
+| secret      | Y        | default                                            |
+| url         | Y        | 需要截图的url                                      |
+| timeout_sec | Y        | 截图失败超时时间，防止FFmpeg一直等待截图           |
+| expire_sec  | Y        | 截图的过期时间，该时间内产生的截图都会作为缓存返回 |
 
 - 数据持久化
 再application.yml中使用sqlite
