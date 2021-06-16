@@ -52,14 +52,6 @@ java -jar /xxx/wvp-2.3.5.RELEASE.jar --spring.config.location=/xxx/application.y
 - 截图  
 api: /index/api/getSnap  
 参数  
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-</style>
 <table class="tg">
 <thead>
   <tr>
@@ -92,9 +84,9 @@ api: /index/api/getSnap
 </tbody>
 </table>
 
-- 数据持久化
+- 数据持久化  
 再application.yml中使用sqlite
 
-- webrtc
+- webrtc  
 /ZLMediaKit/www/webrtc/index.html
 
