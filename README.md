@@ -49,15 +49,48 @@ spring:
 java -jar /xxx/wvp-2.3.5.RELEASE.jar --spring.config.location=/xxx/application.yml
 ```
 ## 功能
-- 截图
+- 截图  
 api: /index/api/getSnap  
-参数:    
-| 参数        | 是否必选 | 释意                                               |
-|-------------|----------|----------------------------------------------------|
-| secret      | Y        | default                                            |
-| url         | Y        | 需要截图的url                                      |
-| timeout_sec | Y        | 截图失败超时时间，防止FFmpeg一直等待截图           |
-| expire_sec  | Y        | 截图的过期时间，该时间内产生的截图都会作为缓存返回 |
+参数  
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+</style>
+<table class="tg">
+<thead>
+  <tr>
+    <th class="tg-0pky">参数</th>
+    <th class="tg-0pky">是否必选</th>
+    <th class="tg-0pky">释意</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="tg-0pky">secret</td>
+    <td class="tg-0pky">Y</td>
+    <td class="tg-0pky">default</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">url</td>
+    <td class="tg-0pky">Y</td>
+    <td class="tg-0pky">需要截图的url</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">timeout_sec</td>
+    <td class="tg-0pky">Y</td>
+    <td class="tg-0pky">截图失败超时时间，防止FFmpeg一直等待截图</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">expire_sec</td>
+    <td class="tg-0pky">Y</td>
+    <td class="tg-0pky">截图的过期时间，该时间内产生的截图都会作为缓存返回</td>
+  </tr>
+</tbody>
+</table>
 
 - 数据持久化
 再application.yml中使用sqlite
