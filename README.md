@@ -50,8 +50,8 @@ java -jar /xxx/wvp-2.3.5.RELEASE.jar --spring.config.location=/xxx/application.y
 ```
 ## 功能
 - 截图
-api: /index/api/getSnap
-参数:  
+api: /index/api/getSnap  
+参数:    
 | 参数                  | 是否必选    |  释意                                   |
 | :--------              | -----:    | :----:                                 |
 | secret                | Y         |   default                                 |
