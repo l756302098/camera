@@ -4,11 +4,12 @@ import socket
 import hashlib
 import base64
 import time
+from threading import Thread
 
 config_dict = {
     'server_username': 'admin',                 #RTSP用户名
     'server_password': 'abcd1234',              #RTSP用户名对应密码
-    'server_ip': '192.168.1.65',                 #RTSP服务器IP地址
+    'server_ip': '192.168.1.66',                 #RTSP服务器IP地址
     'server_port': 554,                         #RTSP服务器使用端口
     'server_path': '/ISAPI/Streaming/thermal/channels/2/streamType/real-time_raw_data',  #URL中端口之后的部份，测试发现不同服务器对这部份接受的值是不一样的，也就是说自己使用时很可能得自己修改这部份的值
     'cseq': 0,                                  #RTSP使用的请求起始序列码，不需要改动
@@ -84,7 +85,7 @@ class RtspClient():
     def gen_setup_header(self,url, realm, nonce):
         global config_dict
         public_method = 'SETUP'
-        str_setup_header  = 'SETUP rtsp://' + config_dict['server_ip'] + ':' + str(config_dict['server_port']) + config_dict['server_path'] + 'trackID=0 RTSP/1.0\r\n'
+        str_setup_header  = 'SETUP rtsp://' + config_dict['server_ip'] + ':' + str(config_dict['server_port']) + config_dict['server_path'] + '/trackID=5 RTSP/1.0\r\n'
         str_setup_header += 'CSeq: ' + str(config_dict['cseq'] + 3) + '\r\n'
         if config_dict['auth_method'] == 'Basic':
             auth_64 = base64.b64encode((config_dict['server_username'] + ":" + config_dict['server_password']).encode("utf-8")).decode()
@@ -172,6 +173,23 @@ class RtspClient():
         str_teardown_header += '\r\n'
         return str_teardown_header
     
+    def start_rtp_receive_thread(self):
+        self._rtp_receive_thread = Thread(target=self._handle_video_receive)
+        self._rtp_receive_thread.setDaemon(True)
+        self._rtp_receive_thread.start()
+    
+    def _handle_video_receive(self):
+        self._rtp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._rtp_socket.bind(("0.0.0.0", self.rtp_port))
+        self._rtp_socket.settimeout(self.RTP_SOFT_TIMEOUT / 1000.)
+        while True:
+            if not self.is_receiving_rtp:
+                #sleep(self.RTP_SOFT_TIMEOUT/1000.)  # diminish cpu hogging
+                continue
+            packet = self._recv_rtp_packet()
+            frame = self._get_frame_from_packet(packet)
+            self._frame_buffer.append(frame)
+
     #拼接rtsp协议的其他请求头，以测试程序对这些请求头部的处理是否有问题；这个方法与add_overload_header_according_to_protocol是互斥的
     def add_normal_header_according_to_protocol(self,str_header):
         str_header = str_header[0:len(str_header)-2]
@@ -289,8 +307,10 @@ class RtspClient():
                 str_describe_auth_header = self.add_normal_header_according_to_protocol(str_describe_auth_header)
             elif config_dict['header_overload_modify_allow'] & config_dict['describe_auth_header_modify']:
                 str_describe_auth_header = self.add_overload__header_according_to_protocol(str_describe_auth_header)
+            print("second describe:",str_describe_auth_header)
             self.socket_send.send(str_describe_auth_header.encode())
             msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
+            print("2 receive:",msg_recv)
             if msg_recv.find('200 OK') == -1:
                 msg_recv_dict = msg_recv.split('\r\n')
                 print('second DESCRIBE request occur error: ')
@@ -302,65 +322,57 @@ class RtspClient():
                     str_setup_header = self.add_normal_header_according_to_protocol(str_setup_header)
                 elif config_dict['header_overload_modify_allow'] & config_dict['setup_header_modify']:
                     str_setup_header = self.add_overload__header_according_to_protocol(str_setup_header)
+                print("first SETUP:",str_setup_header)
                 self.socket_send.send(str_setup_header.encode())
                 msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
+                print("3 receive:",msg_recv)
                 if msg_recv.find('200 OK') == -1:
                     msg_recv_dict = msg_recv.split('\r\n')
                     print('first SETUP request occur error: ')
                     print(msg_recv_dict[0])
                 else:
-                    print('first SETUP is ok,now we will execute second SETUP')
+                    print('first SETUP is ok,now we will execute PLAY')
                     session_pos = msg_recv.find('Session')
                     session_value_begin_pos = msg_recv.find(' ',session_pos+8)+1
                     session_value_end_pos = msg_recv.find(';',session_pos+8)
                     session_value = msg_recv[session_value_begin_pos:session_value_end_pos]
-                    str_setup_session_header = self.gen_setup_session_header(url, realm_value, nonce_value,session_value)
-                    if config_dict['header_normal_modify_allow'] & config_dict['setup_session_header_modify']:
-                        str_setup_session_header = self.add_normal_header_according_to_protocol(str_setup_session_header)
-                    elif config_dict['header_overload_modify_allow'] & config_dict['setup_session_header_modify']:
-                        str_setup_session_header = self.add_overload_header_according_to_protocol(str_setup_session_header)
-                    self.socket_send.send(str_setup_session_header.encode())
+                    str_play_header = self.gen_play_header(url, realm_value, nonce_value, session_value)
+                    if config_dict['header_normal_modify_allow'] & config_dict['play_header_modify']:
+                        str_play_header = self.add_normal_header_according_to_protocol(str_play_header)
+                    elif config_dict['header_overload_modify_allow'] & config_dict['play_header_modify']:
+                        str_play_header = self.add_overload_header_according_to_protocol(str_play_header)
+                    print("PLAY:",str_play_header)
+                    self.socket_send.send(str_play_header.encode())
                     msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
+                    print("4 receive:",msg_recv)
                     if msg_recv.find('200 OK') == -1:
                         msg_recv_dict = msg_recv.split('\r\n')
-                        print('second SETUP request occur error: ')
+                        print('PLAY request occur error: ')
                         print(msg_recv_dict[0])
                     else:
-                        print('second SETUP is ok, now we wil execute PLAY')
-                        str_play_header = self.gen_play_header(url, realm_value, nonce_value, session_value)
-                        if config_dict['header_normal_modify_allow'] & config_dict['play_header_modify']:
-                            str_play_header = self.add_normal_header_according_to_protocol(str_play_header)
-                        elif config_dict['header_overload_modify_allow'] & config_dict['play_header_modify']:
-                            str_play_header = self.add_overload_header_according_to_protocol(str_play_header)
-                        self.socket_send.send(str_play_header.encode())
-                        msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
-                        if msg_recv.find('200 OK') == -1:
-                            msg_recv_dict = msg_recv.split('\r\n')
-                            print('PLAY request occur error: ')
-                            print(msg_recv_dict[0])
-                        else:
-                            print('PLAY is ok, we will execute GET_PARAMETER every 10 seconds and 5 times total')
-                            for i in range(2):
-                                str_get_parameter_header = self.gen_get_parameter_header(url, realm_value, nonce_value, session_value,str(i))
-                                if config_dict['header_normal_modify_allow'] & config_dict['get_parameter_header_modify']:
-                                    str_get_parameter_header = self.add_normal_header_according_to_protocol(str_get_parameter_header)
-                                elif config_dict['header_overload_modify_allow'] & config_dict['get_parameter_header_modify']:
-                                    str_get_parameter_header = self.add_overload_header_according_to_protocol(str_get_parameter_header)
-                                self.socket_send.send(str_get_parameter_header.encode())
-                                msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
-                                msg_recv_dict = msg_recv.split('\r\n')
-                                print(str(i)+'*10:'+msg_recv_dict[0])
-                                time.sleep(10)
-                            print('\nnow we will execute TEARDOWN to disconnect with server')
-                            str_teardown_header = self.gen_teardown_header(url, realm_value, nonce_value, session_value)
-                            if config_dict['header_normal_modify_allow'] & config_dict['teardown_header_modify']:
-                                str_teardown_header = self.add_normal_header_according_to_protocol(str_teardown_header)
-                            elif config_dict['header_overload_modify_allow'] & config_dict['teardown_header_modify']:
-                                str_teardown_header = self.add_overload_header_according_to_protocol(str_teardown_header)
-                            self.socket_send.send(str_teardown_header.encode())
+                        print('PLAY is ok, we will execute GET_PARAMETER every 10 seconds and 5 times total')
+                        for i in range(2):
+                            str_get_parameter_header = self.gen_get_parameter_header(url, realm_value, nonce_value, session_value,str(i))
+                            if config_dict['header_normal_modify_allow'] & config_dict['get_parameter_header_modify']:
+                                str_get_parameter_header = self.add_normal_header_according_to_protocol(str_get_parameter_header)
+                            elif config_dict['header_overload_modify_allow'] & config_dict['get_parameter_header_modify']:
+                                str_get_parameter_header = self.add_overload_header_according_to_protocol(str_get_parameter_header)
+                            self.socket_send.send(str_get_parameter_header.encode())
                             msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
-                            print(msg_recv)
-                            print('program execute finished, thank you')
+                            msg_recv_dict = msg_recv.split('\r\n')
+                            print(str(i)+'*10:'+msg_recv_dict[0])
+                            time.sleep(10)
+                        print('\nnow we will execute TEARDOWN to disconnect with server')
+                        str_teardown_header = self.gen_teardown_header(url, realm_value, nonce_value, session_value)
+                        if config_dict['header_normal_modify_allow'] & config_dict['teardown_header_modify']:
+                            str_teardown_header = self.add_normal_header_according_to_protocol(str_teardown_header)
+                        elif config_dict['header_overload_modify_allow'] & config_dict['teardown_header_modify']:
+                            str_teardown_header = self.add_overload_header_according_to_protocol(str_teardown_header)
+                        self.socket_send.send(str_teardown_header.encode())
+                        msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
+                        print(msg_recv)
+                        print('program execute finished, thank you')
+                            
         self.socket_send.close()
 
     

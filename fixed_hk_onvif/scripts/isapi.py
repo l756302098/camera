@@ -113,7 +113,7 @@ class HK_Api(object):
         print(r.text)
     
     def put_streamParam(self):
-        url = "http://192.168.1.65/ISAPI/Thermal/channels/2/streamParam"
+        url = "http://192.168.1.66/ISAPI/Thermal/channels/2/streamParam"
         root = self.dict_to_xml2('ThermalStreamParam')
         f = BytesIO()
         et = ElementTree.ElementTree(root)

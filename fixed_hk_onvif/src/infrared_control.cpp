@@ -143,7 +143,7 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
 	        ptz_cmd.request.id = camera_id;
 	        ptz_cmd.request.action = 1;
 	        ptz_cmd.request.type = 3;
-	        std::vector<unsigned int> quavalue;
+	        std::vector<int> quavalue;
 	        quavalue.push_back(roll_angle * 100);
 	        quavalue.push_back(pitch_angle * 100);
 	        ptz_cmd.request.allvalue = quavalue;
@@ -158,7 +158,7 @@ void infrared_control::transfer_callback(const fixed_msg::platform_transfer& msg
 	        ptz_cmd.request.id = 1;
 	        ptz_cmd.request.action = 1;
             ptz_cmd.request.type = 5;
-	        std::vector<unsigned int> quavalue;
+	        std::vector<int> quavalue;
 	        quavalue.push_back(x_device * 100);
 	        quavalue.push_back(y_device * 100);
 	        ptz_cmd.request.allvalue = quavalue;
@@ -220,7 +220,7 @@ void infrared_control::reset(){
 	ptz_cmd.request.action = 1;
 	ptz_cmd.request.type = 4;
 	ptz_cmd.request.value = 0;
-	vector<unsigned int> value;
+	vector<int> value;
 	value.push_back(0);
 	value.push_back(0);
 	value.push_back(0);
@@ -271,7 +271,7 @@ void infrared_control::target_callback(const geometry_msgs::PoseStampedConstPtr 
 	ptz_cmd.request.id = camera_id;
 	ptz_cmd.request.action = 1;
 	ptz_cmd.request.type = 3;
-	std::vector<unsigned int> quavalue;
+	std::vector<int> quavalue;
 	quavalue.push_back(roll_angle * 100);
 	quavalue.push_back(pitch_angle * 100);
 	ptz_cmd.request.allvalue = quavalue;

@@ -50,6 +50,11 @@ target_link_libraries(ptz_node
   ${catkin_LIBRARIES}
 )
 
+add_executable(ptz_node2 src/pt_node2.cpp src/pt_control2.cpp src/common.cpp)
+target_link_libraries(ptz_node2
+  ${catkin_LIBRARIES}
+)
+
 add_executable(yd_visible_node src/visible_node.cpp src/visible_control.cpp src/common.cpp)
 target_link_libraries(yd_visible_node
   ${catkin_LIBRARIES}
