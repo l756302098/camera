@@ -171,7 +171,7 @@ int32 id        #云台id
 int32 action    #设置1
 int32 type      #水平0 垂直1 变倍2 水平、垂直转动3 相对转动4
 int32 value     #设置值(0-36000)
-uint32[] allvalue
+int32[] allvalue
 ---
 int32 result
 ```
