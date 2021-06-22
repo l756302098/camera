@@ -3,26 +3,33 @@
 import rospy
 from std_msgs.msg import String
 from time import sleep
-import math
 import threading
-import Queue
+from queue import Queue
 from fixed_msg.srv import cp_control,cp_controlResponse
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import Int32
 from isapi import HK_Api
+
 pan = 0
 tilt = 0
 zoom = 0
 cmd_queue = Queue.PriorityQueue(maxsize=10)
 api = HK_Api()
 
+def set_camera(ttype,xy_value,z_value,zoom_value):
+    v = [ttype,xy_value,z_value,zoom_value]
+    print("set camera:",v)
+    api.put_status(device_ip,1,xy_value,z_value,zoom_value)
+    
+
 def read_ptz(bq):
     print("read ptz")
     while True:
+        global device_ip,device_port,device_username,device_password
         #get current ptz
-        t_pan, t_tilt, t_zoom = api.get_status()
-        global pan,tilt,zoom,status_pt,status_z
+        t_pan, t_tilt, t_zoom = api.get_status(device_ip,1,device_username,device_password)
+        global pan,tilt,zoom
         pan = t_pan
         tilt = t_tilt
         zoom = t_zoom
@@ -86,17 +93,15 @@ def handle_ptz(req):
     cmd_queue.put([1,read_cmd])
     return cp_controlResponse(1)
 
-def timer_callback(event):
-    count = 1
-	#print 'Timer called at:' + str(event.current_real)
-
 if __name__ == '__main__':
     try:
+        rospy.init_node('isapi_control_node')
         #init camera
-        device_ip = rospy.get_param("/control_onvif/device_ip")
-        device_port = rospy.get_param("/control_onvif/device_port")
-        device_username = rospy.get_param("/control_onvif/device_username")
-        device_password = rospy.get_param("/control_onvif/device_password")
+        global device_ip,device_port,device_username,device_password
+        device_ip = rospy.get_param("~device_ip")
+        device_port = rospy.get_param("~device_port")
+        device_username = rospy.get_param("~device_username")
+        device_password = rospy.get_param("~device_password")
         print(device_ip,device_port,device_username,device_password)
         read_thread = threading.Thread(target = read_ptz,name='read_ptz_thread',args=(cmd_queue, ))
         read_thread.daemon = True
@@ -108,16 +113,14 @@ if __name__ == '__main__':
         isreach_pub = rospy.Publisher('/fixed/platform/isreach', Int32, queue_size=1)
         ptz_pub = rospy.Publisher('/fixed/platform/position', Odometry, queue_size=1)
         ptz_server = rospy.Service('/fixed/platform/cmd', cp_control, handle_ptz)
-        rospy.init_node('isapi_control_node', anonymous=True)
-        rospy.Timer(rospy.Duration(0.1),timer_callback)
-        rate = rospy.Rate(30) # 30hz
+        rate = rospy.Rate(20) # 20hz
         while not rospy.is_shutdown():
             #publish ptz attitude
             odom = Odometry()
             odom.header.stamp = rospy.Time.now()
             odom.header.frame_id = "map"
-            # odom.pose.pose.position = Point(pan * 100, zoom* 100, tilt* 100)
-            # ptz_pub.publish(odom)
+            odom.pose.pose.position = Point(pan * 100, zoom* 100, tilt* 100)
+            ptz_pub.publish(odom)
             rate.sleep()
     except rospy.ROSInterruptException:
         pass

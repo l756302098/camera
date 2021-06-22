@@ -5,7 +5,7 @@ from std_msgs.msg import String
 from time import sleep
 import math
 import threading
-import Queue
+from queue import Queue
 from onvif_sdk import camera
 from fixed_msg.srv import cp_control,cp_controlResponse
 from nav_msgs.msg import Odometry

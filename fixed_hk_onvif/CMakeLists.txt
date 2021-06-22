@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(fixed_hk_onvif)
+project(fixed_hk_nosdk)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -32,7 +32,7 @@ find_package(OpenSSL ${_HTTPLIB_OPENSSL_MIN_VER} COMPONENTS Crypto SSL REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES fixed_hk_onvif
+  LIBRARIES fixed_hk_nosdk
   CATKIN_DEPENDS cv_bridge roscpp rospy std_msgs tf fixed_msg geometry_msgs
 )
 

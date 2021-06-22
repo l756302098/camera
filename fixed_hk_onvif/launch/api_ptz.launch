@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="fixed_hk_onvif" type="api_control.py" name="control_onvif" respawn="false" output="screen">
+  <node pkg="fixed_hk_nosdk" type="api_control.py" name="control_onvif" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
       <param name="device_ip" value="192.168.1.66"/>
       <param name="device_port" value="80"/>
