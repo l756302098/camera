@@ -53,19 +53,19 @@ def write_ptz(bq):
             ttype = int(r[2])
             value = int(r[3])
             if ttype == 0:
-                pan = value / 100
+                pan = value / 10
             if ttype == 1:
-                tilt = value / 100
+                tilt = value / 10
             if ttype == 2:
-                zoom = value / 100
+                zoom = value
             if ttype == 3:
-                pan = int(r[4]) / 100
-                tilt = int(r[5]) / 100
+                pan = int(r[4]) / 10
+                tilt = int(r[5]) / 10
             if ttype == 4:
-                pan = int(r[4]) / 100
-                tilt = int(r[5]) / 100
-                zoom = int(r[6]) / 100
-            #set_camera(ttype,pan,tilt,zoom)
+                pan = int(r[4]) / 10
+                tilt = int(r[5]) / 10
+                zoom = int(r[6])
+            set_camera(ttype,pan,tilt,zoom)
         sleep(0.1)
 
 def handle_ptz(req):
@@ -95,7 +95,7 @@ def handle_ptz(req):
 
 if __name__ == '__main__':
     try:
-        rospy.init_node('isapi_control_node')
+        rospy.init_node('isapi_ptz_node')
         #init camera
         global device_ip,device_port,device_username,device_password
         device_ip = rospy.get_param("~device_ip")
