@@ -6,7 +6,11 @@ import base64
 import threading
 import time
 from threading import Thread
-from queue import Queue
+import sys
+if sys.version > '3':
+    import queue as Queue
+else:
+    import Queue
 
 config_dict = {
     'server_username': 'admin',                 #RTSP用户名
@@ -30,9 +34,19 @@ config_dict = {
     'teardown_header_modify': True              #TEARDOWN请求中，是否允许拼接其他协议规定的请求头的开关
 }
 
+def isUse(port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect(('127.0.0.1', int(port)))
+        s.shutdown(2)#shutdown参数表示后续可否读写
+        # print '%d is ok' % port
+        return True
+    except Exception:
+        return False
+
 class RtspClient():
     def __init__(self):
-        self.queue = Queue(maxsize=20)
+        self.queue = Queue.Queue(maxsize=20)
         pass
 
     #用于Digest认证方式时生成response的值
@@ -83,6 +97,18 @@ class RtspClient():
     
     #生成第一次setup请求头部
     def gen_setup_header(self,url, realm, nonce):
+        self._rtp_port = 50166
+        isuse = True
+        while isuse:
+            isuse = isUse(self._rtp_port)
+            if isuse:
+                self._rtp_port = self._rtp_port + 2
+        self._rtcp_port = 50167
+        isuse = True
+        while isuse:
+            isuse = isUse(self._rtcp_port)
+            if isuse:
+                self._rtcp_port = self._rtcp_port + 2
         global config_dict
         public_method = 'SETUP'
         str_setup_header  = 'SETUP rtsp://' + config_dict['server_ip'] + ':' + str(config_dict['server_port']) + config_dict['server_path'] + '/trackID=5 RTSP/1.0\r\n'
@@ -94,7 +120,7 @@ class RtspClient():
             response_value = self.gen_response_value(url, public_method, realm, nonce)
             str_setup_header += 'Authorization: Digest username="'+config_dict['server_username']+'", realm="'+realm+'", nonce="'+nonce+'", uri="'+url+'", response="'+response_value+'"\r\n'
         str_setup_header += 'User-Agent: ' + config_dict['user_agent'] + '\r\n'
-        str_setup_header += 'Transport: RTP/AVP/UDP;unicast;client_port=50166-50167\r\n'
+        str_setup_header += 'Transport: RTP/AVP/UDP;unicast;client_port='+str(self._rtp_port)+'-'+str(self._rtcp_port)+'\r\n'
         str_setup_header += '\r\n'
         return str_setup_header
     
@@ -174,7 +200,7 @@ class RtspClient():
         return str_teardown_header
     
     def get_temp(self):
-        print("queue size:",self.queue.qsize())
+        #print("queue size:",self.queue.qsize())
         if self.queue.qsize()>0:
             data = self.queue.get()
             return data
@@ -192,62 +218,67 @@ class RtspClient():
         print("end start_rtp_receive_thread")
     
     def _handle_rtp_receive(self):
-        print("start _handle_rtp_receive")
-        self._rtp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #self._rtp_socket.bind(("192.168.1.115", 50166))
-        self._rtp_socket.bind(("0.0.0.0", 50166))
-        self._rtp_socket.settimeout(30.)
-        print('Bind UDP on 50166...')
-        temp_bytes = bytes()
-        while True:
-            if not self.is_receiving_rtp:
-                break
-            #print("receive rtp data")
-            try:
-                recv = self._rtp_socket.recv(2048)
-                if(len(recv)==0):
-                    continue
-                recv_bytes = bytearray(recv)
-                header = recv_bytes[:12]
-                payload = recv_bytes[12:]
-                mark = header[1] >> 7
-                payload_type = header[1] & 0x7F
-                #print("byte size:",len(recv)," mark:",mark," payload_type:",payload_type)
-                if(len(recv)==140):
+        try:
+            print("start _handle_rtp_receive")
+            self._rtp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self._rtp_socket.bind(("0.0.0.0", self._rtp_port))
+            self._rtp_socket.settimeout(30.)
+            print('Bind UDP on 50166...')
+            temp_bytes = bytes()
+            while True:
+                if not self.is_receiving_rtp:
+                    break
+                #print("receive rtp data")
+                try:
+                    recv = self._rtp_socket.recv(2048)
+                    if(len(recv)==0):
+                        continue
                     recv_bytes = bytearray(recv)
-                    hex_str = ''.join(['%02x ' % b for b in recv_bytes])
-                    #print(hex_str)
-                else:
-                    temp_bytes += payload
-                if mark == 1:
-                    print("receive one frame image.data size:",len(temp_bytes))
-                    self.queue.put(temp_bytes)
-                    temp_bytes = bytes()
-                    #deal data
-
-                #print("byte size:",len(recv))
-            except socket.timeout:
-                print("time out")
-                continue
+                    header = recv_bytes[:12]
+                    payload = recv_bytes[12:]
+                    mark = header[1] >> 7
+                    payload_type = header[1] & 0x7F
+                    #print("byte size:",len(recv)," mark:",mark," payload_type:",payload_type)
+                    if(len(recv)==140):
+                        recv_bytes = bytearray(recv)
+                        hex_str = ''.join(['%02x ' % b for b in recv_bytes])
+                        #print(hex_str)
+                    else:
+                        temp_bytes += payload
+                    if mark == 1:
+                        #print("receive one frame image.data size:",len(temp_bytes))
+                        self.queue.put(temp_bytes)
+                        temp_bytes = bytes()
+                        #deal data
+                    #print("byte size:",len(recv))
+                except socket.timeout:
+                    print("time out")
+                    continue
+        except Exception:
+            print("udp listening error")
             #raw = packet.payload
+        self._rtp_socket.close()
         print("exit 50166")
 
     def _handle_rtcp_receive(self):
         self._rtcp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #self._rtcp_socket.bind(("192.168.1.115", 50167))
-        self._rtcp_socket.bind(("0.0.0.0", 50167))
-        self._rtcp_socket.settimeout(30.)
-        print('Bind UDP on 50167...')
-        while True:
-            if not self.is_receiving_rtp:
-                break
-            print("receive rtcp data")
-            try:
-                recv = self._rtcp_socket.recv(2048)
-                print(recv)
-            except socket.timeout:
-                print("time out")
-                continue
+        try:
+            self._rtcp_socket.bind(("0.0.0.0", self._rtcp_port))
+            self._rtcp_socket.settimeout(30.)
+            print('Bind UDP on 50167...')
+            while True:
+                if not self.is_receiving_rtp:
+                    break
+                print("receive rtcp data")
+                try:
+                    recv = self._rtcp_socket.recv(2048)
+                    print(recv)
+                except socket.timeout:
+                    print("time out")
+                    continue
+        except Exception:
+            print("udp listening error")
+        self._rtcp_socket.close()
         print("exit 50167")
 
     #执行一次完整的rtsp播放请求，OPTIONS/DESCRIBE/SETUP/PLAY/GET PARAMETER/TEARDOWN，如果某个请求不正确则中止
@@ -256,6 +287,7 @@ class RtspClient():
         self.socket_send = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket_send.settimeout(5)
         self.socket_send.connect((config_dict['server_ip'], config_dict['server_port']))
+        self.socket_open = True
         
         self.url = 'rtsp://' + config_dict['server_ip'] + ':' + str(config_dict['server_port']) + config_dict['server_path']
         print("url:",self.url)
@@ -272,6 +304,7 @@ class RtspClient():
             print('OPTIONS request is OK')
         else:
             print('OPTIONS request is BAD')
+            return False
         str_describe_header = self.gen_describe_header()
         print("first describe:",str_describe_header)
         self.socket_send.send(str_describe_header.encode())
@@ -306,6 +339,7 @@ class RtspClient():
                 msg_recv_dict = msg_recv.split('\r\n')
                 print('second DESCRIBE request occur error: ')
                 print(msg_recv_dict[0])
+                return False
             else:
                 print('second DESCRIBE is ok,now we will execute first SETUP for session')
                 str_setup_header = self.gen_setup_header(self.url, self.realm_value, self.nonce_value)
@@ -323,6 +357,7 @@ class RtspClient():
                     msg_recv_dict = msg_recv.split('\r\n')
                     print('first SETUP request occur error: ')
                     print(msg_recv_dict[0])
+                    return False
                 else:
                     print('first SETUP is ok,now we will execute PLAY')
                     session_pos = msg_recv.find('Session')
@@ -333,8 +368,8 @@ class RtspClient():
                     print("PLAY:",str_play_header)
                     self.socket_send.send(str_play_header.encode())
                     msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
-                    #msg_recv_dict = msg_recv.split('\r\n')
-                    print("4 receive:")
+                    msg_recv_dict = msg_recv.split('\r\n')
+                    print("4 receive:",msg_recv)
                     for item in msg_recv_dict:
                         print(item)
                     if msg_recv.find('200 OK') == -1:
@@ -342,8 +377,10 @@ class RtspClient():
                         print(msg_recv)
                         msg_recv_dict = msg_recv.split('\r\n')
                         print(msg_recv_dict[0])
+                        return False
                     else:
                         print('PLAY is ok')
+                        return True
                         # try:
                         #     while True:
                         #         time.sleep(1)
@@ -360,19 +397,30 @@ class RtspClient():
         # self.socket_send.close()
 
     def teardown(self):
-        print('\nnow we will execute TEARDOWN to disconnect with server')
-        str_teardown_header = self.gen_teardown_header(self.url, self.realm_value, self.nonce_value, self.session_value)
-        self.socket_send.send(str_teardown_header.encode())
-        msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
-        print(msg_recv)
-        print('program execute finished, thank you')
-        self.is_receiving_rtp = False                  
-        self.socket_send.close()
+        if self.socket_open:
+            print('\nnow we will execute TEARDOWN to disconnect with server')
+            str_teardown_header = self.gen_teardown_header(self.url, self.realm_value, self.nonce_value, self.session_value)
+            try:
+                self.socket_send.send(str_teardown_header.encode())
+                msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
+                print(msg_recv)
+                print('program execute finished, thank you')
+            except Exception:
+                print('program execute error, thank you')
+            self.is_receiving_rtp = False                  
+            self.socket_send.close()
+            self.socket_open = False
 
     def __del__(self):
         # self.socket_send.close()
         pass
 
+    def connect_rtsp_server(self):
+        try:
+            return self.exec_full_request()
+        except Exception:
+            print("connect_rtsp_server error")
+            return False
 
 # if __name__ == '__main__':
 #     rtsp_client = RtspClient()

@@ -92,7 +92,11 @@ class HK_Api(object):
         except Exception:
             print("request error")
             return elevation,azimuth,absoluteZoom 
-        root = ElementTree.fromstring(response)
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return elevation,azimuth,absoluteZoom
         #print("root tag:",root.tag)
         if root==None:
             return elevation,azimuth,absoluteZoom
@@ -113,8 +117,8 @@ class HK_Api(object):
                     azimuth = int(grandson.text)
                 if 'absoluteZoom' in grandson.tag:
                     absoluteZoom = int(grandson.text)
-        print([elevation,azimuth,absoluteZoom])
-        return elevation,azimuth,absoluteZoom
+        #print([azimuth,elevation,absoluteZoom])
+        return azimuth,elevation,absoluteZoom
 
     def put_status(self,ip,p,t,z,channel=1,username="admin",psd="123qweasd"):
         url = "http://"+ip+"/ISAPI/PTZCtrl/channels/"+str(channel)+"/absolute"
@@ -137,7 +141,11 @@ class HK_Api(object):
         except Exception:
             print("request error")
             return 0
-        root = ElementTree.fromstring(response)
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return 0
         #print("root tag:",root.tag)
         if root==None:
             return 0
@@ -167,7 +175,11 @@ class HK_Api(object):
         except Exception:
             print("request error")
             return 0
-        root = ElementTree.fromstring(response)
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return 0
         #print("root tag:",root.tag)
         if root==None:
             return 0
@@ -192,7 +204,11 @@ class HK_Api(object):
         except Exception:
             print("request error")
             return None,0
-        root = ElementTree.fromstring(response)
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return None,0
         if root==None:
             return None,0
         if root.tag.find('ThermalStreamParam') == -1:
@@ -222,7 +238,11 @@ class HK_Api(object):
         except Exception:
             print("request error")
             return 0
-        root = ElementTree.fromstring(response)
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return 0
         if root==None:
             return 0
         if root.tag.find('ResponseStatus') == -1:
