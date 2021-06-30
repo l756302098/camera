@@ -22,7 +22,7 @@ roslaunch fixed_hk_nosdk hk.launch
       <param name="camera_id" type="int" value="1"/>
       <!-- 设备ip -->
       <param name="device_ip" value="192.168.1.66"/>
-      <!-- 设备port -->
+      <!-- 设备http port -->
       <param name="device_port" value="80"/>
       <!-- 设备的用户名,密码 -->
       <param name="device_username" value="admin"/>
