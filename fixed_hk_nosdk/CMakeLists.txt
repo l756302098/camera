@@ -18,8 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Eigen3 REQUIRED)
 
-set(_HTTPLIB_OPENSSL_MIN_VER "1.1.1")
-find_package(OpenSSL ${_HTTPLIB_OPENSSL_MIN_VER} COMPONENTS Crypto SSL REQUIRED)
+#set(_HTTPLIB_OPENSSL_MIN_VER "1.1.1")
+#find_package(OpenSSL ${_HTTPLIB_OPENSSL_MIN_VER} COMPONENTS Crypto SSL REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
