@@ -21,6 +21,7 @@
 #include <nav_msgs/Odometry.h>
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include "sensor_msgs/Image.h"
+#include "param_server/server.h"
 #include "fixed_msg/cp_control.h"
 #include "fixed_msg/platform_transfer.h"
 #include <fixed_msg/inspected_result.h>
@@ -48,6 +49,8 @@ private:
     ros::Publisher camera_pose_pub,readyimage_pub;
     geometry_msgs::PoseStamped c_pos,t_pos;
 public:
+    int default_p,default_t,default_z;
+    std::unique_ptr<param_server::Server> pserver;
     std::vector<float> camera_focus_dis;
     std::vector<int> camera_focus_set;
     vector<std::string> msg_list;
@@ -76,6 +79,24 @@ public:
     void read_calibration(std::string _choose_file,cv::Mat &out_RT);
     void target_callback(const geometry_msgs::PoseStampedConstPtr &msg);
     int get_zoomset(float distance, int device_width, int device_height, int zoom_scale = 5);
+    void callback(param_server::SimpleType &config)
+    {
+        for (auto &kv : config) {
+            ROS_INFO("callback key:%s value:%s",kv.first.c_str(),kv.second.c_str());
+        }
+    }
+     void readConfig(){
+        if(pserver->exist("default_p")){
+            pserver->get("default_p",default_p);
+        }
+        if(pserver->exist("default_t")){
+            pserver->get("default_t",default_t);
+        }
+        if(pserver->exist("default_z")){
+            pserver->get("default_z",default_z);
+        }
+        ROS_INFO("default_p:%f default_t:%f default_z:%f",default_p,default_t,default_z);
+    }
 };
 
 #endif

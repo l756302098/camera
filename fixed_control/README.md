@@ -229,3 +229,17 @@ int16 flag
 ---
 bool success
 ```
+##  修改云台默认PTZ
+Topic: /fixed_visible_node/param_server/set 
+Type: param_server/Param
+key: default_p/default_t/default_z    
+```json
+KeyValue[] data
+---
+bool success
+```
+KeyValue  
+```json
+string key
+string value
+```

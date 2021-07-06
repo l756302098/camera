@@ -42,6 +42,11 @@ visible_control::visible_control(const ros::NodeHandle &nh):nh_(nh),do_task(fals
     readyimage_pub = nh_.advertise<fixed_msg::inspected_result>("/visible_survey_parm", 1);
 	goal_sub = nh_.subscribe("/goal", 1, &visible_control::target_callback,this);
 	init(camera_file);
+    std::unique_ptr<param_server::Server> ptr(new param_server::Server("fixed_visible","cfg/config.yml"));
+    pserver = std::move(ptr);
+    param_server::CallbackType f = boost::bind(&visible_control::callback,this,_1); //绑定回调函数
+    pserver->setCallback(f);
+    readConfig();
 }
 
 visible_control::~visible_control(){}
@@ -308,9 +313,9 @@ void visible_control::reset(){
 	ptz_cmd.request.type = 4;
 	ptz_cmd.request.value = 0;
 	vector<int> value;
-	value.push_back(0);
-	value.push_back(0);
-	value.push_back(0);
+	value.push_back(default_p);
+	value.push_back(default_t);
+	value.push_back(default_z);
 	ptz_cmd.request.allvalue = value;
 	if(ptz_client.call(ptz_cmd))
 		std::cout << "set xyz_zoom degree success!" << std::endl;

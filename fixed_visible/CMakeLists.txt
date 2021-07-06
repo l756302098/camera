@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  param_server
 )
 find_package(Eigen3 REQUIRED)
 
