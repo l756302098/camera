@@ -50,7 +50,8 @@ private:
     geometry_msgs::PoseStamped c_pos,t_pos;
 public:
     int default_p,default_t,default_z;
-    std::unique_ptr<param_server::Server> pserver;
+    //std::unique_ptr<param_server::Server> pserver;
+    param_server::Server *pserver;
     std::vector<float> camera_focus_dis;
     std::vector<int> camera_focus_set;
     vector<std::string> msg_list;
@@ -84,6 +85,7 @@ public:
         for (auto &kv : config) {
             ROS_INFO("callback key:%s value:%s",kv.first.c_str(),kv.second.c_str());
         }
+        readConfig();
     }
      void readConfig(){
         if(pserver->exist("default_p")){
@@ -95,7 +97,7 @@ public:
         if(pserver->exist("default_z")){
             pserver->get("default_z",default_z);
         }
-        ROS_INFO("default_p:%f default_t:%f default_z:%f",default_p,default_t,default_z);
+        ROS_INFO("default_p:%i default_t:%i default_z:%i",default_p,default_t,default_z);
     }
 };
 
