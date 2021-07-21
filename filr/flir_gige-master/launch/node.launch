@@ -1,6 +1,6 @@
 <launch>
     <!-- Common Interface -->
-    <arg name="device" default="192.168.1.20"/>
+    <arg name="device" default="192.168.1.100"/>
     <arg name="rate" default="10"/>
 
     <!-- Camera Settings -->

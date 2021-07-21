@@ -238,6 +238,8 @@ class RtspClient():
                     payload = recv_bytes[12:]
                     mark = header[1] >> 7
                     payload_type = header[1] & 0x7F
+                    if payload_type != 0x6d:
+                        continue
                     #print("byte size:",len(recv)," mark:",mark," payload_type:",payload_type)
                     if(len(recv)==140):
                         recv_bytes = bytearray(recv)
