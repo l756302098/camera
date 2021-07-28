@@ -176,8 +176,13 @@ void pt_control2::tick(const ros::TimerEvent &event){
     }else if(cmd[2]==0x50){
         unsigned char data4 = cmd[4];
         unsigned char data5 = cmd[5];
-        uint vdata = (data4 << 8) + data5;
-        g_now_zposition = vdata;
+        std::vector<unsigned char> temp;
+        temp.push_back(data5);
+        temp.push_back(data4);
+        int16_t* tempi = (int16_t*)&temp[0];
+        g_now_zposition = *tempi;
+        //uint vdata = (data4 << 8) + data5;
+        //g_now_zposition = vdata;
         //printf("%x %x v:%i \n",data4,data5,g_now_zposition);
     }else if(cmd[2]==0x46){
         unsigned char data4 = cmd[4];
@@ -198,10 +203,11 @@ void pt_control2::tick(const ros::TimerEvent &event){
     {
         if(g_xy_goal != -1){
             xy_diff_val = g_xy_goal - g_now_xyposition;
+            xy_diff_val = abs(xy_diff_val) % 36000;
             std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
             std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
             std::cout << "xy_val: " << xy_diff_val << std::endl;
-            if(abs(xy_diff_val) > 35800)
+            if(xy_diff_val > 35800)
                 xy_diff_val = 0;
             if(abs(xy_diff_val)<200){
                 g_xy_goal = -1;
@@ -216,10 +222,11 @@ void pt_control2::tick(const ros::TimerEvent &event){
         }
         if (g_z_goal != -1){
             z_diff_val = g_z_goal - g_now_zposition;
+            z_diff_val = abs(z_diff_val) % 36000;
             std::cout << "g_z_goal: " << g_z_goal << std::endl;
             std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
             std::cout << "z_val: " << z_diff_val << std::endl;
-            if(abs(z_diff_val)>35800)
+            if(z_diff_val > 35800)
                 z_diff_val = 0;
             if(abs(z_diff_val)<200){
                 g_z_reach_flag = 1;
@@ -249,6 +256,7 @@ bool pt_control2::set_action(int id, int type, int value, int xy_value, int z_va
         if(cv.wait_for(lck,std::chrono::seconds(10)) == std::cv_status::timeout){
             std::cout << "wait timeout." << std::endl;
         }
+        sleep(1);
         std::cout << "write thread wake." << std::endl;
         ready = false;
         motor_absolute_angle(0x42,z_value);
@@ -281,6 +289,7 @@ void pt_control2::motor_relat_angle(char cmd1,int angle){
 }
 
 void pt_control2::motor_absolute_angle(char cmd1,int angle){
+    std::cout << "motor_absolute_angle." << std::endl;
     std::vector<unsigned char> cmd;
     cmd.push_back(0xFF);
     cmd.push_back(0x01);
@@ -292,10 +301,10 @@ void pt_control2::motor_absolute_angle(char cmd1,int angle){
     cmd.push_back(byte1);
     cmd.push_back(byte2);
     crc_check(cmd);
-    // for(int i=0;i<cmd.size();i++){
-    //     printf("%x ",cmd[i]);
-    // }
-    // printf("\n");
+    for(int i=0;i<cmd.size();i++){
+        printf("%x ",cmd[i]);
+    }
+    printf("\n");
     tcp_ptr->send_bytes(cmd);
 }
 //设置电机当前位置为原点

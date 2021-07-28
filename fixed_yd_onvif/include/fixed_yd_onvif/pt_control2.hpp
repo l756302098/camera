@@ -33,6 +33,7 @@
 #include <thread>
 #include <mutex>                // std::mutex, std::unique_lock
 #include <condition_variable>    // std::condition_variable
+#include <stdlib.h>
 
 using namespace std;
 
@@ -52,8 +53,8 @@ private:
     geometry_msgs::PoseStamped c_pos,t_pos;
 
     unsigned int g_get_info_flag = 1;
-    unsigned int g_now_xyposition = 0;
-    unsigned int g_now_zposition = 0;
+    int g_now_xyposition = 0;
+    int g_now_zposition = 0;
     unsigned int g_now_zoom = 0;
     unsigned int g_control_type = 0;
     int g_action = 0;
