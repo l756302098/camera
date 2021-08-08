@@ -23,7 +23,7 @@
 using namespace rapidjson;
 using namespace std;
 
-class status_control
+class slide_control
 {
 private:
     /* data */
@@ -211,9 +211,9 @@ public:
         if(msg.mode != TASK_CONTROL)
             clear_task_flag = true;
     }
-    void transfer(vector<string> lists, vector<string> task_camera, string trans_id, char flg);
-    status_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
-    ~status_control();
+    void transfer(float locX,float locY,float locZ, vector<string> lists, vector<string> task_camera, string trans_id, char flg);
+    slide_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
+    ~slide_control();
     void meter_cb(const std_msgs::String msg);
     bool task_srv(fixed_msg::task::Request &req, fixed_msg::task::Response &res);
     void tick(const ros::TimerEvent &event);

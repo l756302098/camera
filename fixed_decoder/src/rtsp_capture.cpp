@@ -160,8 +160,9 @@ rtsp_capture::rtsp_capture(){
     ros::NodeHandle nh_("~");
 
 	nh_.param<std::string>("topic_name", topic_str, "/shd/rtsp/visible");
-    nh_.param<std::string>("rtsp_url", rtsp_str, "rtsp://192.168.31.8:8000/165506");
+    nh_.param<std::string>("rtsp_url", rtsp_str, "rtsp://192.168.1.5:554/user=admin&password=&channel=1&stream=0.sdp?real_stream");
 	nh_.param<bool>("extradata", extra_data, false);
+	std::cout << "rtsp_str " << rtsp_str << std::endl;
     image_pub = nh_.advertise<sensor_msgs::Image>(topic_str, 10);
 	pthread_create(&tid,NULL,read_h264,(void*)this);
 }

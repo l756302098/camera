@@ -93,7 +93,7 @@ public:
     void crc_check(std::vector<unsigned char> &data);
     void motor_callback(const std_msgs::String::ConstPtr& msg);
     //绝对角度
-    void motor_absolute_angle(char cmd1,int angle);
+    void motor_absolute_angle(char cmd1,int16_t angle);
     //相对角度
     void motor_relat_angle(char cmd1,int angle);
     //设置电机当前位置为原点

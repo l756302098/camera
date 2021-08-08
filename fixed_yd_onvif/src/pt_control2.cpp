@@ -25,8 +25,7 @@ pt_control2::pt_control2(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_go
     std::cout << "pt_control2 network init finish" << std::endl;
 }
 
-pt_control2::~pt_control2(){
-    if(sock_thread)
+pt_control2::~pt_control2(){    if(sock_thread)
         delete sock_thread;
 }
 
@@ -288,16 +287,15 @@ void pt_control2::motor_relat_angle(char cmd1,int angle){
     */
 }
 
-void pt_control2::motor_absolute_angle(char cmd1,int angle){
+void pt_control2::motor_absolute_angle(char cmd1,int16_t angle){
     std::cout << "motor_absolute_angle." << std::endl;
     std::vector<unsigned char> cmd;
     cmd.push_back(0xFF);
     cmd.push_back(0x01);
     cmd.push_back(cmd1);
     cmd.push_back(0x00);
-    unsigned int rotate = angle;
-    unsigned char byte1 =  (rotate >> 8) & 0x00FF;
-    unsigned char byte2 =  rotate & 0x00FF;
+    unsigned char byte1 =  (angle >> 8) & 0x00FF;
+    unsigned char byte2 =  angle & 0x00FF;
     cmd.push_back(byte1);
     cmd.push_back(byte2);
     crc_check(cmd);

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(fixed_control)
+project(fixed_slide_infrared)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -8,17 +8,18 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
+  cv_bridge
   fixed_msg
+  geometry_msgs
+  roscpp
+  rospy
+  std_msgs
+  actionlib
+  actionlib_msgs
+  slide_control_msgs
 )
 
-## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
-if(Boost_FOUND)
-  MESSAGE( STATUS "Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}.")
-  include_directories(${Boost_INCLUDE_DIRS})
-endif(Boost_FOUND)
+find_package(Eigen3 REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -30,10 +31,10 @@ endif(Boost_FOUND)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES fixed_control
-  CATKIN_DEPENDS roscpp std_msgs fixed_msg
-  DEPENDS system_lib
+#  INCLUDE_DIRS include
+#  LIBRARIES fixed_slide_infrared
+#  CATKIN_DEPENDS cv_bridge fixed_msg geometry_msgs roscpp rospy std_msgs
+#  DEPENDS system_lib
 )
 
 ###########
@@ -43,21 +44,15 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+ include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
-## Declare a C++ library
-add_library(lib-${PROJECT_NAME}
-  src/status_control.cpp
-  src/slide_control.cpp
+add_executable(infrared_slide_node src/infrared_slide_node.cpp src/infrared_slide_control.cpp src/common.cpp)
+target_link_libraries(infrared_slide_node
+  ${catkin_LIBRARIES}
 )
-
-add_executable(${PROJECT_NAME}_node src/fixed_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} lib-${PROJECT_NAME})
-
-add_executable(slide_node src/slide_node.cpp)
-target_link_libraries(slide_node ${catkin_LIBRARIES} lib-${PROJECT_NAME})
 
 #############
 ## Install ##
@@ -106,7 +101,7 @@ target_link_libraries(slide_node ${catkin_LIBRARIES} lib-${PROJECT_NAME})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_fixed_control.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_fixed_slide_infrared.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

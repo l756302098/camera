@@ -1,0 +1,140 @@
+{
+   "InspectId" : "6924",
+   "InspectType" : 8000,
+   "RobotId" : 4,
+   "TaskHistoryId" : 6924,
+   "TaskId" : 536,
+   "TaskType" : 1,
+   "Tasks" : [
+      {
+         "Align" : "",
+         "CameraPose" : "100130000:5/0,0,0/10010003/1/6924",
+         "Id" : "1",
+         "IsAnterograde" : false,
+         "TLine" : "23.010000,4.379980,-134.988495/23.129999,11.069980,-134.986099",
+         "TLoc" : "400;400;0",
+         "TLocType" : "transfer",
+         "TLocWidth" : 1.5,
+         "TableInfo" : "0/0/8",
+         "TurnAngle" : "",
+         "Watchs" : [
+            {
+               "Assemblys" : [
+                  {
+                     "AssemblyId" : 10000,
+                     "ReconParam" : "10010001",
+                     "ReconType" : 5
+                  }
+               ],
+               "WatchId" : 1,
+               "WatchPos" : "21.155100,6.280750,-134.272003",
+               "WatchType" : "fixed"
+            }
+         ]
+      },
+      {
+         "Align" : "",
+         "CameraPose" : "100120000:5/0,0,0/10010002/1/6924",
+         "Id" : "1",
+         "IsAnterograde" : false,
+         "TLine" : "23.010000,4.379980,-134.988495/23.129999,11.069980,-134.986099",
+         "TLoc" : "1400;400;0",
+         "TLocType" : "transfer",
+         "TLocWidth" : 1.5,
+         "TableInfo" : "0/0/8",
+         "TurnAngle" : "",
+         "Watchs" : [
+            {
+               "Assemblys" : [
+                  {
+                     "AssemblyId" : 10000,
+                     "ReconParam" : "10010001",
+                     "ReconType" : 5
+                  }
+               ],
+               "WatchId" : 1,
+               "WatchPos" : "21.155100,6.280750,-134.272003",
+               "WatchType" : "fixed"
+            }
+         ]
+      },
+     {
+         "Align" : "",
+         "CameraPose" : "100130000:5/0,0,0/10010003/1/6924",
+         "Id" : "1",
+         "IsAnterograde" : false,
+         "TLine" : "23.010000,4.379980,-134.988495/23.129999,11.069980,-134.986099",
+         "TLoc" : "2400;400;0",
+         "TLocType" : "transfer",
+         "TLocWidth" : 1.5,
+         "TableInfo" : "0/0/8",
+         "TurnAngle" : "",
+         "Watchs" : [
+            {
+               "Assemblys" : [
+                  {
+                     "AssemblyId" : 10000,
+                     "ReconParam" : "10010001",
+                     "ReconType" : 5
+                  }
+               ],
+               "WatchId" : 1,
+               "WatchPos" : "21.155100,6.280750,-134.272003",
+               "WatchType" : "fixed"
+            }
+         ]
+      },
+      {
+         "Align" : "",
+         "CameraPose" : "100140000:5/0,0,0/10010004/1/6924",
+         "Id" : "1",
+         "IsAnterograde" : false,
+         "TLine" : "23.010000,4.379980,-134.988495/23.129999,11.069980,-134.986099",
+         "TLoc" : "2400;700;0",
+         "TLocType" : "transfer",
+         "TLocWidth" : 1.5,
+         "TableInfo" : "0/0/8",
+         "TurnAngle" : "",
+         "Watchs" : [
+            {
+               "Assemblys" : [
+                  {
+                     "AssemblyId" : 10000,
+                     "ReconParam" : "10010001",
+                     "ReconType" : 5
+                  }
+               ],
+               "WatchId" : 1,
+               "WatchPos" : "21.155100,6.280750,-134.272003",
+               "WatchType" : "fixed"
+            }
+         ]
+      },
+      {
+         "Align" : "",
+         "CameraPose" : "100150000:5/0,0,0/10010005/1/6924",
+         "Id" : "1",
+         "IsAnterograde" : false,
+         "TLine" : "23.010000,4.379980,-134.988495/23.129999,11.069980,-134.986099",
+         "TLoc" : "1400;1000;0",
+         "TLocType" : "transfer",
+         "TLocWidth" : 1.5,
+         "TableInfo" : "0/0/8",
+         "TurnAngle" : "",
+         "Watchs" : [
+            {
+               "Assemblys" : [
+                  {
+                     "AssemblyId" : 10000,
+                     "ReconParam" : "10010001",
+                     "ReconType" : 5
+                  }
+               ],
+               "WatchId" : 1,
+               "WatchPos" : "21.155100,6.280750,-134.272003",
+               "WatchType" : "fixed"
+            }
+         ]
+      }
+   ]
+}

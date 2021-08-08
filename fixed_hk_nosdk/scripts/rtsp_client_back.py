@@ -9,8 +9,10 @@ from threading import Thread
 import sys
 if sys.version > '3':
     import queue as Queue
+    import socketserver
 else:
     import Queue
+    import SocketServer
 
 config_dict = {
     'server_username': 'admin',                 #RTSP用户名
@@ -34,6 +36,8 @@ config_dict = {
     'teardown_header_modify': True              #TEARDOWN请求中，是否允许拼接其他协议规定的请求头的开关
 }
 
+recQueue = Queue.Queue(maxsize=20)
+
 def isUse(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -44,10 +48,44 @@ def isUse(port):
     except Exception:
         return False
 
+class MyUDPHandler(socketserver.BaseRequestHandler):
+    """
+    This class works similar to the TCP handler class, except that
+    self.request consists of a pair of data and client socket, and since
+    there is no connection the client address must be given explicitly
+    when sending data back via sendto().
+    """
+
+    def handle(self):
+        try:
+            data = self.request[0].strip()
+            print("data len",len(data))
+            print("{} wrote:".format(self.client_address[0]))
+            if(len(data)==0):
+                return
+            recv_bytes = bytearray(data)
+            header = recv_bytes[:12]
+            payload = recv_bytes[12:]
+            mark = header[1] >> 7
+            payload_type = header[1] & 0x7F
+            if payload_type != 0x6d:
+                return
+            #print("byte size:",len(recv)," mark:",mark," payload_type:",payload_type)
+            self.temp_bytes = bytes()
+            if(len(recv)==140):
+                pass
+            else:
+                self.temp_bytes += payload
+            if mark == 1:
+                #print("receive one frame image.data size:",len(temp_bytes))
+                recQueue.put(self.temp_bytes)
+                self.temp_bytes = b''
+        except Exception:
+            print("udp handle error") 
+
 class RtspClient():
     def __init__(self):
-        self.queue = Queue.Queue(maxsize=20)
-        pass
+        print("init")
 
     #用于Digest认证方式时生成response的值
     def gen_response_value(self,url,public_method,realm,nonce):
@@ -201,8 +239,8 @@ class RtspClient():
     
     def get_temp(self):
         #print("queue size:",self.queue.qsize())
-        if self.queue.qsize()>0:
-            data = self.queue.get()
+        if recQueue.qsize()>0:
+            data = recQueue.get()
             return data
         return None
     
@@ -218,48 +256,10 @@ class RtspClient():
         print("end start_rtp_receive_thread")
     
     def _handle_rtp_receive(self):
-        try:
-            print("start _handle_rtp_receive")
-            self._rtp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._rtp_socket.bind(("0.0.0.0", self._rtp_port))
-            self._rtp_socket.settimeout(30.)
-            print('Bind UDP on 50166...')
-            temp_bytes = bytes()
-            buffer_max = 10*1024*1024
-            while True:
-                if not self.is_receiving_rtp:
-                    break
-                #print("receive rtp data")
-                try:
-                    recv,addr = self._rtp_socket.recvfrom(buffer_max)
-                    if(len(recv)==0):
-                        continue
-                    recv_bytes = bytearray(recv)
-                    header = recv_bytes[:12]
-                    payload = recv_bytes[12:]
-                    mark = header[1] >> 7
-                    payload_type = header[1] & 0x7F
-                    if payload_type != 0x6d:
-                        print("payload_type",payload_type)
-                        continue
-                    #print("byte size:",len(recv)," mark:",mark," payload_type:",payload_type)
-                    if(len(recv)==140):
-                        pass
-                    else:
-                        temp_bytes += payload
-                    if mark == 1:
-                        #print("receive one frame image.data size:",len(temp_bytes))
-                        self.queue.put(temp_bytes)
-                        temp_bytes = b''
-                    #print("byte size:",len(recv))
-                except socket.timeout:
-                    print("time out")
-                    continue
-        except Exception:
-            print("udp listening error")
-            #raw = packet.payload
-        self._rtp_socket.close()
-        print("exit 50166")
+        print("start _handle_rtp_receive")
+        HOST, PORT = "localhost", self._rtp_port
+        with socketserver.UDPServer((HOST, PORT), MyUDPHandler) as server:
+            server.serve_forever()
 
     def _handle_rtcp_receive(self):
         self._rtcp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
