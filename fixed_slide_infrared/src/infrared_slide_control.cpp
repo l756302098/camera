@@ -76,6 +76,18 @@ void infrared_slide_control::transfer_callback(const fixed_msg::platform_transfe
         base_goal.goal.position.z = atof(local_point[2].c_str());
 
         client->sendGoal(base_goal, &infrared_slide_control::doneCb, &infrared_slide_control::activeCb, &infrared_slide_control::feedbackCb);
+    }else if(msg.flag == 1){
+        bool isOk = client->isServerConnected();
+        if (isOk)
+        {
+            client->cancelAllGoals();
+        }
+        slide_control_msgs::PositionGoal base_goal;
+        base_goal.action = 1;
+        base_goal.goal.position.x = 0;
+        base_goal.goal.position.y = 0;
+        base_goal.goal.position.z = 0;
+        client->sendGoal(base_goal, &infrared_slide_control::doneCb, &infrared_slide_control::activeCb, &infrared_slide_control::feedbackCb);
     }
 }
 
