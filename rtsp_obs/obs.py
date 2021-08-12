@@ -95,9 +95,12 @@ class Obs(Daemon):
                     if len(data_array)!=image_size:
                         print("error size:",len(data_array))
                         continue
-                    print("ok size:",len(data_array))
+                    data_size = len(data_array)
+                    header_bytes = data_size.to_bytes(4, 'big')
+                    print("ok size:",len(data_array),"header_bytes",header_bytes)
                     if len(self.clients) > 0:
                         try:
+                            data_array.insert(0,header_bytes)
                             for k,v in self.clients.items():
                                 v.sendall(data_array)
                         except Exception as e:

@@ -8,6 +8,7 @@
       <param name="device_password" value="123qweasd"/>
       <param name="image_width" type="int" value="384"/>
       <param name="image_height" type="int" value="288"/>
+      <param name="xml_path" type="str" value="$(find fixed_hk_nosdk)/scripts/xml"/>
   </node>
   
 </launch>
