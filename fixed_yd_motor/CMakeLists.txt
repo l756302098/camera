@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(fixed_yd_onvif)
+project(fixed_yd_motor)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -28,7 +28,7 @@ find_package(Eigen3 REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES fixed_yd_onvif
+  LIBRARIES fixed_yd_motor
   CATKIN_DEPENDS cv_bridge geometry_msgs roscpp rospy std_msgs fixed_msg
 #  DEPENDS system_lib
 )
@@ -55,7 +55,7 @@ target_link_libraries(ptz_node2
   ${catkin_LIBRARIES}
 )
 
-add_executable(yd_visible_node src/visible_node.cpp src/visible_control.cpp src/common.cpp)
-target_link_libraries(yd_visible_node
+add_executable(lantern_node src/lantern_node.cpp src/lantern_control.cpp src/epoll_client.cpp src/common.cpp)
+target_link_libraries(lantern_node
   ${catkin_LIBRARIES}
 )

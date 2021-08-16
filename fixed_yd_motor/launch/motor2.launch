@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="fixed_yd_onvif" type="ptz_node2" name="ptz_node2" respawn="false" output="screen">
+  <node pkg="fixed_yd_motor" type="ptz_node2" name="ptz_node2" respawn="false" output="screen">
       <param name="camera_id" type="int" value="1"/>
       <param name="device_ip" value="192.168.1.200"/>
       <param name="device_port" type="int" value="3000"/>

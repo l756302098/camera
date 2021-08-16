@@ -151,13 +151,18 @@ public:
     }
 
     void send_bytes(std::vector<unsigned char> data){
-        // for (size_t i = 0; i < data.size(); i++)
-        // {
-        //     printf(" %x ",data[i]);
-        // }
-        // printf("\n");
-        //std::cout << "isopen:" << is_open() << std::endl;
+        for (size_t i = 0; i < data.size(); i++)
+        {
+            printf(" %x ",data[i]);
+        }
+        printf("\n");
+        // std::cout << "isopen:" << is_open() << std::endl;
         if(is_open())
-            sock->write_some(boost::asio::buffer(data));
+        {
+            boost::system::error_code ec;
+            sock->write_some(boost::asio::buffer(data),ec);
+            if(ec)
+                std::cout << "ignored_error:" << ec.message() << std::endl;
+        }
     }
 };

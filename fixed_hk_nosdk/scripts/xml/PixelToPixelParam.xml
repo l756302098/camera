@@ -2,7 +2,7 @@
 <PixelToPixelParam version="2.0" 
     xmlns="http://www.std-cgi.com/ver20/XMLSchema">
     <id>1</id>
-    <maxFrameRate>400</maxFrameRate>
+    <maxFrameRate>200</maxFrameRate>
     <reflectiveEnable>false</reflectiveEnable>
     <reflectiveTemperature>20.00</reflectiveTemperature>
     <emissivity>0.96</emissivity>

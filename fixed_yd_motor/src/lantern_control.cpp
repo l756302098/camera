@@ -6,38 +6,55 @@
  * @LastEditors: li
  * @LastEditTime: 2021-05-08 14:52:25
  */
-#include "fixed_yd_onvif/pt_control.hpp"
+#include "fixed_yd_motor/lantern_control.hpp"
 
-pt_control::pt_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal(-1){
+lantern_control::lantern_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal(-1){
     nh_.param<std::string>("device_ip", device_ip, "192.168.1.4");
     nh_.param<int>("device_port", device_port, 1001);
     std::cout << "ip:" << device_ip << " port:" << device_port << std::endl;
     nh_.param<std::string>("ptz_topic", ptz_topic, "/fixed/platform/position");
     nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
-    motor_sub = nh_.subscribe("/fixed/motor/cmd", 1, &pt_control::motor_callback, this);
+    motor_sub = nh_.subscribe("/fixed/motor/cmd", 1, &lantern_control::motor_callback, this);
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
     zoom_pub_ = nh_.advertise<std_msgs::Float32>("/fixed/visible/zoom", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
-    ptz_server = nh_.advertiseService(ptz_server_name, &pt_control::handle_cloudplatform, this);
-    std::unique_ptr<client> ptr (new client(device_ip,device_port));
-    tcp_ptr = std::move(ptr);
-    sock_thread = new std::thread(std::bind(&client::run,tcp_ptr.get()));
-    std::cout << "pt_control network init finish" << std::endl;
+    ptz_server = nh_.advertiseService(ptz_server_name, &lantern_control::handle_cloudplatform, this);
+    tcp_ptr = std::make_shared<EpollTcpClient>(device_ip, device_port);
+    if (!tcp_ptr) {
+        std::cout << "tcp_client create faield!" << std::endl;
+        ros::shutdown();
+    }
+    auto recv_call = [&](const PacketPtr& data) -> void {
+        // just print recv data to stdout
+        //std::cout << "recv: " << data->msg.size() << std::endl;
+        std::vector<unsigned char> rv;
+        char *p=(char*)data->msg.c_str();
+        // for(int i = 0; i < sizeof(p); i++){
+        //     std::cout << i << ": " << p[i] << std::endl;
+        // }
+        rv.insert(rv.end(),p,p+data->msg.size());
+        que_mtx.lock();
+        receive_msg.push_back(rv);
+        que_mtx.unlock();
+        return;
+    };
+    tcp_ptr->RegisterOnRecvCallback(recv_call);
+    if (!tcp_ptr->Start()) {
+        std::cout << "tcp_client start failed!" << std::endl;
+        ros::shutdown();
+    }
+    std::cout << "############tcp_client started!################" << std::endl;
+    std::cout << "lantern_control network init finish" << std::endl;
 }
 
-pt_control::~pt_control(){
-    if(sock_thread)
-        delete sock_thread;
+lantern_control::~lantern_control(){
+    if(tcp_ptr)
+        tcp_ptr->Stop();
 }
 
-void pt_control::update(){
+void lantern_control::update(){
     motor_temp_id++;
     unsigned char query_id = motor_temp_id % 2 == 0 ? 0x01 : 0x02;
-    if(!tcp_ptr->is_open()){
-        std::cout << "network error reconnect ..." << std::endl;
-        sleep(1);
-        tcp_ptr->start();
-    }
     motor_status(query_id);
     nav_msgs::Odometry pose;
 	pose.header.stamp = ros::Time::now();
@@ -59,7 +76,7 @@ void pt_control::update(){
     }
 }
 
-bool pt_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res)
+bool lantern_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res)
 {
     this->write_mtx.lock();
     std::stringstream ss;
@@ -79,7 +96,7 @@ bool pt_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed
 	return true;
 }
 
-void pt_control::write_hk(){
+void lantern_control::write_hk(){
     while(true)
     {
         sleep(0.1);
@@ -115,27 +132,6 @@ void pt_control::write_hk(){
                     else if(g_control_type == 1)
                         g_z_goal = value;
                 }
-                // else if(type == 3 || type == 4){
-                //     g_control_type = type;
-                //     if(g_control_type == 3){
-                //         g_xy_goal = g_now_xyposition - value;
-                //         if(g_xy_goal<0){
-                //             g_xy_goal += 36000;
-                //         }else if(g_xy_goal>36000){
-                //             g_xy_goal -= 36000;
-                //         }
-                //         std::cout << "relative xy angle " << g_now_xyposition << " to:" << g_xy_goal << std::endl;
-                //     }
-                //     else if(g_control_type == 4){
-                //         g_z_goal = g_now_zposition + value;
-                //         if(g_z_goal<0){
-                //             g_z_goal += 36000;
-                //         }else if(g_z_goal>36000){
-                //             g_z_goal -= 36000;
-                //         }
-                //         std::cout << "relative z angle "<< g_now_zposition << " to:" << g_z_goal << std::endl;
-                //     }
-                // }
                 else if(type == 3){
                     g_control_type = type;
                     int xy_value = atoi(cmd_value_strv[4].c_str());
@@ -208,8 +204,8 @@ void pt_control::write_hk(){
     }
 }
 
-void pt_control::tick(const ros::TimerEvent &event){
-    vector<unsigned char> cmd = tcp_ptr->queue_pop();
+void lantern_control::tick(const ros::TimerEvent &event){
+    vector<unsigned char> cmd = queue_pop();
     if(cmd.empty() || cmd.size()<20) return;
     if(cmd[3]!=0x0B) return;
     if(cmd[2]==0x01){
@@ -264,7 +260,7 @@ void pt_control::tick(const ros::TimerEvent &event){
     }
 }
 
-bool pt_control::set_action(int id, int type, int value, int xy_value, int z_value, int zoom_value){
+bool lantern_control::set_action(int id, int type, int value, int xy_value, int z_value, int zoom_value){
     //wPanPos   1号电机
     //wTiltPos  2号电机
     if(type == 0){
@@ -304,7 +300,7 @@ bool pt_control::set_action(int id, int type, int value, int xy_value, int z_val
     }
 }
 
-void pt_control::motor_callback(const std_msgs::String::ConstPtr& msg){
+void lantern_control::motor_callback(const std_msgs::String::ConstPtr& msg){
     std::string cmd =  msg->data.c_str();
     std::cout << "cmd:" << cmd;
     if(cmd.compare(0,CMD_GOBACK.length(),CMD_GOBACK)==0){
@@ -341,7 +337,7 @@ void pt_control::motor_callback(const std_msgs::String::ConstPtr& msg){
     }
 }
 
-void pt_control::motor_relat_angle(char motor_id,int angle){
+void lantern_control::motor_relat_angle(char motor_id,int angle){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -355,10 +351,10 @@ void pt_control::motor_relat_angle(char motor_id,int angle){
     cmd.push_back(byte1);
     cmd.push_back(byte2);
     crc_check(cmd);
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
 }
 
-void pt_control::motor_absolute_angle(char motor_id,int angle){
+void lantern_control::motor_absolute_angle(char motor_id,int angle){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -378,10 +374,10 @@ void pt_control::motor_absolute_angle(char motor_id,int angle){
     cmd.push_back(byte3);
     cmd.push_back(byte4);
     crc_check(cmd);
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
 }
 //电机按照最短的距离回到设定的原点
-void pt_control::motor_back(char motor_id){
+void lantern_control::motor_back(char motor_id){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -389,10 +385,10 @@ void pt_control::motor_back(char motor_id){
     cmd.push_back(0x51);
     cmd.push_back(0x00);
     crc_check(cmd);
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
 }
 //关闭电机,电机进入关闭模式
-void pt_control::motor_close(char motor_id){
+void lantern_control::motor_close(char motor_id){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -400,10 +396,10 @@ void pt_control::motor_close(char motor_id){
     cmd.push_back(0x50);
     cmd.push_back(0x00);
     crc_check(cmd);
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
 }
 //清除系统当前故障
-void pt_control::motor_clear_mal(char motor_id){
+void lantern_control::motor_clear_mal(char motor_id){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -411,10 +407,10 @@ void pt_control::motor_clear_mal(char motor_id){
     cmd.push_back(0x41);
     cmd.push_back(0x00);
     crc_check(cmd);
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
 }
 //设置电机当前位置为原点
-void pt_control::motor_set_ori(char motor_id){
+void lantern_control::motor_set_ori(char motor_id){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -422,10 +418,10 @@ void pt_control::motor_set_ori(char motor_id){
     cmd.push_back(0x21);
     cmd.push_back(0x00);
     crc_check(cmd);
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
 }
 
-void pt_control::crc_check(std::vector<unsigned char> &data){
+void lantern_control::crc_check(std::vector<unsigned char> &data){
     unsigned short value = N_CRC16(&(data[0]),data.size());
     char byte1 = (value >> 8) & 0x00FF;
 	char byte2 = value & 0x00FF;
@@ -435,7 +431,7 @@ void pt_control::crc_check(std::vector<unsigned char> &data){
     data.push_back(byte2);
 }
 
-void pt_control::motor_status(char motor_id){
+void lantern_control::motor_status(char motor_id){
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -445,6 +441,6 @@ void pt_control::motor_status(char motor_id){
     crc_check(cmd);
     //printf("3E 00 %x 0B 00 %x %x \n",motor_id,cmd[5],cmd[6]);
     //std::cout << "start tcp send bytes" << std::endl;
-    tcp_ptr->send_bytes(cmd);
+    send_messages(cmd);
     //std::cout << "end tcp send bytes" << std::endl;
 }

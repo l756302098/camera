@@ -6,7 +6,7 @@
  * @LastEditors: li
  * @LastEditTime: 2021-05-08 14:52:25
  */
-#include "fixed_yd_onvif/pt_control2.hpp"
+#include "fixed_yd_motor/pt_control2.hpp"
 
 pt_control2::pt_control2(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal(-1){
     nh_.param<std::string>("device_ip", device_ip, "192.168.1.4");

@@ -62,6 +62,11 @@
         "random": "cpp",
         "set": "cpp",
         "string": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "image": "cpp",
+        "*.ipp": "cpp",
+        "arraydispatchers": "cpp",
+        "mixinvector": "cpp",
+        "ref_ptr": "cpp"
     }
 }

@@ -116,13 +116,15 @@ def timer_callback(event):
 	#print 'Timer called at:' + str(event.current_real)
 
 def detect_callback(data):
+    print("get detect callback",data)
     #calc left bottom
     x_min = (int)(data.xmin * 255 / 1920 )
-    y_min = (int)(data.ymin * 255 / 1080 )
+    y_min = (int)((1080 - data.ymin) * 255 / 1080 )
     #calc right top
-    x_max = (int)(data.xmax * 255 / 1920 )
-    y_max = (int)(data.ymax * 255 / 1080 )
-    ok = api.put_position(device_ip,x_min,y_min,x_max,y_max,device_username,device_password)
+    x_off = (int)(data.xmax - data.xmin) * 255 / 1920
+    y_off = (int)(data.ymax - data.ymin) * 255 / 1080
+    print("get detect callback",x_min,y_min,x_min+x_off,y_min+y_off)
+    ok = api.put_position(device_ip,x_min,y_min,x_min+x_off,y_min+y_off,1,device_username,device_password)
     if ok:
         print("set detect success")
 

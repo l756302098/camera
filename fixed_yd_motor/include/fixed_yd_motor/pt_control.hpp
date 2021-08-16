@@ -28,16 +28,16 @@
 #include <fixed_msg/inspected_result.h>
 #include <fixed_msg/detect_result.h>
 #include <geometry_msgs/PoseStamped.h>
-#include "fixed_yd_onvif/common.hpp"
-#include "fixed_yd_onvif/asio_client.hpp"
+#include "fixed_yd_motor/common.hpp"
+#include "fixed_yd_motor/asio_client.hpp"
 #include <thread>
 #include <mutex>                // std::mutex, std::unique_lock
 #include <condition_variable>    // std::condition_variable
-#include <stdlib.h>
 
 using namespace std;
+#define MOTOR_ROTATE 16384.0
 
-class pt_control2
+class pt_control
 {
 private:
     std::string CMD_GOBACK = "goback";
@@ -53,8 +53,8 @@ private:
     geometry_msgs::PoseStamped c_pos,t_pos;
 
     unsigned int g_get_info_flag = 1;
-    int g_now_xyposition = 0;
-    int g_now_zposition = 0;
+    unsigned int g_now_xyposition = 0;
+    unsigned int g_now_zposition = 0;
     unsigned int g_now_zoom = 0;
     unsigned int g_control_type = 0;
     int g_action = 0;
@@ -83,8 +83,8 @@ public:
     bool ready = false;
     
 public:
-    pt_control2(const ros::NodeHandle &nh = ros::NodeHandle("~"));
-    ~pt_control2();
+    pt_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
+    ~pt_control();
     bool handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res);
     void update();
     void tick(const ros::TimerEvent &event);
@@ -93,13 +93,19 @@ public:
     void crc_check(std::vector<unsigned char> &data);
     void motor_callback(const std_msgs::String::ConstPtr& msg);
     //绝对角度
-    void motor_absolute_angle(char cmd1,int16_t angle);
+    void motor_absolute_angle(char motor_id,int angle);
     //相对角度
-    void motor_relat_angle(char cmd1,int angle);
+    void motor_relat_angle(char motor_id,int angle);
+    //电机按照最短的距离回到设定的原点
+    void motor_back(char motor_id);
+    //关闭电机,电机进入关闭模式
+    void motor_close(char motor_id);
+    //清除系统当前故障
+    void motor_clear_mal(char motor_id);
     //设置电机当前位置为原点
-    void motor_set_ori();
+    void motor_set_ori(char motor_id);
     //读取电机系统实时数据
-    void motor_status(char cmd1);
+    void motor_status(char motor_id);
 };
 
 #endif

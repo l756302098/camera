@@ -10,7 +10,7 @@
 #include <thread>
 #include <iostream>
 #include <csignal>
-#include "fixed_yd_onvif/pt_control.hpp"
+#include "fixed_yd_motor/pt_control.hpp"
 
 #define __app_name__ "yd_pt_control_node"
 
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     std::thread *write_thread = new std::thread(std::bind(&pt_control::write_hk, ptr));
     ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &pt_control::tick, ptr.get(), false);
     //ros
-    ros::Rate rate(10);
+    ros::Rate rate(5);
     while (ros::ok() && is_running)
     {
         //ROS_INFO("update...");

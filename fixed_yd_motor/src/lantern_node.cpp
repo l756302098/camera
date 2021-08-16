@@ -10,9 +10,9 @@
 #include <thread>
 #include <iostream>
 #include <csignal>
-#include "fixed_yd_onvif/pt_control2.hpp"
+#include "fixed_yd_motor/lantern_control.hpp"
 
-#define __app_name__ "yd_pt_control_node"
+#define __app_name__ "lantern_control_node"
 
 bool is_running;
 
@@ -31,9 +31,9 @@ int main(int argc, char **argv)
     ROS_INFO_STREAM(__app_name__<<" node started...");
     signal(SIGINT, signalHandler);
     is_running = true;
-    std::shared_ptr<pt_control2> ptr(new pt_control2);
-    std::thread *write_thread = new std::thread(std::bind(&pt_control2::write_hk, ptr));
-    ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &pt_control2::tick, ptr.get(), false);
+    std::shared_ptr<lantern_control> ptr(new lantern_control);
+    std::thread *write_thread = new std::thread(std::bind(&lantern_control::write_hk, ptr));
+    ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &lantern_control::tick, ptr.get(), false);
     //ros
     ros::Rate rate(10);
     while (ros::ok() && is_running)
