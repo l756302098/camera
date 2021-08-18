@@ -60,6 +60,7 @@ hk_sdk_control::~hk_sdk_control()
 
 void hk_sdk_control::update()
 {
+    if(!ptz_option) return;
     nav_msgs::Odometry msg_pos;
 	msg_pos.header.stamp = ros::Time::now();
 	msg_pos.pose.pose.position.x = g_now_xyposition;
@@ -67,7 +68,6 @@ void hk_sdk_control::update()
     msg_pos.pose.pose.position.y = g_now_zoom;
 	ptz_pub_.publish(msg_pos);
 
-    if(!ptz_option) return;
     if((g_xy_reach_flag == 1) && (g_z_reach_flag == 1))
     {
         g_xy_reach_flag = 0;

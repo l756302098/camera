@@ -9,6 +9,7 @@ from requests.auth import HTTPDigestAuth
 import os 
 from io import BytesIO
 import sys
+import cv2
 print("python version:",sys.version)
 
 def timer_callback(event):
@@ -32,7 +33,7 @@ if __name__ == '__main__':
         global temp_pub
         temp_pub = rospy.Publisher('/fixed/infrared/raw',Image,queue_size=1)
         rospy.Timer(rospy.Duration(0.1),timer_callback)
-        rate = rospy.Rate(2)
+        rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             #publish image
             try:
@@ -48,9 +49,10 @@ if __name__ == '__main__':
                     content_list = content.split("\r\n")
                     #print("size:",len(content_list))
                     if "application/json" in content:
+                        #print("content:",content)
                         print("contain application/json")
                         content_len = len(content_list)
-                        json_data = content_list[content_len - 2]
+                        json_data = content_list[content_len - 1]
                         text = json.loads(json_data)
                         if text:
                             print(text)
@@ -67,6 +69,20 @@ if __name__ == '__main__':
                             continue
                         data_index = len(content_list)-2
                         data_array = content_list[data_index]
+                        try:
+                            is_write = False
+                            with open("/home/li/temp.jpg", "wb") as f:
+                                f.write(data_array)
+                                f.close()
+                                is_write = True
+                            if is_write:
+                                print("len:",len(data_array))
+                                lena = cv2.imread('/home/li/temp.jpg')
+                                cv2.imshow('image', lena)
+                                cv2.waitKey(1)
+                        except Exception,e:
+
+                            print("cv error",e)
                     if "application/octet-stream" in content:
                         print("contain application/octet-stream")
                         data_index = len(content_list)-2
