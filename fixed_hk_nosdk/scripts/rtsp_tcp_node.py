@@ -4,7 +4,7 @@ import rospy
 from time import sleep
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
-from rtsp_client import RtspClient,config_dict
+from rtsp_tcp_client import RtspTcpClient,config_dict
 from isapi import HK_Api
 import time
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
             sleep(1)
         print("finish check video type")
         #init rtsp client
-        rtsp_client = RtspClient()
+        rtsp_client = RtspTcpClient()
         succ = rtsp_client.connect_rtsp_server()
         if not succ:
             print("ros node shutdown")

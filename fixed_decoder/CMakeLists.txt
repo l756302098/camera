@@ -4,6 +4,24 @@ project(fixed_decoder)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+option(ARM_BUILD "option for arm build" OFF)
+if(ARM_BUILD)
+  Message("ARM BUILD")
+  set(AVCODEC_LIBRARY /usr/lib/aarch64-linux-gnu/libavcodec.so)
+  set(AVDEVICE_LIBRARY /usr/lib/aarch64-linux-gnu/libavdevice.so)
+  set(AVUTIL_LIBRARY /usr/lib/aarch64-linux-gnu/libavutil.so)
+  set(AVFORMAT_LIBRARY /usr/lib/aarch64-linux-gnu/libavformat.so)
+  set(SWRESAMPLE_LIBRARY /usr/lib/aarch64-linux-gnu/libswresample.so)
+  set(SWSCALE_LIBRARY /usr/lib/aarch64-linux-gnu/libswscale.so)
+else()
+  Message("X86 BUILD")
+  set(AVCODEC_LIBRARY /usr/lib/x86_64-linux-gnu/libavcodec.so)
+  set(AVDEVICE_LIBRARY /usr/lib/x86_64-linux-gnu/libavdevice.so)
+  set(AVUTIL_LIBRARY /usr/lib/x86_64-linux-gnu/libavutil.so)
+  set(AVFORMAT_LIBRARY /usr/lib/x86_64-linux-gnu/libavformat.so)
+  set(SWRESAMPLE_LIBRARY /usr/lib/x86_64-linux-gnu/libswresample.so)
+  set(SWSCALE_LIBRARY /usr/lib/x86_64-linux-gnu/libswscale.so)
+endif()
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -17,8 +35,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package( OpenCV REQUIRED )
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(ffmpeg REQUIRED IMPORTED_TARGET libavcodec libavformat libavutil libswscale)
+# find_package(PkgConfig REQUIRED)
+# pkg_check_modules(ffmpeg REQUIRED IMPORTED_TARGET libavcodec libavformat libavutil libswscale)
 
 ###################################
 ## catkin specific configuration ##
@@ -45,10 +63,33 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+if(ARM_BUILD)
+/usr/local/ffmpeg/include/libavcodec
+/usr/local/ffmpeg/include/libavformat
+/usr/local/ffmpeg/include/libswscale
+else()
+  /usr/include/x86_64-linux-gnu/libavcodec
+  /usr/include/x86_64-linux-gnu/libavformat
+  /usr/include/x86_64-linux-gnu/libswscale
+endif()
 )
 
 add_executable(fixed_decoder_node src/rtsp_capture.cpp src/base64.cpp)
-target_link_libraries(fixed_decoder_node ${catkin_LIBRARIES}  libavcodec.so libavformat.so libavutil.so libswscale.so)
+target_link_libraries(fixed_decoder_node 
+${catkin_LIBRARIES}  
+${AVCODEC_LIBRARY}
+${AVDEVICE_LIBRARY}
+${AVUTIL_LIBRARY}
+${AVFORMAT_LIBRARY}
+${SWRESAMPLE_LIBRARY}
+${SWSCALE_LIBRARY})
 
 add_executable(decoder_h264_node src/decoder_h264_node.cpp src/H264Decoder.cpp)
-target_link_libraries(decoder_h264_node ${catkin_LIBRARIES}  ${OpenCV_LIBS} libavcodec.so libavformat.so libavutil.so libswscale.so)
+target_link_libraries(decoder_h264_node ${catkin_LIBRARIES}  ${OpenCV_LIBS} 
+${catkin_LIBRARIES}  
+${AVCODEC_LIBRARY}
+${AVDEVICE_LIBRARY}
+${AVUTIL_LIBRARY}
+${AVFORMAT_LIBRARY}
+${SWRESAMPLE_LIBRARY}
+${SWSCALE_LIBRARY})

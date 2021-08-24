@@ -18,7 +18,7 @@ lantern_control::lantern_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
     zoom_pub_ = nh_.advertise<std_msgs::Float32>("/fixed/visible/zoom", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
-    ptz_server = nh_.advertiseService(ptz_server_name, &lantern_control::handle_cloudplatform, this);
+    //ptz_server = nh_.advertiseService(ptz_server_name, &lantern_control::handle_cloudplatform, this);
     tcp_ptr = std::make_shared<EpollTcpClient>(device_ip, device_port);
     if (!tcp_ptr) {
         std::cout << "tcp_client create faield!" << std::endl;

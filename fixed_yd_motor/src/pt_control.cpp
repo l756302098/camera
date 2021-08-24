@@ -38,7 +38,7 @@ void pt_control::update(){
     //     sleep(1);
     //     tcp_ptr->start();
     // }
-    motor_status(query_id);
+    // motor_status(query_id);
     nav_msgs::Odometry pose;
 	pose.header.stamp = ros::Time::now();
 	pose.pose.pose.position.x = g_now_xyposition;

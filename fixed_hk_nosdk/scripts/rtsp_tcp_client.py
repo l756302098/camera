@@ -20,7 +20,7 @@ config_dict = {
     'server_path': '/ISAPI/Streaming/thermal/channels/2/streamType/pixel-to-pixel_thermometry_data',  #URL中端口之后的部份，测试发现不同服务器对这部份接受的值是不一样的，也就是说自己使用时很可能得自己修改这部份的值
     'cseq': 0,                                  #RTSP使用的请求起始序列码，不需要改动
     'user_agent': 'LibVLC/3.0.2',               #自定义请求头部
-    'buffer_len': 1024,                         #用于接收服务器返回数据的缓冲区的大小
+    'buffer_len': 4096,                         #用于接收服务器返回数据的缓冲区的大小
     'auth_method': 'Digest',                    #RTSP使用的认证方法，Basic/Digest
     'header_normal_modify_allow': False,        #是否允许拼接其他协议规定的请求头的总开关，请些请求头的值为正常值（大多是RFC给出的示例）
     'header_overload_modify_allow': False,      #是否允许拼接其他协议规定的请求头的总开关，请些请求头的值为超长字符串
@@ -45,7 +45,7 @@ def isUse(port):
     except Exception:
         return False
 
-class RtspClient():
+class RtspTcpClient():
     def __init__(self):
         self.queue = Queue.Queue(maxsize=20)
         pass
@@ -121,7 +121,7 @@ class RtspClient():
             response_value = self.gen_response_value(url, public_method, realm, nonce)
             str_setup_header += 'Authorization: Digest username="'+config_dict['server_username']+'", realm="'+realm+'", nonce="'+nonce+'", uri="'+url+'", response="'+response_value+'"\r\n'
         str_setup_header += 'User-Agent: ' + config_dict['user_agent'] + '\r\n'
-        str_setup_header += 'Transport: RTP/AVP/UDP;unicast;client_port='+str(self._rtp_port)+'-'+str(self._rtcp_port)+'\r\n'
+        str_setup_header += 'Transport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n'
         str_setup_header += '\r\n'
         return str_setup_header
     
@@ -207,89 +207,25 @@ class RtspClient():
             return data
         return None
     
-    def start_udp_receive_thread(self):
-        print("start start_udp_receive_thread")
-        self._rtp_receive_thread = Thread(target=self._handle_rtp_receive)
+    def start_tcp_receive_thread(self):
+        print("start start_tcp_receive_thread")
+        self._rtp_receive_thread = Thread(target=self._handle_tcp_rtp_receive)
         self._rtp_receive_thread.setDaemon(True)
         self._rtp_receive_thread.start()
+        print("end start_tcp_receive_thread")
 
-        self._rtp2_receive_thread = Thread(target=self._handle_rtcp_receive)
-        self._rtp2_receive_thread.setDaemon(True)
-        self._rtp2_receive_thread.start()
-        print("end start_udp_receive_thread")
-    
-    def _handle_rtp_receive(self):
+    def _handle_tcp_rtp_receive(self):
         try:
-            print("start _handle_rtp_receive")
-            self._rtp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self._rtp_socket.bind(("0.0.0.0", self._rtp_port))
-            self._rtp_socket.settimeout(30.)
-            print('Bind UDP on 50166...')
-            temp_bytes = bytes()
-            buffer_max = 2*1024*1024
+            print("start tcp listening")
             while True:
                 if not self.is_receiving_rtp:
                     break
-                #print("receive rtp data")
-                try:
-                    recv,addr = self._rtp_socket.recvfrom(buffer_max)
-                    if(len(recv)==0):
-                        continue
-                    recv_bytes = bytearray(recv)
-                    header = recv_bytes[:12]
-                    payload = recv_bytes[12:]
-                    mark = header[1] >> 7
-                    payload_type = header[1] & 0x7F
-                    if payload_type != 0x6d:
-                        print("payload_type",payload_type)
-                        continue
-                    #print("byte size:",len(recv)," mark:",mark," payload_type:",payload_type)
-                    if(len(recv)==140):
-                        # resolve timestamp
-                        timeBytes = recv[56:72]
-                        # timeStr = ":".join("{:02x}".format(ord(c)) for c in timeBytes)
-                        # print("timeStr",timeStr)
-                        temp_bytes += timeBytes
-                        pass
-                    else:
-                        #timestampByte = recv_bytes[4:8]
-                        #timestamp = (timestampByte[0] << 24) + (timestampByte[1] << 16) + (timestampByte[2] << 8) + timestampByte[3]
-                        #print("timestamp",timestamp)
-                        temp_bytes += payload
-                    if mark == 1:
-                        #print("receive one frame image.data size:",len(temp_bytes))
-                        self.queue.put(temp_bytes)
-                        temp_bytes = b''
-                    #print("byte size:",len(recv))
-                except socket.timeout:
-                    print("time out")
-                    continue
+                msg_recv = self.socket_send.recv(config_dict['buffer_len'])
+                print("reveive len:",len(msg_recv))
         except Exception:
-            print("udp listening error")
-            #raw = packet.payload
+            print("tcp_rtp listening error")
         self._rtp_socket.close()
-        print("exit 50166")
-
-    def _handle_rtcp_receive(self):
-        self._rtcp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            self._rtcp_socket.bind(("0.0.0.0", self._rtcp_port))
-            self._rtcp_socket.settimeout(30.)
-            print('Bind UDP on 50167...')
-            while True:
-                if not self.is_receiving_rtp:
-                    break
-                print("receive rtcp data")
-                try:
-                    recv = self._rtcp_socket.recv(2048)
-                    print(recv)
-                except socket.timeout:
-                    print("time out")
-                    continue
-        except Exception:
-            print("udp listening error")
-        self._rtcp_socket.close()
-        print("exit 50167")
+        print("exit tcp_rtp listing")
 
     #执行一次完整的rtsp播放请求，OPTIONS/DESCRIBE/SETUP/PLAY/GET PARAMETER/TEARDOWN，如果某个请求不正确则中止
     #此方法推荐用于则试服务端是否正确实现RTSP服务
@@ -355,9 +291,6 @@ class RtspClient():
                 str_setup_header = self.gen_setup_header(self.url, self.realm_value, self.nonce_value)
                 print("first SETUP:",str_setup_header)
                 self.socket_send.send(str_setup_header.encode())
-                # setup udp listen
-                self.is_receiving_rtp = True
-                self.start_udp_receive_thread()
                 msg_recv = self.socket_send.recv(config_dict['buffer_len']).decode()
                 msg_recv_dict = msg_recv.split('\r\n')
                 print("3 receive:")
@@ -390,6 +323,9 @@ class RtspClient():
                         return False
                     else:
                         print('PLAY is ok')
+                        # setup udp listen
+                        self.is_receiving_rtp = True
+                        self.start_tcp_receive_thread()
                         return True
                         # try:
                         #     while True:
