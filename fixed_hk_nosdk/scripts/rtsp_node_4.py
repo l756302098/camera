@@ -3,7 +3,7 @@
 import rospy
 from time import sleep
 from sensor_msgs.msg import Image
-from rtsp_client import RtspClient,config_dict
+from rtsp_client_4 import RtspClient,config_dict
 from isapi import HK_Api
 
 if __name__ == '__main__':
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                 data_array = data[4:]
                 image_size = image_height * image_width * 4
                 if len(data_array)!=image_size:
-                    print("error size:",len(data_array))
+                    print("error size:",len(data_array),image_size)
                     continue
                 print("ok size:",len(data_array))
                 #publish temp data

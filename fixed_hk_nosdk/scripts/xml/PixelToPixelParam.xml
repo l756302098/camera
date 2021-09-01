@@ -9,7 +9,7 @@
     <distance>1000</distance>
     <refreshInterval>50</refreshInterval>
     <distanceUnit>centimeter</distanceUnit>
-    <temperatureDataLength>2</temperatureDataLength>
+    <temperatureDataLength>4</temperatureDataLength>
     <JpegPictureWithAppendData>
         <jpegPicEnabled>true</jpegPicEnabled>
     </JpegPictureWithAppendData>

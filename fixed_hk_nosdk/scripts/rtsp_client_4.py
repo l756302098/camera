@@ -246,11 +246,6 @@ class RtspClient():
                     if(len(recv)==140):
                         pass
                     else:
-                        timestampByte = recv_bytes[4:8]
-                        # print("byte ",timestampByte[0],timestampByte[1],timestampByte[2],timestampByte[3])
-                        timestamp = (timestampByte[0] << 24) + (timestampByte[1] << 16) + (timestampByte[2] << 8) + timestampByte[3]
-                        #timestamp = int.from_bytes(timestampByte,'little')
-                        print("timestamp",timestamp)
                         temp_bytes += payload
                     if mark == 1:
                         #print("receive one frame image.data size:",len(temp_bytes))
