@@ -48,21 +48,16 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
-add_executable(onvif_visible_node src/visible_node.cpp src/visible_control.cpp src/common.cpp)
-target_link_libraries(onvif_visible_node
-  ${catkin_LIBRARIES}
-)
-add_executable(onvif_infrared_node src/infrared_node.cpp src/infrared_control.cpp src/common.cpp)
-target_link_libraries(onvif_infrared_node
-  ${catkin_LIBRARIES}
-)
-
-
-# add_executable(raw_temp_node src/raw_temp_node.cpp src/raw_temp.cpp src/pugixml.cpp src/common.cpp)
-# target_link_libraries(raw_temp_node
-#   ${catkin_LIBRARIES}
-#   OpenSSL::SSL
-#   OpenSSL::Crypto
-#   ssl
+# install(PROGRAMS
+#   scripts/*.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
-# target_compile_definitions(raw_temp_node PUBLIC HTTPLIB_REQUIRE_OPENSSL)
+install(DIRECTORY scripts
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+add_custom_target(fixed_hk_nosdk_install ALL COMMAND "pip" "install" "--user" "-r" "${PROJECT_SOURCE_DIR}/requirements.txt")
