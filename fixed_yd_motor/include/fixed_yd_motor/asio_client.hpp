@@ -151,11 +151,11 @@ public:
     }
 
     void send_bytes(std::vector<unsigned char> data){
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            printf(" %x ",data[i]);
-        }
-        printf("\n");
+        // for (size_t i = 0; i < data.size(); i++)
+        // {
+        //     printf(" %x ",data[i]);
+        // }
+        // printf("\n");
         // std::cout << "isopen:" << is_open() << std::endl;
         if(is_open())
         {

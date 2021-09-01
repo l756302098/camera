@@ -161,7 +161,7 @@ void EpollTcpClient::OnSocketWrite(int32_t fd) {
 }
 
 int32_t EpollTcpClient::SendData(const PacketPtr& data) {
-    std::cout << "SendData: " << data->msg.c_str() << " size:" << data->msg.size() << std::endl;
+    //std::cout << "SendData: " << data->msg.c_str() << " size:" << data->msg.size() << std::endl;
     int r = ::write(handle_, data->msg.data(), data->msg.size());
     if (r == -1) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {

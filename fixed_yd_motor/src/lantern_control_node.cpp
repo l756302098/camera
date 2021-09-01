@@ -33,7 +33,6 @@ int main(int argc, char **argv)
     is_running = true;
     std::shared_ptr<lantern_control> ptr(new lantern_control);
     std::thread *write_thread = new std::thread(std::bind(&lantern_control::write_hk, ptr));
-    ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &lantern_control::tick, ptr.get(), false);
     //ros
     ros::Rate rate(10);
     while (ros::ok() && is_running)

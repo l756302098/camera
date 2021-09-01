@@ -18,7 +18,7 @@ pt_control::pt_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1),g_z_goal
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
     zoom_pub_ = nh_.advertise<std_msgs::Float32>("/fixed/visible/zoom", 1);
     ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
-    ptz_server = nh_.advertiseService(ptz_server_name, &pt_control::handle_cloudplatform, this);
+    //ptz_server = nh_.advertiseService(ptz_server_name, &pt_control::handle_cloudplatform, this);
     std::unique_ptr<client> ptr (new client(device_ip,device_port));
     tcp_ptr = std::move(ptr);
     sock_thread = new std::thread(std::bind(&client::run,tcp_ptr.get()));
@@ -33,12 +33,12 @@ pt_control::~pt_control(){
 void pt_control::update(){
     motor_temp_id++;
     unsigned char query_id = motor_temp_id % 2 == 0 ? 0x01 : 0x02;
-    // if(!tcp_ptr->is_open()){
-    //     std::cout << "network error reconnect ..." << std::endl;
-    //     sleep(1);
-    //     tcp_ptr->start();
-    // }
-    // motor_status(query_id);
+    if(!tcp_ptr->is_open()){
+        std::cout << "network error reconnect ..." << std::endl;
+        sleep(1);
+        tcp_ptr->start();
+    }
+    motor_status(query_id);
     nav_msgs::Odometry pose;
 	pose.header.stamp = ros::Time::now();
 	pose.pose.pose.position.x = g_now_xyposition;
@@ -46,17 +46,17 @@ void pt_control::update(){
     pose.pose.pose.position.y = g_now_zoom;
 	ptz_pub_.publish(pose);
     //motor_status(0x02);
-    if((g_xy_reach_flag == 1) && (g_z_reach_flag == 1))
-    {
-        g_xy_reach_flag = 0;
-        g_z_reach_flag = 0;
-        g_xy_goal = -1;
-        g_z_goal = -1;
-        std_msgs::Int32 res_msg;
-		res_msg.data = 1;
-		isreach_pub_.publish(res_msg);
-        std::cout << "isreach publish" << std::endl;
-    }
+    // if((g_xy_reach_flag == 1) && (g_z_reach_flag == 1))
+    // {
+    //     g_xy_reach_flag = 0;
+    //     g_z_reach_flag = 0;
+    //     g_xy_goal = -1;
+    //     g_z_goal = -1;
+    //     std_msgs::Int32 res_msg;
+	// 	res_msg.data = 1;
+	// 	isreach_pub_.publish(res_msg);
+    //     std::cout << "isreach publish" << std::endl;
+    // }
 }
 
 bool pt_control::handle_cloudplatform(fixed_msg::cp_control::Request &req, fixed_msg::cp_control::Response &res)

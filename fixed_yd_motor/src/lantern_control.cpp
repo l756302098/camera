@@ -16,9 +16,8 @@ lantern_control::lantern_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1
     nh_.param<std::string>("ptz_server_name", ptz_server_name, "/fixed/platform/cmd");
     motor_sub = nh_.subscribe("/fixed/motor/cmd", 1, &lantern_control::motor_callback, this);
     isreach_pub_ = nh_.advertise<std_msgs::Int32>("/fixed/platform/isreach", 1);
-    zoom_pub_ = nh_.advertise<std_msgs::Float32>("/fixed/visible/zoom", 1);
-    ptz_pub_ = nh_.advertise<nav_msgs::Odometry>(ptz_topic, 1);
-    //ptz_server = nh_.advertiseService(ptz_server_name, &lantern_control::handle_cloudplatform, this);
+    ptz_sub = nh_.subscribe(ptz_topic, 1, &lantern_control::pose_cb, this);
+    ptz_server = nh_.advertiseService(ptz_server_name, &lantern_control::handle_cloudplatform, this);
     tcp_ptr = std::make_shared<EpollTcpClient>(device_ip, device_port);
     if (!tcp_ptr) {
         std::cout << "tcp_client create faield!" << std::endl;
@@ -43,7 +42,7 @@ lantern_control::lantern_control(const ros::NodeHandle &nh):nh_(nh),g_xy_goal(-1
         std::cout << "tcp_client start failed!" << std::endl;
         ros::shutdown();
     }
-    std::cout << "############tcp_client started!################" << std::endl;
+    std::cout << "############tcp_client client started!################" << std::endl;
     std::cout << "lantern_control network init finish" << std::endl;
 }
 
@@ -53,15 +52,39 @@ lantern_control::~lantern_control(){
 }
 
 void lantern_control::update(){
-    motor_temp_id++;
-    unsigned char query_id = motor_temp_id % 2 == 0 ? 0x01 : 0x02;
-    motor_status(query_id);
-    nav_msgs::Odometry pose;
-	pose.header.stamp = ros::Time::now();
-	pose.pose.pose.position.x = g_now_xyposition;
-	pose.pose.pose.position.z = g_now_zposition;
-    pose.pose.pose.position.y = g_now_zoom;
-	ptz_pub_.publish(pose);
+    if(g_action == 1 && g_control_type != 2 )
+    {
+        if(g_xy_goal != -1){
+            xy_diff_val = g_xy_goal - g_now_xyposition;
+            std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
+            std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
+            std::cout << "xy_val: " << xy_diff_val << std::endl;
+            if(abs(xy_diff_val) > 35700)
+                xy_diff_val = 0;
+            if(abs(xy_diff_val)<300){
+                g_xy_goal = -1;
+                g_xy_reach_flag = 1;
+                if(ready && g_control_type==3){
+                    std::unique_lock <std::mutex> lck(mtx);
+                    ready = false;
+                    cv.notify_one();
+                    std::cout << "notify_one" << std::endl;
+                }
+            }
+        }
+        if (g_z_goal != -1){
+            z_diff_val = g_z_goal - g_now_zposition;
+            std::cout << "g_z_goal: " << g_z_goal << std::endl;
+            std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
+            std::cout << "z_val: " << z_diff_val << std::endl;
+            if(abs(z_diff_val)>35700)
+                z_diff_val = 0;
+            if(abs(z_diff_val)<300){
+                g_z_reach_flag = 1;
+                g_z_goal = -1;
+            }
+        }
+    }
     //motor_status(0x02);
     if((g_xy_reach_flag == 1) && (g_z_reach_flag == 1))
     {
@@ -126,8 +149,7 @@ void lantern_control::write_hk(){
                 {
                     g_control_type = type;
                     if(g_control_type == 0){
-                        if(value==0) value = 36000;
-                        g_xy_goal = 36000 - value;
+                        g_xy_goal = value;
                     }
                     else if(g_control_type == 1)
                         g_z_goal = value;
@@ -136,8 +158,7 @@ void lantern_control::write_hk(){
                     g_control_type = type;
                     int xy_value = atoi(cmd_value_strv[4].c_str());
                     int z_value = atoi(cmd_value_strv[5].c_str());
-                    if(xy_value==0) xy_value = 36000;
-                    g_xy_goal = 36000 - xy_value;
+                    g_xy_goal = xy_value;
                     g_z_goal = z_value;
                     std::cout << "now  xy_value:" << g_now_xyposition << " z_value:" << g_now_zposition << std::endl;
                     std::cout << "goal xy_value:" << g_xy_goal << " z_value:" << g_z_goal << std::endl;
@@ -160,8 +181,6 @@ void lantern_control::write_hk(){
             value = xy_value = z_value = 0;
             if(type==0){
                 value = atoi(cmd_value_strv[3].c_str());
-                if(value==0) value = 36000;
-                value = 36000 - value;
                 g_xy_reach_flag = 0;
                 g_z_reach_flag = 1;
             }else if(type==1){
@@ -173,88 +192,13 @@ void lantern_control::write_hk(){
             }
             else if(type==3){
                 xy_value = atoi(cmd_value_strv[4].c_str());
-                if(xy_value==0) xy_value = 36000;
-                xy_value = 36000 - xy_value;
                 z_value = atoi(cmd_value_strv[5].c_str());
                 g_xy_reach_flag = 0;
                 g_z_reach_flag = 0;
             }
-            // else if(type==3){
-            //     value = -1 * atoi(cmd_value_strv[3].c_str());
-            //     g_xy_reach_flag = 0;
-            //     g_z_reach_flag = 1;
-            // }else if(type==4){
-            //     value = atoi(cmd_value_strv[3].c_str());
-            //     g_xy_reach_flag = 1;
-            //     g_z_reach_flag = 0;
-            // }else if(type==5){
-            //     xy_value = atoi(cmd_value_strv[4].c_str());
-            //     if(xy_value==0) xy_value = 36000;
-            //     xy_value = 36000 - xy_value;
-            //     z_value = atoi(cmd_value_strv[5].c_str());
-            //     g_xy_reach_flag = 0;
-            //     g_z_reach_flag = 0;
-            // }
-            
             //此处分开设置水平、垂直及变倍值是为兼容通过485遵循pelco-d协议设置的方式
             if(action == 1){
                 this->set_action(id, type, value, xy_value, z_value, 0);
-            }
-        }
-    }
-}
-
-void lantern_control::tick(const ros::TimerEvent &event){
-    vector<unsigned char> cmd = queue_pop();
-    if(cmd.empty() || cmd.size()<20) return;
-    if(cmd[3]!=0x0B) return;
-    if(cmd[2]==0x01){
-        //printf("%x号电机 ",cmd[2]);
-        uint16_t single_value = cmd[5] + (cmd[6] << 8);
-        uint32_t multi_value = cmd[7] + (cmd[8] << 8) + (cmd[9] << 16)+ (cmd[10] << 24);
-        g_now_xyposition = single_value * 360 / MOTOR_ROTATE * 100 ;
-        // printf(" 运行状态:%x \n",cmd[17]);
-        //printf(" single_value=%i single_angle=%i multi_value=%i \n",single_value,g_now_xyposition,multi_value);
-    }else{
-        uint16_t single_value = cmd[5] + (cmd[6] << 8);
-        uint32_t multi_value = cmd[7] + (cmd[8] << 8) + (cmd[9] << 16)+ (cmd[10] << 24);
-        g_now_zposition = single_value * 360 / MOTOR_ROTATE * 100;
-        // printf(" 运行状态:%x \n",cmd[17]);
-        //printf(" single_value=%i single_angle=%i multi_value=%i \n",single_value,g_now_zposition,multi_value);
-    }
-    // std::cout << "g_xy_reach_flag:" << g_xy_reach_flag << " g_z_reach_flag:" << g_z_reach_flag << std::endl;
-    // std::cout << "g_action:" << g_action << " g_control_type:" << g_control_type << std::endl;
-    // std::cout << "g_xy_goal:" << g_xy_goal << " g_z_goal:" << g_z_goal << std::endl;
-    if(g_action == 1 &&   g_control_type != 2 )
-    {
-        if(g_xy_goal != -1){
-            xy_diff_val = g_xy_goal - g_now_xyposition;
-            std::cout << "g_xy_goal: " << g_xy_goal << std::endl;
-            std::cout << "g_now_xyposition: " << g_now_xyposition << std::endl;
-            std::cout << "xy_val: " << xy_diff_val << std::endl;
-            if(abs(xy_diff_val) > 35700)
-                xy_diff_val = 0;
-            if(abs(xy_diff_val)<300){
-                g_xy_goal = -1;
-                g_xy_reach_flag = 1;
-                if(ready && g_control_type==3){
-                    std::unique_lock <std::mutex> lck(mtx);
-                    ready = false;
-                    cv.notify_one();
-                    std::cout << "notify_one" << std::endl;
-                }
-            }
-        }
-        if (g_z_goal != -1){
-            z_diff_val = g_z_goal - g_now_zposition;
-            std::cout << "g_z_goal: " << g_z_goal << std::endl;
-            std::cout << "g_now_zposition: " << g_now_zposition << std::endl;
-            std::cout << "z_val: " << z_diff_val << std::endl;
-            if(abs(z_diff_val)>35700)
-                z_diff_val = 0;
-            if(abs(z_diff_val)<300){
-                g_z_reach_flag = 1;
-                g_z_goal = -1;
             }
         }
     }
@@ -265,25 +209,11 @@ bool lantern_control::set_action(int id, int type, int value, int xy_value, int 
     //wTiltPos  2号电机
     if(type == 0){
         motor_id = 0x01;
-        motor_absolute_angle(0x01,value / 100);
+        motor_absolute_angle(0x02,value / 100);
     }else if(type == 1){
         motor_id = 0x02;
-        motor_absolute_angle(0x02,value / 100);
-    }else if(type == 2){
-        //set zoom
-        std_msgs::Float32 data;
-        data.data = value / 100;
-        zoom_pub_.publish(data);
+        motor_absolute_angle(0x01,value / 100);
     }
-    // else if(type == 3){
-    //     //相对运动
-    //     motor_id = 0x01;
-    //     motor_relat_angle(0x01,value / 100);
-    // }else if(type == 4){
-    //     //相对运动
-    //     motor_id = 0x02;
-    //     motor_relat_angle(0x02,value / 100);
-    // }
     else if(type == 3){
         //相对运动
         motor_id = 0x01;
@@ -355,6 +285,7 @@ void lantern_control::motor_relat_angle(char motor_id,int angle){
 }
 
 void lantern_control::motor_absolute_angle(char motor_id,int angle){
+    printf("motor_absolute_angle");
     std::vector<unsigned char> cmd;
     cmd.push_back(0x3E);
     cmd.push_back(0x00);
@@ -374,6 +305,11 @@ void lantern_control::motor_absolute_angle(char motor_id,int angle){
     cmd.push_back(byte3);
     cmd.push_back(byte4);
     crc_check(cmd);
+    for (size_t i = 0; i < cmd.size(); i++)
+    {
+        printf(" %x ",cmd[i]);
+    }
+    printf("\n");
     send_messages(cmd);
 }
 //电机按照最短的距离回到设定的原点

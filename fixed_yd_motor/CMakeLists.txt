@@ -55,7 +55,12 @@ target_link_libraries(ptz_node2
   ${catkin_LIBRARIES}
 )
 
-add_executable(lantern_node src/lantern_node.cpp src/lantern_control.cpp src/epoll_client.cpp src/common.cpp)
-target_link_libraries(lantern_node
+add_executable(lantern_control_node src/lantern_control_node.cpp src/lantern_control.cpp src/epoll_client.cpp src/common.cpp)
+target_link_libraries(lantern_control_node
+  ${catkin_LIBRARIES}
+)
+
+add_executable(lantern_status_node src/lantern_status_node.cpp src/lantern_status.cpp src/epoll_client.cpp src/common.cpp)
+target_link_libraries(lantern_status_node
   ${catkin_LIBRARIES}
 )
