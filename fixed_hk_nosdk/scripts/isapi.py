@@ -14,17 +14,6 @@ def read_xml():
     print(body)
     return body
 
-def read_PixelToPixelParam(path):
-    '''
-    读取xml文件
-    :return:
-    '''
-    print("xml path ",path)
-    f = open(path+'/PixelToPixelParam.xml',"r")
-    body = f.read()
-    print(body)
-    return body
-
 #2.发送接口请求
 from os import nice
 from io import BytesIO
@@ -37,6 +26,21 @@ from requests.models import codes
 class HK_Api(object):
     def __init__(self):
         print("init")
+    '''
+    Turn a simple dict of key/value pairs into XML
+    '''
+    def Continuous_to_xml(self, d):
+        root = ElementTree.Element("PTZData")  #使用Element创建元素
+        root.set("xmlns","http://www.hikvision.com/ver20/XMLSchema")
+        root.set("version","2.0")
+        #循环key与val
+        for key, val in d.items():
+            #创建新的元素,确定元素的值
+            child = ElementTree.Element(key)
+            child.text = str(val)
+            #添加为elem的子节点
+            root.append(child)
+        return root
     '''
     Turn a simple dict of key/value pairs into XML
     '''
@@ -55,7 +59,7 @@ class HK_Api(object):
         return root
     
     def ThermalStreamParam_to_xml(self):
-        root = ElementTree.Element("PixelToPixelParam")  #使用Element创建元素
+        root = ElementTree.Element("ThermalStreamParam")  #使用Element创建元素
         root.set("xmlns","http://www.hikvision.com/ver20/XMLSchema")
         root.set("version","2.0")
         child = ElementTree.Element("videoCodingType")
@@ -89,20 +93,6 @@ class HK_Api(object):
             child.text = str(val)
             #添加为elem的子节点
             e_elem.append(child)
-        return root
-
-    def PixelToPixelParam_to_xml(self,dataLength):
-        root = ElementTree.Element("PixelToPixelParam")  #使用Element创建元素
-        root.set("xmlns","http://www.hikvision.com/ver20/XMLSchema")
-        root.set("version","2.0")
-        child1 = ElementTree.Element("id")
-        child1.text = str(1)
-        root.append(child1)
-        child2 = ElementTree.Element("temperatureDataLength")
-        child2.text = str(dataLength)
-        #child.text = str("real-time_raw_data")
-        #添加为elem的子节点
-        root.append(child2)
         return root
 
     def get_status(self,ip,channel=1,username="admin",psd="123qweasd"):
@@ -144,6 +134,47 @@ class HK_Api(object):
                     absoluteZoom = int(grandson.text)
         #print([azimuth,elevation,absoluteZoom])
         return azimuth,elevation,absoluteZoom
+
+    def put_continuous(self,ip,p,t,z,channel=1,username="admin",psd="123qweasd"):
+        url = "http://"+ip+"/ISAPI/PTZCtrl/channels/"+str(channel)+"/continuous"
+        params = {
+            'pan':p,
+            'tilt':t,
+            'zoom':z
+        }
+        root = self.Continuous_to_xml(params)
+        f = BytesIO()
+        et = ElementTree.ElementTree(root)
+        et.write(f, encoding='utf-8', xml_declaration=True)
+        request_data = f.getvalue()
+        print("request_data:",request_data)
+        response = ""
+        try:
+            r = requests.put(url,auth=HTTPDigestAuth(username,psd),data=request_data)
+            print(r.text)
+            response = r.text
+        except Exception:
+            print("request error")
+            return 0
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return 0
+        #print("root tag:",root.tag)
+        if root==None:
+            return 0
+        if root.tag.find('ResponseStatus') == -1:
+            print("not contain ResponseStatus")
+            return 0
+        for child in root:
+            if child == None or child.tag == None:
+                continue
+            if 'statusCod' in child.tag:
+                code = int(child.text)
+                print("code:",code)
+                return code
+        return 0
 
     def put_status(self,ip,p,t,z,channel=1,username="admin",psd="123qweasd"):
         url = "http://"+ip+"/ISAPI/PTZCtrl/channels/"+str(channel)+"/absolute"
@@ -204,12 +235,13 @@ class HK_Api(object):
             root = ElementTree.fromstring(response)
         except Exception:
             print("parse xml error")
+            print("response",response)
             return 0
-        #print("root tag:",root.tag)
         if root==None:
             return 0
         if root.tag.find('ResponseStatus') == -1:
             print("not contain ResponseStatus")
+            print("response",response)
             return 0
         for child in root:
             if child == None or child.tag == None:
@@ -220,37 +252,6 @@ class HK_Api(object):
                 return code
         return 0
     
-    def get_pixelToPixelParam(self,ip,channel=1,username="admin",psd="123qweasd"):
-        url = "http://"+ip+"/ISAPI/Thermal/channels/"+str(channel)+"/thermometry/pixelToPixelParam"
-        response = ""
-        try:
-            r = requests.get(url,auth=HTTPDigestAuth(username,psd))
-            response = r.text
-        except Exception:
-            print("request error")
-            return None,0
-        print("get_pixelToPixelParam",response)
-        try:
-            root = ElementTree.fromstring(response)
-        except Exception:
-            print("parse xml error")
-            return None,0
-        if root==None:
-            return None,0
-        print("root",root,root.tag)
-        if root.tag.find('PixelToPixelParam') == -1:
-            print("not contain PixelToPixelParam")
-            return None,0
-        for child in root:
-            #print(child.tag, child.attrib,child.text,child.tail)
-            if child == None or child.tag == None:
-                continue
-            if 'temperatureDataLength' in child.tag:
-                dataLength = child.text
-                print("dataLength:",dataLength)
-                return dataLength,1
-        return None,0
-
     def get_streamParam(self,ip,channel=1,username="admin",psd="123qweasd"):
         url = "http://"+ip+"/ISAPI/Thermal/channels/"+str(channel)+"/streamParam"
         response = ""
@@ -279,42 +280,6 @@ class HK_Api(object):
                 print("video_type:",video_type)
                 return video_type,1
         return None,0
-
-    def put_pixelToPixelParam(self,path,ip,channel=1,username="admin",psd="123qweasd"):
-        url = "http://"+ip+"/ISAPI/Thermal/channels/"+str(channel)+"/thermometry/pixelToPixelParam"
-        # root = self.PixelToPixelParam_to_xml(2)
-        # f = BytesIO()
-        # et = ElementTree.ElementTree(root)
-        # et.write(f, encoding='utf-8', xml_declaration=True)
-        # request_data = f.getvalue()
-        request_data = read_PixelToPixelParam(path)
-        print("put_pixelToPixelParam data",request_data,type(request_data))
-        response = ""
-        try:
-            r = requests.put(url,auth=HTTPDigestAuth(username,psd),data=request_data)
-            response = r.text
-        except Exception:
-            print("request error")
-            return 0
-        print("response",response)
-        try:
-            root = ElementTree.fromstring(response)
-        except Exception:
-            print("parse xml error")
-            return 0
-        if root==None:
-            return 0
-        if root.tag.find('ResponseStatus') == -1:
-            print("not contain ResponseStatus")
-            return 0
-        for child in root:
-            if child == None or child.tag == None:
-                continue
-            if 'statusCod' in child.tag:
-                code = int(child.text)
-                print("code:",code)
-                return code
-        return 0
 
     def put_streamParam(self,ip,channel=1,username="admin",psd="123qweasd"):
         url = "http://"+ip+"/ISAPI/Thermal/channels/"+str(channel)+"/streamParam"
@@ -351,6 +316,8 @@ class HK_Api(object):
 
 # if __name__ == '__main__':
 #     api = HK_Api()
+#     ok = api.put_continuous('192.168.1.67',60,0,0)
+#     print("result:",ok)
     # p,t,z = api.get_status('192.168.1.65',1,'admin','abcd1234')
     # print(p,t,z)
     # code = api.put_status('192.168.1.65',0,0,0,1,'admin','abcd1234')
