@@ -6,7 +6,6 @@ from sensor_msgs.msg import Image
 from rtsp_client_4 import RtspClient,config_dict
 from isapi import HK_Api
 import cv2
-from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 
 if __name__ == '__main__':
@@ -51,19 +50,6 @@ if __name__ == '__main__':
         global temp_pub
         temp_pub = rospy.Publisher('/fixed/infrared/raw',Image,queue_size=1)
         rate = rospy.Rate(10)
-        # cv bridge
-        bridge = CvBridge()
-
-        # 得到ndarray数据
-        # arr = np.empty((4, 2, 3), dtype=np.float32)
-        # print(arr)
-        # # 打印字节串
-        # b_arr = arr.tostring()
-        # print(b_arr)
-        # # 字节串转ndarray数据
-        # arr_2 = np.frombuffer(b_arr, dtype=np.float32)
-        # arr_2.shape = (4, 2, 3)
-        # print(arr_2)
 
         while not rospy.is_shutdown():
             data = rtsp_client.get_temp()
