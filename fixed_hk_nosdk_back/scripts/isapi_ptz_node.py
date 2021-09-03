@@ -14,8 +14,8 @@ from yidamsg.msg import Detect_Result
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
 from std_msgs.msg import Int32
+from isapi import HK_Api
 from diagnostic_msgs.msg import DiagnosticArray,DiagnosticStatus,KeyValue
-from hk.isapi import HK_Api
 
 pan = 0
 tilt = 0

@@ -1,0 +1,16 @@
+<launch>
+
+  <node pkg="fixed_hk_nosdk" type="rtsp_32f_node.py" name="rtsp_temp_node" respawn="false" output="screen">
+      <param name="camera_id" type="int" value="1"/>
+      <param name="device_ip" value="192.168.1.64"/>
+      <param name="device_port" value="554"/>
+      <param name="device_username" value="admin"/>
+      <param name="device_password" value="123qweasd"/>
+      <param name="image_width" type="int" value="120"/>
+      <param name="image_height" type="int" value="160"/>
+      <param name="xml_path" type="str" value="$(find fixed_hk_nosdk)/scripts/xml"/>
+  </node>
+  
+</launch>
+
+

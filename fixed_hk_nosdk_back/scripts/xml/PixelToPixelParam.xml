@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PixelToPixelParam version="2.0" 
+    xmlns="http://www.std-cgi.com/ver20/XMLSchema">
+    <id>1</id>
+    <maxFrameRate>200</maxFrameRate>
+    <reflectiveEnable>false</reflectiveEnable>
+    <reflectiveTemperature>20.00</reflectiveTemperature>
+    <emissivity>0.96</emissivity>
+    <distance>1000</distance>
+    <refreshInterval>50</refreshInterval>
+    <distanceUnit>centimeter</distanceUnit>
+    <temperatureDataLength>4</temperatureDataLength>
+    <JpegPictureWithAppendData>
+        <jpegPicEnabled>true</jpegPicEnabled>
+    </JpegPictureWithAppendData>
+</PixelToPixelParam>

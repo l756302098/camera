@@ -16,42 +16,14 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   fixed_msg
 )
-find_package(Eigen3 REQUIRED)
+catkin_python_setup()
+catkin_package()
 
-#set(_HTTPLIB_OPENSSL_MIN_VER "1.1.1")
-#find_package(OpenSSL ${_HTTPLIB_OPENSSL_MIN_VER} COMPONENTS Crypto SSL REQUIRED)
-
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES fixed_hk_nosdk
-  CATKIN_DEPENDS cv_bridge roscpp rospy std_msgs tf fixed_msg geometry_msgs
-)
-
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
 )
 
-# install(PROGRAMS
-#   scripts/*.py
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
 install(DIRECTORY scripts
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

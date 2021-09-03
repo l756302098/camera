@@ -1,0 +1,8 @@
+<launch>
+
+  <include file="$(find fixed_hk_nosdk)/launch/isapi_ptz.launch"/>
+  <include file="$(find fixed_hk_nosdk)/launch/rtsp_temp66.launch"/>
+
+</launch>
+
+

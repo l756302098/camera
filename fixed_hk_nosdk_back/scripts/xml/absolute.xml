@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<PTZData xmlns="http://www.isapi.org/ver20/XMLSchema" version="2.0">
+  <!--opt, object, PTZ数据, attr:version{req, string, 协议版本, range:[,]}-->
+  <AbsoluteHigh>
+    <!--opt, object, 绝对高度-->
+    <elevation>
+      <!--opt, int, 海拔, range:[-900,2700], step:, unit:, unitType:-->1
+    </elevation>
+    <azimuth>
+      <!--opt, int, 方位角, range:[0,3600], step:, unit:, unitType:-->1
+    </azimuth>
+    <absoluteZoom>
+      <!--opt, int, 绝对缩放, range:[0,1000], step:, unit:, unitType:-->1
+    </absoluteZoom>
+  </AbsoluteHigh>
+</PTZData>

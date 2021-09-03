@@ -1,0 +1,15 @@
+<launch>
+
+  <node pkg="fixed_hk_nosdk" type="isapi_temp_node.py" name="raw_temp_node" respawn="false" output="screen">
+      <param name="camera_id" type="int" value="1"/>
+      <param name="device_ip" value="192.168.1.67"/>
+      <param name="device_port" value="80"/>
+      <param name="device_username" value="admin"/>
+      <param name="device_password" value="123qweasd"/>
+      <param name="url" value="http://192.168.1.67/ISAPI/Thermal/channels/2/thermometry/jpegPicWithAppendData?format=json"/>
+      <param name="show_image" type="bool" value="true"/>
+  </node>
+  
+</launch>
+
+
