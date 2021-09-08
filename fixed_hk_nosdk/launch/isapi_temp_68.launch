@@ -7,7 +7,7 @@
       <param name="device_username" value="admin"/>
       <param name="device_password" value="123qweasd"/>
       <param name="url" value="http://192.168.1.68/ISAPI/Thermal/channels/1/thermometry/jpegPicWithAppendData?format=json"/>
-      <param name="show_image" type="bool" value="false"/>
+      <param name="show_image" type="bool" value="true"/>
   </node>
   
 </launch>

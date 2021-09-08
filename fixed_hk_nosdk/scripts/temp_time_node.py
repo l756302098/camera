@@ -69,12 +69,12 @@ if __name__ == '__main__':
                         data_array = content_list[data_index]
                         try:
                             is_write = False
-                            with open("/usr/local/temp.jpg", "wb") as f:
+                            with open("/home/li/temp.jpg", "wb") as f:
                                 f.write(data_array)
                                 f.close()
                                 is_write = True
                             if is_write:
-                                lena = cv2.imread('/usr/local/temp.jpg')
+                                lena = cv2.imread('/home/li/temp.jpg')
                                 cv2.imshow('image', lena)
                                 cv2.waitKey(1)
                         except Exception,e:
@@ -88,6 +88,7 @@ if __name__ == '__main__':
                         header.stamp.secs = timestamp_secs
                         header.stamp.nsecs = timestamp_nsecs
                         image_temp.header = header
+                        image_temp.step = image_width * 4
                         image_temp.height=image_height
                         image_temp.width=image_width
                         image_temp.encoding='32FC1'

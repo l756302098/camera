@@ -33,9 +33,9 @@ int main(int argc, char **argv)
     is_running = true;
     std::shared_ptr<pt_control2> ptr(new pt_control2);
     std::thread *write_thread = new std::thread(std::bind(&pt_control2::write_hk, ptr));
-    ros::Timer timer = nh_.createTimer(ros::Duration(0.1), &pt_control2::tick, ptr.get(), false);
+    ros::Timer timer = nh_.createTimer(ros::Duration(0.02), &pt_control2::tick, ptr.get(), false);
     //ros
-    ros::Rate rate(10);
+    ros::Rate rate(50);
     while (ros::ok() && is_running)
     {
         //ROS_INFO("update...");
