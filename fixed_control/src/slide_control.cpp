@@ -11,14 +11,17 @@
 slide_control::slide_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(false),watch_flag(false),task_pause(false)
 {
     //get param
-    std::string test_file;
+    std::string test_file,service_str;
     nh_.param<int>("robot_id", robot_id, 1);
     nh_.param<std::string>("test_file", test_file, "");
+    nh_.param<std::string>("service_str", service_str, "");
     std::cout << "robot_id:" << robot_id << std::endl;
     std::cout << "test_file:" << test_file << std::endl;
+    std::cout << "service_str:" << service_str << std::endl;
     transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
     control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
     task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control/task_status", 1);
+    calc_client = nh_.serviceClient<localize_msgs::TransformMapToRail>("service_str");
     if(!test_file.empty()){
         load_from_file(test_file);
     }
@@ -104,6 +107,30 @@ void slide_control::pub_task_status(int task_id, int task_status)
 
 void slide_control::transfer(float locX,float locY,float locZ, vector<string> lists, vector<string> task_camera, string trans_id, char flg)
 {
+    float rail_x = 0;
+    float rail_y = 0;
+    float rail_z = 0;
+    //calc position
+    geometry_msgs::Point32 pos;
+    pos.x = locX;
+    pos.y = locY;
+    pos.z = locZ;
+
+    localize_msgs::TransformMapToRail cmd;
+    cmd.request.map_point = pos;
+    if (calc_client.call(cmd))
+    {
+        std::cout << "call calc position success!" << std::endl;
+        std::cout << "code:" << cmd.response.status.code << " message:" << cmd.response.status.message << std::endl;
+        rail_x = cmd.response.rail_point.x;
+        rail_y = cmd.response.rail_point.y;
+        rail_z = cmd.response.rail_point.z;
+    }else{
+        std::cout << "call calc position failure!" << std::endl;
+        return;
+    }
+    
+
 	    string s_time;
 	    fixed_msg::platform_transfer data;
 	    double secs = ros::Time::now().toSec();
@@ -116,7 +143,7 @@ void slide_control::transfer(float locX,float locY,float locZ, vector<string> li
 	    data.flag = flg;
 	    data.data = s_time + "/";
 	    data.data += (trans_id + "/");
-	    data.data += (std::to_string(locX) + "," + std::to_string(locY)+ "," + std::to_string(locZ) + "/");
+	    data.data += (std::to_string(rail_x) + "," + std::to_string(rail_y)+ "," + std::to_string(rail_z) + "/");
 	    std::ostringstream s;
 	    if (task_camera.size() >= 2)
 	    {

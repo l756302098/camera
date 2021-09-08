@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   fixed_msg
+  localize_msgs
 )
 
 ## System dependencies are found with CMake's conventions

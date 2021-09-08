@@ -13,6 +13,8 @@
 #include "fixed_msg/task.h"
 #include "fixed_msg/task_control.h"
 #include "fixed_msg/task_status.h"
+#include "localize_msgs/TransformMapToRail.h"
+#include "geometry_msgs/Point32.h"
 #include <thread>
 #include <fstream>
 #include <iostream>
@@ -32,6 +34,7 @@ private:
     std::vector<std::shared_ptr<ROAD_PLAN>> road_tasks;
     bool clear_task_flag,watch_flag,task_running,task_pause;
     ros::NodeHandle nh_;
+    ros::ServiceClient calc_client;
     //ros::Subscriber meter_sub;
     ros::ServiceServer task_server;
     ros::Publisher transfer_pub,control_mode_pub,task_status_pub;
