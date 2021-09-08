@@ -21,7 +21,7 @@ slide_control::slide_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(
     transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
     control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
     task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control/task_status", 1);
-    calc_client = nh_.serviceClient<localize_msgs::TransformMapToRail>("service_str");
+    calc_client = nh_.serviceClient<localize_msgs::TransformMapToRail>(service_str);
     if(!test_file.empty()){
         load_from_file(test_file);
     }
