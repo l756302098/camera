@@ -4,6 +4,7 @@
       <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
       <!-- <param name="test_file" value="$(find fixed_control)/launch/task.json"/> -->
       <param name="test_file" value="$(find fixed_control)/launch/shujia.json"/>
-      <param name="service_str" value="/yida"/>
+      <param name="service_str" value="/TransformMapToRail"/>
+      <param name="reset_timeout" value="120"/>
   </node>
 </launch>

@@ -114,19 +114,14 @@ void *read_h264(void *args)
     struct SwsContext *img_convert_ctx = NULL;
 	img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt,
 		pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
-	// get real time
-	double videoFramePerSecond = av_q2d(pFormatCtx->streams[videoindex]->r_frame_rate);
-	// Need for convert time to ffmpeg time.
-	double videoBaseTime       = av_q2d(pFormatCtx->streams[videoindex]->time_base); 
-	std::cout << "videoFramePerSecond:" << videoFramePerSecond << " videoBaseTime:" << videoBaseTime << std::endl;
+ 
 	AVPacket *packet = (AVPacket *)av_malloc(sizeof(AVPacket));
-    int64_t pts = 0;
+    
 	try
 	{
 		unsigned char* g_buffer = NULL;
     	unsigned int g_len = 0;
 		int got_picture = 0;
-
 		for (;;)
 		{
 			//printf("av_read_frame start \n");
@@ -135,11 +130,6 @@ void *read_h264(void *args)
 				//printf("av_read_frame end \n");
 				if (packet->stream_index == videoindex)
 				{
-					//calc time
-					pts = (packet->dts != AV_NOPTS_VALUE) ? packet->dts : 0;
-					double timestamp = pts * videoBaseTime;
-					int64_t numberFrame = (double)((int64_t)pts - videoBaseTime) * videoBaseTime * videoFramePerSecond;
-					std::cout << "pts:" << pts << " videoBaseTime:" << videoBaseTime << " numberFrame:" << numberFrame << " timestamp:" << timestamp << std::endl;
                 	//视频解码函数  解码之后的数据存储在 pFrame中
 					g_buffer = (unsigned char*)packet->data;
                 	g_len = packet->size;

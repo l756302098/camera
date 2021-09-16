@@ -10,7 +10,7 @@
 
 bool infrared_slide_control::do_task = false;
 
-infrared_slide_control::infrared_slide_control(const ros::NodeHandle &nh):nh_(nh){
+infrared_slide_control::infrared_slide_control(const ros::NodeHandle &nh):nh_(nh),is_reset(false){
     std::string camera_focus_value_str,camera_focus_mm_str;
     std::string camera_file = nh_.param<std::string>("camera_file", "");
     nh_.param<int>("camera_id", camera_id, 1);
@@ -29,17 +29,23 @@ infrared_slide_control::~infrared_slide_control(){}
 
 void infrared_slide_control::update(){
     if(infrared_slide_control::do_task){
-        //publish
-        sleep(1);
-        fixed_msg::inspected_result inspected_msg;
-		inspected_msg.camid = camera_id;
-		std::stringstream ss;
-		ss.str("");
-		ss << msg_list[3] << ":" << msg_list[4] << "/" << msg_list[5] << "/" << msg_list[6] << "/" << msg_list[7] << "/" << msg_list[8];
-		inspected_msg.equipid = ss.str();
-        inspected_msg.success = true;
-		infrared_result_pub.publish(inspected_msg);
-        std::cout << "publish infrared_survey_parm" << std::endl;
+        if(is_reset){
+            std_msgs::String msg;
+            msg.data = "reset success";
+            meterflag_pub.publish(msg);
+        }else{
+            //publish
+            sleep(1);
+            fixed_msg::inspected_result inspected_msg;
+            inspected_msg.camid = camera_id;
+            std::stringstream ss;
+            ss.str("");
+            ss << msg_list[3] << ":" << msg_list[4] << "/" << msg_list[5] << "/" << msg_list[6] << "/" << msg_list[7] << "/" << msg_list[8];
+            inspected_msg.equipid = ss.str();
+            inspected_msg.success = true;
+            infrared_result_pub.publish(inspected_msg);
+            std::cout << "publish infrared_survey_parm" << std::endl;
+        }
         infrared_slide_control::do_task = false;
     }
 }
@@ -56,6 +62,7 @@ void infrared_slide_control::connect_server()
 void infrared_slide_control::transfer_callback(const fixed_msg::platform_transfer& msg){
     std::cout << "transfer_callback" << std::endl;
     if(msg.flag == 0){
+        is_reset = false;
         std::string str_devicepoint = msg.data;
         msg_list.clear();
     	SplitString(str_devicepoint, msg_list, "/");
@@ -77,6 +84,7 @@ void infrared_slide_control::transfer_callback(const fixed_msg::platform_transfe
 
         client->sendGoal(base_goal, &infrared_slide_control::doneCb, &infrared_slide_control::activeCb, &infrared_slide_control::feedbackCb);
     }else if(msg.flag == 1){
+        is_reset = true;
         bool isOk = client->isServerConnected();
         if (isOk)
         {

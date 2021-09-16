@@ -13,11 +13,13 @@ slide_control::slide_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(
     //get param
     std::string test_file,service_str;
     nh_.param<int>("robot_id", robot_id, 1);
+    nh_.param<int>("reset_timeout", reset_timeout, 60);
     nh_.param<std::string>("test_file", test_file, "");
     nh_.param<std::string>("service_str", service_str, "");
     std::cout << "robot_id:" << robot_id << std::endl;
     std::cout << "test_file:" << test_file << std::endl;
     std::cout << "service_str:" << service_str << std::endl;
+    std::cout << "reset_timeout:" << reset_timeout << std::endl;
     transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
     control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
     task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control/task_status", 1);
@@ -94,6 +96,13 @@ void slide_control::reset(){
     clear_task_flag = false;
 }
 
+void slide_control::reset_driver(){
+    //reset cloudplatform
+    fixed_msg::platform_transfer data;
+    data.flag = 1;
+    transfer_pub.publish(data);
+}
+
 void slide_control::pub_task_status(int task_id, int task_status)
 {
     //任务状态 0:已执行\1:终止\2:暂停\3:正在执行\4:未执行\5:超期\6:预执行\7:超时
@@ -112,9 +121,9 @@ void slide_control::transfer(float locX,float locY,float locZ, vector<string> li
     float rail_z = 0;
     //calc position
     geometry_msgs::Point32 pos;
-    pos.x = locX;
-    pos.y = locY;
-    pos.z = locZ;
+    pos.x = locX * 1000;
+    pos.y = locY * 1000;
+    pos.z = locZ * 1000;
 
     localize_msgs::TransformMapToRail cmd;
     cmd.request.map_point = pos;
@@ -173,6 +182,28 @@ void slide_control::update(){
     ros::Time last;
     //ROS_INFO("task size %i",road_tasks.size());
     if(road_tasks.size()==0) pub_control_mode();
+    else{
+        reset_driver();
+        ros::Time reset_time = ros::Time::now();
+        watch_flag = false;
+        bool is_timeout = true;
+        ROS_INFO("start reset driver");
+        while(ros::Time::now() - reset_time  <= ros::Duration(reset_timeout)){
+            if(watch_flag){
+                ROS_INFO("driver reset success!");
+                is_timeout = false;
+                break;
+            }
+        }
+        if(is_timeout){
+            ROS_ERROR("driver reset timeout!");
+            road_tasks.clear();
+            reset();
+            return;
+        }
+        ROS_INFO("end reset driver");
+    }
+    
     for (size_t i = 0; i < road_tasks.size(); i++){
         if(clear_task_flag) break;
         pub_control_mode();
@@ -229,10 +260,7 @@ void slide_control::update(){
         pub_task_status(task_id,0);
         //reset flag
         reset();
-        //reset cloudplatform
-        fixed_msg::platform_transfer data;
-        data.flag = 1;
-        transfer_pub.publish(data);
+        reset_driver();
         //finish ok
         if(road_tasks.size()>0)
             road_tasks.clear();

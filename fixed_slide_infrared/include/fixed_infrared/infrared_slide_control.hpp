@@ -50,6 +50,7 @@ private:
 	ros::Subscriber transfer_sub,isreach_sub,goal_sub,ptz_sub;
     ros::Publisher camera_pose_pub,infrared_result_pub,meterflag_pub;
     geometry_msgs::PoseStamped c_pos,t_pos;
+    bool is_reset;
 public:
     std::vector<float> camera_focus_dis;
     std::vector<int> camera_focus_set;
@@ -83,7 +84,7 @@ public:
     {
         if (state == state.SUCCEEDED)
         {
-            ROS_INFO("success avoid obs");
+            ROS_INFO("success move to target");
             infrared_slide_control::do_task = true;
         }
         else if (state == state.PREEMPTED)
@@ -92,7 +93,7 @@ public:
         }
         else
         {
-            ROS_INFO("failed avoid obs");
+            ROS_INFO("failed move to target");
             infrared_slide_control::do_task = false;
         }
     }

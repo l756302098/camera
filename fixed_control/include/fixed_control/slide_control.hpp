@@ -31,6 +31,7 @@ private:
     /* data */
     int ctr_mode = 0;
     int robot_id,task_id;
+    int reset_timeout;
     std::vector<std::shared_ptr<ROAD_PLAN>> road_tasks;
     bool clear_task_flag,watch_flag,task_running,task_pause;
     ros::NodeHandle nh_;
@@ -222,6 +223,7 @@ public:
     void tick(const ros::TimerEvent &event);
     void update();
     void reset();
+    void reset_driver();
     void pub_task_status(int task_id, int task_status);
     void pub_control_mode();
     bool task_clear_srv(fixed_msg::task_control::Request &req, fixed_msg::task_control::Response &res);
