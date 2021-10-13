@@ -58,7 +58,7 @@ if __name__ == '__main__':
                 data_array = data[4:]
                 image_size = image_height * image_width * 4
                 if len(data_array)!=image_size:
-                    print("error size:",len(data_array),image_size)
+                    #print("error size:",len(data_array),image_size)
                     continue
                 print("ok size:",len(data_array))
                 #publish temp data

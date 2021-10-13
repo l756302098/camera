@@ -91,7 +91,7 @@ if __name__ == '__main__':
                             if is_write:
                                 cv_temp = cv2.imread('/home/li/temp.jpg')
                                 try:
-                                    image_jet = cv_bridge.cv2_to_imgmsg(cv_temp, encoding="passthrough")
+                                    image_jet = cv_bridge.cv2_to_imgmsg(cv_temp, encoding="bgr8")
                                     header = Header()
                                     header.stamp.secs = timestamp_secs
                                     header.stamp.nsecs = timestamp_nsecs

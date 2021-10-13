@@ -17,7 +17,7 @@ infrared_slide_control::infrared_slide_control(const ros::NodeHandle &nh):nh_(nh
     nh_.param<int>("cali_offset_h", cali_offset_h, 0);
     nh_.param<int>("cali_offset_v", cali_offset_v, 0);
     
-    meterflag_pub = nh_.advertise<std_msgs::String>("/meter_flag", 1);
+    meterflag_pub = nh_.advertise<std_msgs::String>("/ydmsg/platform/keep", 1);
     infrared_result_pub = nh_.advertise<fixed_msg::inspected_result>("/infrared_survey_parm", 1);
     transfer_sub = nh_.subscribe("/fixed/platform/transfer", 1, &infrared_slide_control::transfer_callback, this);
     ptz_sub = nh_.subscribe("/fixed/platform/position", 1, &infrared_slide_control::ptz_callback, this);
@@ -84,18 +84,21 @@ void infrared_slide_control::transfer_callback(const fixed_msg::platform_transfe
 
         client->sendGoal(base_goal, &infrared_slide_control::doneCb, &infrared_slide_control::activeCb, &infrared_slide_control::feedbackCb);
     }else if(msg.flag == 1){
+        std::cout << "transfer_callback flag" << msg.flag << std::endl;
         is_reset = true;
         bool isOk = client->isServerConnected();
         if (isOk)
         {
             client->cancelAllGoals();
         }
+        std::cout << "cancel success" << std::endl;
         slide_control_msgs::PositionGoal base_goal;
         base_goal.action = 1;
         base_goal.goal.position.x = 0;
         base_goal.goal.position.y = 0;
         base_goal.goal.position.z = 0;
         client->sendGoal(base_goal, &infrared_slide_control::doneCb, &infrared_slide_control::activeCb, &infrared_slide_control::feedbackCb);
+        std::cout << "pub reset goal" << std::endl;
     }
 }
 

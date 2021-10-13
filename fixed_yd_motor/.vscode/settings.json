@@ -67,6 +67,7 @@
         "*.ipp": "cpp",
         "arraydispatchers": "cpp",
         "mixinvector": "cpp",
-        "ref_ptr": "cpp"
+        "ref_ptr": "cpp",
+        "fast_back_stack": "cpp"
     }
 }

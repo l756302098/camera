@@ -6,5 +6,6 @@
       <param name="test_file" value="$(find fixed_control)/launch/shujia.json"/>
       <param name="service_str" value="/TransformMapToRail"/>
       <param name="reset_timeout" value="120"/>
+      <param name="task_timeout" value="120"/>
   </node>
 </launch>

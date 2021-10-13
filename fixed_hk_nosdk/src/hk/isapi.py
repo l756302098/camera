@@ -14,6 +14,17 @@ def read_xml():
     print(body)
     return body
 
+def read_PixelToPixelParam(path):
+    '''
+    读取xml文件
+    :return:
+    '''
+    print("xml path ",path)
+    f = open(path+'/PixelToPixelParam.xml',"r")
+    body = f.read()
+    print(body)
+    return body
+
 #2.发送接口请求
 from os import nice
 from io import BytesIO
@@ -67,6 +78,52 @@ class HK_Api(object):
         #child.text = str("real-time_raw_data")
         #添加为elem的子节点
         root.append(child)
+        return root
+    
+    def PixelToPixelParam_to_xml(self,dataLength):
+        root = ElementTree.Element("PixelToPixelParam")  #使用Element创建元素
+        root.set("xmlns","http://www.hikvision.com/ver20/XMLSchema")
+        root.set("version","2.0")
+        child1 = ElementTree.Element("id")
+        child1.text = str(1)
+        child2 = ElementTree.Element("temperatureDataLength")
+        child2.text = str(dataLength)
+        # <JpegPictureWithAppendData>
+        #     <jpegPicEnabled>true</jpegPicEnabled>
+        # </JpegPictureWithAppendData>
+        child3 = ElementTree.Element("maxFrameRate")
+        child3.text = str(200)
+        child4 = ElementTree.Element("reflectiveEnable")
+        child4.text = "false"
+        child5 = ElementTree.Element("reflectiveTemperature")
+        child5.text = str(20.0)
+        child6 = ElementTree.Element("emissivity")
+        child6.text = str(0.96)
+        child7 = ElementTree.Element("distance")
+        child7.text = str(1000)
+        child8 = ElementTree.Element("refreshInterval")
+        child8.text = str(50)
+        child9 = ElementTree.Element("distanceUnit")
+        child9.text = "centimeter"
+        child10 = ElementTree.Element("temperatureDataLength")
+        child10.text = str(dataLength)
+        child11 = ElementTree.Element("JpegPictureWithAppendData")
+        child = ElementTree.Element("jpegPicEnabled")
+        child.text = "true"
+        #添加为elem的子节点
+        child11.append(child)
+        #添加为elem的子节点
+        root.append(child1)
+        root.append(child2)
+        root.append(child3)
+        root.append(child4)
+        root.append(child5)
+        root.append(child6)
+        root.append(child7)
+        root.append(child8)
+        root.append(child9)
+        root.append(child10)
+        root.append(child11)
         return root
 
     def Position3D_to_xml(self,sx,sy,ex,ey):
@@ -314,8 +371,74 @@ class HK_Api(object):
                 return code
         return 0
 
+    def get_pixelToPixelParam(self,ip,channel=1,username="admin",psd="123qweasd"):
+        url = "http://"+ip+"/ISAPI/Thermal/channels/"+str(channel)+"/thermometry/pixelToPixelParam"
+        response = ""
+        try:
+            r = requests.get(url,auth=HTTPDigestAuth(username,psd))
+            response = r.text
+        except Exception:
+            print("request error")
+            return None,0
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return None,0
+        for child in root:
+            #print(child.tag, child.attrib,child.text,child.tail)
+            if child == None or child.tag == None:
+                continue
+            if 'temperatureDataLength' in child.tag:
+                dataLength = child.text
+                print("dataLength:",dataLength)
+                return dataLength,1
+        return None,0
+
+    def put_pixelToPixelParam(self,path,ip,tem_length=4,channel=1,username="admin",psd="123qweasd"):
+        url = "http://"+ip+"/ISAPI/Thermal/channels/"+str(channel)+"/thermometry/pixelToPixelParam"
+        #request_data = read_PixelToPixelParam(path)
+        root = api.PixelToPixelParam_to_xml(tem_length)
+        f = BytesIO()
+        et = ElementTree.ElementTree(root)
+        et.write(f, encoding='utf-8', xml_declaration=True)
+        request_data = f.getvalue()
+        print("put_pixelToPixelParam data",request_data,type(request_data))
+        response = ""
+        try:
+            r = requests.put(url,auth=HTTPDigestAuth(username,psd),data=request_data)
+            response = r.text
+        except Exception:
+            print("request error")
+            return 0
+        print("response",response)
+        try:
+            root = ElementTree.fromstring(response)
+        except Exception:
+            print("parse xml error")
+            return 0
+        if root==None:
+            return 0
+        if root.tag.find('ResponseStatus') == -1:
+            print("not contain ResponseStatus")
+            return 0
+        for child in root:
+            if child == None or child.tag == None:
+                continue
+            if 'statusCod' in child.tag:
+                code = int(child.text)
+                print("code:",code)
+                return code
+        return 0
+
 # if __name__ == '__main__':
 #     api = HK_Api()
+#     root = api.PixelToPixelParam_to_xml(2)
+#     f = BytesIO()
+#     et = ElementTree.ElementTree(root)
+#     et.write(f, encoding='utf-8', xml_declaration=True)
+#     request_data = f.getvalue()
+#     print(request_data)
 #     ok = api.put_continuous('192.168.1.67',60,0,0)
 #     print("result:",ok)
     # p,t,z = api.get_status('192.168.1.65',1,'admin','abcd1234')

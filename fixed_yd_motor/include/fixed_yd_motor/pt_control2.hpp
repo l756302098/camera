@@ -96,6 +96,11 @@ public:
     void motor_absolute_angle(char cmd1,int16_t angle);
     //相对角度
     void motor_relat_angle(char cmd1,int angle);
+    // 停止运动
+    void stop_move();
+    // 连续运动
+    void continuous_left(uint8_t speed);
+    void continuous_right(uint8_t speed);
     //设置电机当前位置为原点
     void motor_set_ori();
     //读取电机系统实时数据

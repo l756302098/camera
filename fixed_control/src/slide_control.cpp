@@ -14,12 +14,14 @@ slide_control::slide_control(const ros::NodeHandle &nh):nh_(nh),clear_task_flag(
     std::string test_file,service_str;
     nh_.param<int>("robot_id", robot_id, 1);
     nh_.param<int>("reset_timeout", reset_timeout, 60);
+    nh_.param<int>("task_timeout", task_timeout, 60);
     nh_.param<std::string>("test_file", test_file, "");
     nh_.param<std::string>("service_str", service_str, "");
     std::cout << "robot_id:" << robot_id << std::endl;
     std::cout << "test_file:" << test_file << std::endl;
     std::cout << "service_str:" << service_str << std::endl;
     std::cout << "reset_timeout:" << reset_timeout << std::endl;
+    std::cout << "task_timeout:" << task_timeout << std::endl;
     transfer_pub = nh_.advertise<fixed_msg::platform_transfer>("/fixed/platform/transfer", 1);
     control_mode_pub = nh_.advertise<fixed_msg::control_mode>("/fixed/control/mode", 1);
     task_status_pub = nh_.advertise<fixed_msg::task_status>("/fixed/control/task_status", 1);
@@ -121,9 +123,9 @@ void slide_control::transfer(float locX,float locY,float locZ, vector<string> li
     float rail_z = 0;
     //calc position
     geometry_msgs::Point32 pos;
-    pos.x = locX * 1000;
-    pos.y = locY * 1000;
-    pos.z = locZ * 1000;
+    pos.x = locX;
+    pos.y = locY;
+    pos.z = locZ;
 
     localize_msgs::TransformMapToRail cmd;
     cmd.request.map_point = pos;
@@ -131,14 +133,13 @@ void slide_control::transfer(float locX,float locY,float locZ, vector<string> li
     {
         std::cout << "call calc position success!" << std::endl;
         std::cout << "code:" << cmd.response.status.code << " message:" << cmd.response.status.message << std::endl;
-        rail_x = cmd.response.rail_point.x;
-        rail_y = cmd.response.rail_point.y;
-        rail_z = cmd.response.rail_point.z;
+        rail_x = cmd.response.rail_point.x * 1000;
+        rail_y = cmd.response.rail_point.y * 1000;
+        rail_z = cmd.response.rail_point.z * 1000;
     }else{
         std::cout << "call calc position failure!" << std::endl;
         return;
     }
-    
 
 	    string s_time;
 	    fixed_msg::platform_transfer data;
@@ -198,6 +199,7 @@ void slide_control::update(){
         if(is_timeout){
             ROS_ERROR("driver reset timeout!");
             road_tasks.clear();
+            pub_task_status(task_id,0);
             reset();
             return;
         }
@@ -245,7 +247,7 @@ void slide_control::update(){
                             continue;
                         }
                         ros::Time now = ros::Time::now();
-                        if(now-last>ros::Duration(120)){
+                        if(now-last>ros::Duration(task_timeout)){
                             ROS_INFO("time out:wait for watch");
                             watch_flag = true;
                         }

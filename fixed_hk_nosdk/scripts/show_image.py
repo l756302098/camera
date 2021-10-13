@@ -8,7 +8,7 @@ import numpy as np
 
 class Image_Receiver:
     def __init__(self):
-        rospy.Subscriber('/fixed/infrared/raw', Image, callback=self.image_rgb_callback, queue_size=1)
+        rospy.Subscriber('/image/test', Image, callback=self.image_rgb_callback, queue_size=1)
         self.cv_bridge = CvBridge()
         rospy.spin()
 
@@ -19,10 +19,11 @@ class Image_Receiver:
         except CvBridgeError as e:
             print(e)
         print(cv_image.shape)
-        print(cv_image)
+        #print(cv_image)
         #print(image_array.shape)
         #image_array.shape = (data.height,data.width)
-        cv2.imshow("Image Window", cv_image)
+        cv2.resizeWindow("Window", 1920, 1080)
+        cv2.imshow("Window", cv_image)
         cv2.waitKey(3)
 
 if __name__ == '__main__':

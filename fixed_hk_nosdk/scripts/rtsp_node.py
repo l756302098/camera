@@ -4,8 +4,8 @@ import rospy
 from time import sleep
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
-from rtsp_client import RtspClient,config_dict
-from isapi import HK_Api
+from hk.rtsp_client import RtspClient,config_dict
+from hk.isapi import HK_Api
 import time
 
 if __name__ == '__main__':
@@ -22,6 +22,8 @@ if __name__ == '__main__':
         image_width = rospy.get_param("~image_width",1920)
         image_height = rospy.get_param("~image_height",1080)
         xml_path = rospy.get_param("~xml_path","")
+        pixel_bytes = rospy.get_param("~pixel_bytes",4)
+        use_ntp_time = rospy.get_param("~use_ntp_time",False)
         print(device_ip,device_port,device_username,device_password,xml_path)
         config_dict["server_ip"] = device_ip
         config_dict["server_port"] = device_port
@@ -33,10 +35,10 @@ if __name__ == '__main__':
         while(check):
             length,ok = api.get_pixelToPixelParam(device_ip,1,device_username,device_password)
             if ok :
-                if length == '2':
+                if length == str(pixel_bytes):
                     check = False
                 else:
-                    ok = api.put_pixelToPixelParam(xml_path,device_ip,1,device_username,device_password)
+                    ok = api.put_pixelToPixelParam(xml_path,device_ip,pixel_bytes,1,device_username,device_password)
             sleep(1)
         print("end check temp data lenght")
         print("start check video type")
@@ -92,13 +94,17 @@ if __name__ == '__main__':
                 # print("ok size:",len(data_array))
                 #publish temp data
                 image_temp=Image()
-                header = Header()
-                header.stamp.secs = timeStamp
-                header.stamp.nsecs = mils * 1000000
-                image_temp.header = header
+                if use_ntp_time:
+                    header = Header()
+                    header.stamp.secs = timeStamp
+                    header.stamp.nsecs = mils * 1000000
+                    image_temp.header = header
+                else:
+                    image_temp.header.stamp = rospy.Time.now()
+                image_temp.step = image_width * 4
                 image_temp.height=image_height
                 image_temp.width=image_width
-                image_temp.encoding='rgb8'
+                image_temp.encoding='32FC1'
                 image_temp.data= str(data_array)
                 temp_pub.publish(image_temp)
             else:

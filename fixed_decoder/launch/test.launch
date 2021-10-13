@@ -1,6 +1,6 @@
 <launch>
   <node pkg="fixed_decoder" type="fixed_decoder_node" name="visible_rtsp_node" output="screen" respawn="true">
       <param name="topic_name" type="str" value="/fixed/visible/h264"/>
-      <param name="rtsp_url" type="str" value="rtsp://admin:123qweasd@192.168.1.67:554/h264/ch1/main/av_stream"/>
+      <param name="rtsp_url" type="str" value="rtsp://admin:123qweasd@192.168.1.65:554/h264/ch1/main/av_stream"/>
   </node>
 </launch>
