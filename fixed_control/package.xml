@@ -53,6 +53,8 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>fixed_msg</build_depend>
   <build_depend>localize_msgs</build_depend>
+  <build_depend>libgflags-dev</build_depend>
+  <build_depend>libgoogle-glog-dev</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>fixed_msg</build_export_depend>

@@ -12,7 +12,7 @@ print(sys.path)
 
 import PyNvCodec as nvc
 
-encFile = "rtsp://admin:123qweasd@192.168.1.65:554/h264/ch1/main/av_stream"
+encFile = "rtsp://admin:123qweasd@192.168.1.68:554/h264/ch1/main/av_stream"
 decFile = open("output.nv12", "wb")
 
 nvDec = nvc.PyNvDecoder(encFile, 0)

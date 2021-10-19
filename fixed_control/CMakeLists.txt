@@ -58,7 +58,7 @@ add_executable(${PROJECT_NAME}_node src/fixed_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} lib-${PROJECT_NAME})
 
 add_executable(slide_node src/slide_node.cpp)
-target_link_libraries(slide_node ${catkin_LIBRARIES} lib-${PROJECT_NAME})
+target_link_libraries(slide_node glog gflags ${catkin_LIBRARIES} lib-${PROJECT_NAME} )
 
 #############
 ## Install ##

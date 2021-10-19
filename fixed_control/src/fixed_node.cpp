@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, __app_name__);
     ros::NodeHandle nh_("~");
-    ROS_INFO("node started...");
+
     signal(SIGINT, signalHandler);
     is_running = true;
     status_control control;

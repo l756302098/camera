@@ -1,6 +1,6 @@
 <launch>
 
-  <node pkg="fixed_hk_nosdk" type="rtsp_node.py" name="rtsp_temp_node" respawn="false" output="screen">
+  <node pkg="fixed_hk_nosdk" type="rtsp_node.py" name="rtsp_temp_node" respawn="true" output="screen">
       <param name="camera_id" type="int" value="1"/>
       <param name="device_ip" value="192.168.1.64"/>
       <param name="device_port" value="554"/>

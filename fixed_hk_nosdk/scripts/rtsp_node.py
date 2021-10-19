@@ -89,7 +89,7 @@ if __name__ == '__main__':
                 data_array = data[20:]
                 image_size = image_height * image_width * 2
                 if len(data_array)!=image_size:
-                    print("error size:",len(data_array))
+                    #print("error size:",len(data_array))
                     continue
                 # print("ok size:",len(data_array))
                 #publish temp data

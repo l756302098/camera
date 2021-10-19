@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="fixed_control" type="slide_node" name="slide_node" output="screen" respawn="false">
+  <node pkg="fixed_control" type="slide_node" name="slide_node" output="screen" respawn="false" args="/home/li/log/fixed_control/ 5">
       <param name="robot_id" type="int" value="2"/>
       <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
       <!-- <param name="test_file" value="$(find fixed_control)/launch/task.json"/> -->
@@ -7,5 +7,6 @@
       <param name="service_str" value="/TransformMapToRail"/>
       <param name="reset_timeout" value="120"/>
       <param name="task_timeout" value="120"/>
+      <param name="max_save_days" value="5"/>
   </node>
 </launch>
