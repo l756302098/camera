@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(fixed_control)
+project(fc_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -10,8 +10,6 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  fixed_msg
-  localize_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -33,7 +31,7 @@ endif(Boost_FOUND)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES fixed_control
-  CATKIN_DEPENDS roscpp std_msgs fixed_msg
+  CATKIN_DEPENDS roscpp std_msgs
   DEPENDS system_lib
 )
 
@@ -48,20 +46,16 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
+# Declare a C++ library
 add_library(lib-${PROJECT_NAME}
-  src/status_control.cpp
-  src/slide_control.cpp
+src/action_idle.cpp
+src/action_coloring.cpp
+src/action_mapping.cpp
+src/fc_control.cpp
 )
 
-add_executable(${PROJECT_NAME}_node src/fixed_node.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} lib-${PROJECT_NAME})
-
-add_executable(slide_node src/slide_node.cpp)
-target_link_libraries(slide_node glog gflags ${catkin_LIBRARIES} lib-${PROJECT_NAME} )
-
-add_executable(fsm_node src/fsm_node.cpp)
-target_link_libraries(fsm_node glog gflags ${catkin_LIBRARIES} lib-${PROJECT_NAME} )
+add_executable(${PROJECT_NAME}_node src/fc_control_node.cpp)
+target_link_libraries(${PROJECT_NAME}_node  glog gflags ${catkin_LIBRARIES} lib-${PROJECT_NAME})
 
 #############
 ## Install ##
