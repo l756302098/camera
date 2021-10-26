@@ -9,8 +9,8 @@ if sys.version > '3':
     import queue as Queue
 else:
     import Queue
-from yd_cloudplatform.srv import CloudPlatControl,CloudPlatControlResponse
-from yidamsg.msg import Detect_Result
+from fixed_msg.srv import cp_control,cp_controlResponse
+from fixed_msg.msg import detect_result
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point
 from std_msgs.msg import Int32
@@ -98,7 +98,7 @@ def handle_ptz(req):
     V = [req.action, req.type, req.value, req.allvalue]
     print(V)
     if req.action == 0:
-        return CloudPlatControlResponse(0)
+        return cp_controlResponse(0)
     elif req.action == 2:
         if req.type == 0:
             ok = api.put_continuous(device_ip,req.value,0,0,1,device_username,device_password)
@@ -106,30 +106,30 @@ def handle_ptz(req):
             ok = api.put_continuous(device_ip,0,req.value,0,1,device_username,device_password)
         if ok:
             print("continous success")
-        return CloudPlatControlResponse(1)
+        return cp_controlResponse(1)
     try:
         read_cmd = str(req.id) + "/" + str(req.action) + "/" + str(req.type) + "/" + str(req.value)
         #ready to move
         if req.type == 0:
             print("type 0")
             if req.value < 0  or req.value > 36000:
-                return CloudPlatControlResponse(0)
+                return cp_controlResponse(0)
         elif req.type == 1:
             print("type 1")
             if req.value < -36000  or req.value > 36000:
-                return CloudPlatControlResponse(0)
+                return cp_controlResponse(0)
         elif req.type == 2:
             print("type 2 zoom")
         elif req.type == 3:
             if req.allvalue[0] < 0  or req.allvalue[0] > 36000:
-                return CloudPlatControlResponse(0)
+                return cp_controlResponse(0)
             read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1])
         elif req.type == 4:
             read_cmd = read_cmd + "/" + str(req.allvalue[0]) + "/" + str(req.allvalue[1]) + "/" + str(req.allvalue[2])
         cmd_queue.put([read_cmd])
-        return CloudPlatControlResponse(1)
+        return cp_controlResponse(1)
     except Exception:
-        return CloudPlatControlResponse(0)
+        return cp_controlResponse(0)
 
 def timer_callback(event):
     pub_heartbeat()
@@ -190,11 +190,11 @@ if __name__ == '__main__':
         write_thread.daemon = True
         write_thread.start()
         global isreach_pub,heartbeat_pub
-        isreach_pub = rospy.Publisher('/yida/platform_isreach', Int32, queue_size=1)
         heartbeat_pub = rospy.Publisher('/yd/heartbeat', DiagnosticArray, queue_size=1)
-        ptz_pub = rospy.Publisher('/yida/yuntai/position', Odometry, queue_size=1)
-        ptz_server = rospy.Service('/yida/internal/platform_cmd', CloudPlatControl, handle_ptz)
-        dect_sub = rospy.Subscriber("/detect_rect", Detect_Result, detect_callback)
+        isreach_pub = rospy.Publisher('/fixed/platform/isreach', Int32, queue_size=1)
+        ptz_pub = rospy.Publisher('/fixed/platform/position', Odometry, queue_size=1)
+        ptz_server = rospy.Service('/fixed/platform/cmd', cp_control, handle_ptz)
+        dect_sub = rospy.Subscriber("/detect_rect", detect_result, detect_callback)
         rospy.Timer(rospy.Duration(0.1),timer_callback)
         rate = rospy.Rate(20) # 20hz
         while not rospy.is_shutdown():
