@@ -21,7 +21,9 @@ namespace fsm
             undistort_stop_client = nh_.serviceClient<undistort_service_msgs::stop_undistort>("/undistort_service/stop_undistort");
             ptz_client = nh_.serviceClient<fixed_msg::cp_control>("/fixed/platform/cmd");
             arrive_sub = nh_.subscribe("/fixed/platform/isreach", 1, &fsm::action_coloring::arrive_cb,this);
-            coloring_finish_sub = nh_.subscribe(task_control::option_.coloring_finish_topic, 1, &fsm::action_coloring::task_finish_cb,this);
+            status_sub = nh_.subscribe("/tio/irpose/pose_status", 1, &fsm::action_coloring::status_cb,this);
+            //coloring_finish_sub = nh_.subscribe(task_control::option_.coloring_finish_topic, 1, &fsm::action_coloring::task_finish_cb,this);
+            coloring_undistort_sub = nh_.subscribe("/infrared/undistorted", 1, &fsm::action_coloring::undistort_cb,this);
             coloring_start_pub = nh_.advertise<fixed_msg::inspected_result>(task_control::option_.coloring_start_topic, 1);
         }
         last = ros::Time::now();
@@ -66,7 +68,7 @@ namespace fsm
         std::cout << "action_coloring " << name << " exit" << std::endl;
     }
     bool action_coloring::play(uint8_t flag,std::vector<std::string> &data){
-        LOG(INFO) << "action_mapping play " << std::to_string(flag);
+        LOG(INFO) << "action_coloring play " << std::to_string(flag);
         switch (flag)
         {
             case fsm::coloring_enum::COR_START:
@@ -142,6 +144,7 @@ namespace fsm
     }
     void action_coloring::reset(){
         coloring_pub_info.clear();
+        undistort_count = 0;
         device_id = 0;
         task_id = 0;
         map_id = 0;
@@ -155,14 +158,14 @@ namespace fsm
             return;
         }
         if(move_level1 < task_control::option_.coloring_tasks.size()){
-            LOG(INFO) << "move_level1:" << move_level2 << " move_level2:" << move_level2;
+            LOG(INFO) << "move_level1:" << move_level1 << " move_level2:" << move_level2;
             std::shared_ptr<ROAD_PLAN> rp = task_control::option_.coloring_tasks[move_level1];
             int watch_point_count = rp->cameraPose.size();
             if(move_level2 >= watch_point_count){
                 move_level1 ++;
                 move_level2 = 0;
                 current_status = fsm::coloring_enum::COR_MOTOR;
-                LOG(INFO) << "next move_level1:" << move_level2 << " move_level2:" << move_level2;
+                LOG(INFO) << "next move_level1:" << move_level1 << " move_level2:" << move_level2;
                 return;
             }
             if(rp){
@@ -221,7 +224,7 @@ namespace fsm
     }
 
     void action_coloring::response(fsm::coloring_error_enum code,std::string &error_msg){
-        //LOG(INFO) << "action_mapping::response code:" << code << " msg:" << error_msg; 
+        //LOG(INFO) << "action_coloring::response code:" << code << " msg:" << error_msg; 
         if((int)code <=  (int)fsm::coloring_error_enum::COR_EXIT){
             LOG(INFO) << "response status:" << status << " code:" << code << " ok";
         }else{
@@ -255,8 +258,8 @@ namespace fsm
     }
     bool action_coloring::stop_pose(){
         //stop pose
-        LOG(INFO) << "action_coloring::start_pose" ;
-        tf_ircampose_msg::start_pose cmd;
+        LOG(INFO) << "action_coloring::stop_pose" ;
+        tf_ircampose_msg::stop_pose cmd;
         cmd.request.device_id = device_id;
         cmd.request.task_id = task_id;
         cmd.request.map_id = map_id;
@@ -279,6 +282,7 @@ namespace fsm
 		{
             if(cmd.response.status.code == 0){
                 LOG(INFO) << "undistort_start_client call success. coloring_start_pub " << coloring_pub_info;
+                undistort_count = 0;
                 fixed_msg::inspected_result inspected_msg;
                 inspected_msg.camid = device_id;
                 inspected_msg.equipid = coloring_pub_info;
@@ -298,7 +302,7 @@ namespace fsm
     bool action_coloring::stop_undistort(){
         //stop_undistort
         LOG(INFO) << "action_coloring::stop_undistort" ;
-        undistort_service_msgs::start_undistort cmd;
+        undistort_service_msgs::stop_undistort cmd;
         if(undistort_stop_client.call(cmd))
 		{
             if(cmd.response.status.code == 0){
@@ -323,6 +327,32 @@ namespace fsm
         }
     }
 
+    void action_coloring::undistort_cb(const undistort_service_msgs::PosedImage msg){
+        LOG(INFO) << "action_coloring::undistort_cb " << undistort_count;
+        undistort_count++;
+        if(undistort_count>5){
+            if(current_status == fsm::coloring_enum::COR_WAIT_COLOR){
+                std::string error_msg = "ok";
+                response(fsm::coloring_error_enum::COR_NORMAL,error_msg);
+                go_next();
+            }
+        }
+    }
+
+    void action_coloring::status_cb(const tf_ircampose_msg::tf_pose_status::ConstPtr &msg){
+        LOG(INFO) << "action_coloring status_cb task_status:" << msg->task_status << " error_message:" << msg->error_message
+        << " device_id:" << msg->device_id<< " task_id" <<msg->task_id << " map_id:" << msg->map_id;
+        if(current_status == fsm::coloring_enum::COR_WAIT_COLOR){
+            if(msg->task_status == -1){
+                LOG(ERROR) << "action_coloring status_cb tf_pose error:"<<msg->error_message;
+                current_status = fsm::coloring_enum::COR_ERROR_FINISH;
+                //notify control
+                std::string error_msg = msg->error_message;
+                response(fsm::coloring_error_enum::COR_DATA_EXP,error_msg);
+            }
+        }
+    }
+
     void action_coloring::go_next(){
         LOG(INFO) << "action_coloring::go_next" ;
         bool is_stop_undistort = stop_undistort();
@@ -330,11 +360,11 @@ namespace fsm
             LOG(ERROR) << "go_next:stop undistort failed";
             return;
         }
-        // bool is_stop_pose = stop_pose();
-        // if(!is_stop_pose){
-        //     LOG(ERROR) << "go_next:stop pose failed";
-        //     return;
-        // }
+        bool is_stop_pose = stop_pose();
+        if(!is_stop_pose){
+            LOG(ERROR) << "go_next:stop pose failed";
+            return;
+        }
         //calc next point
         current_status = fsm::coloring_enum::COR_MOTOR;
     }

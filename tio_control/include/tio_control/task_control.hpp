@@ -80,14 +80,14 @@ public:
     void update();
 	int load_from_stream(std::string &in){
         task_control::option_.coloring_tasks.clear();
-        std::cout << "out:" << std::endl;
-        std::cout << in << std::endl;
+        LOG(WARNING) << "out:";
+        LOG(WARNING) << in;
         const char* json = in.c_str();
         StringStream ss(json);
         rapidjson::Document doc;
         if (doc.ParseStream(ss).HasParseError())
         {
-            ROS_ERROR("Failed to parse json ");
+            LOG(ERROR) << "Failed to parse json";
             return -1;
         }
         return resolve_coloring_json(doc);
@@ -178,14 +178,14 @@ public:
         }
         const rapidjson::Value &iid = doc["InspectId"];
         if(iid.IsString()){
-            std::cout << "InspectId:" << iid.GetString() << std::endl;
+            LOG(WARNING) << "InspectId:" << iid.GetString();
         }
         const rapidjson::Value &rid = doc["RobotId"];
-        if(rid.IsNumber()){std::cout << "RobotId:" << rid.GetInt() << std::endl;}
+        if(rid.IsNumber()){LOG(WARNING) << "RobotId:" << rid.GetInt();}
         const rapidjson::Value &thid = doc["TaskHistoryId"];
-        if(thid.IsNumber()){std::cout << "TaskHistoryId:" << thid.GetInt() << std::endl;}
+        if(thid.IsNumber()){LOG(WARNING) << "TaskHistoryId:" << thid.GetInt();}
         const rapidjson::Value &tid = doc["TaskId"];
-        if(tid.IsNumber()){std::cout << "TaskId:" << tid.GetInt() << std::endl;}
+        if(tid.IsNumber()){LOG(WARNING) << "TaskId:" << tid.GetInt();}
         static const char* kTypeNames[] = { "Null", "False", "True", "Object", "Array", "String", "Number" };
         for (SizeType i = 0; i < tasks.Size(); i++) // 使用 SizeType 而不是 size_t
         {
@@ -195,38 +195,38 @@ public:
             for (Value::ConstMemberIterator itr = obj.MemberBegin();itr != obj.MemberEnd(); ++itr){
                 std::string type = kTypeNames[itr->value.GetType()];
                 std::string key = itr->name.GetString();
-                //std::cout << "" << itr->name.GetString() << " " << type  << std::endl;
+                //LOG(WARNING) << "" << itr->name.GetString() << " " << type ;
                 if (key == "Align")
                 {
-                    std::cout << "Align:" << itr->value.GetString() << std::endl;
+                    LOG(WARNING) << "Align:" << itr->value.GetString();
                     task->road = itr->value.GetString();
                 }
                 else if (key == "CameraPose")
                 {
-                    std::cout << "CameraPose:" << itr->value.GetString() << std::endl;
+                    LOG(WARNING) << "CameraPose:" << itr->value.GetString();
                     std::string camera_pose = itr->value.GetString();
                     std::vector<std::string> cam_pose = split_str(camera_pose, ";");
 		            task->cameraPose.assign(cam_pose.begin(), cam_pose.end());
                 }
                 else if (key == "Id")
                 {
-                    std::cout << "Id:" << itr->value.GetString() << std::endl;
+                    LOG(WARNING) << "Id:" << itr->value.GetString();
                     task->transfer_id = itr->value.GetString();
                 }
                 else if (key == "TurnAngle")
                 {
-                    std::cout << "TurnAngle:" << itr->value.GetString() << std::endl;
+                    LOG(WARNING) << "TurnAngle:" << itr->value.GetString();
                     std::string turn_angle = itr->value.GetString();
                     task->fTurnAngle = atof(turn_angle.c_str());
                 }
                 else if (key == "TLine")
                 {
-                    std::cout << "TLine:" << itr->value.GetString() << std::endl;
+                    LOG(WARNING) << "TLine:" << itr->value.GetString();
                     task->road = itr->value.GetString();
                 }
                 else if (key == "TLoc")
                 {
-                    std::cout << "TLoc:" << itr->value.GetString() << std::endl;
+                    LOG(WARNING) << "TLoc:" << itr->value.GetString();
                     std::string sloc = itr->value.GetString();
                     std::vector<std::string> veLoc = split_str(sloc, ";");
 		            task->LocX = atof(veLoc[0].c_str());

@@ -18,8 +18,10 @@
 #include "tio_control/fsm.hpp"
 #include "tf_ircampose_msg/start_pose.h"
 #include "tf_ircampose_msg/stop_pose.h"
+#include "tf_ircampose_msg/tf_pose_status.h"
 #include "undistort_service_msgs/start_undistort.h"
 #include "undistort_service_msgs/stop_undistort.h"
+#include "undistort_service_msgs/PosedImage.h"
 #include "fixed_msg/cp_control.h"
 #include <std_msgs/Int32.h>
 #include <fixed_msg/inspected_result.h>
@@ -38,13 +40,13 @@ namespace fsm
     private:
         ros::NodeHandle nh_;
         ros::ServiceClient ptz_client,tf_pose_start_client,tf_pose_stop_client,undistort_start_client,undistort_stop_client;
-        ros::Subscriber arrive_sub,coloring_finish_sub;
+        ros::Subscriber arrive_sub,status_sub,coloring_finish_sub,coloring_undistort_sub;
         ros::Publisher coloring_start_pub;
         bool is_init,is_pause;
         ros::Time last,start_wait_time;
         int device_id,task_id,map_id=0;
         std::string coloring_pub_info;
-        int move_level1,move_level2,mottor_timeout_count = 0;
+        int move_level1,move_level2,undistort_count,mottor_timeout_count = 0;
         float motor_angle_x,motor_angle_z;
         float target_angle_x,target_angle_z;
     private:
@@ -61,6 +63,8 @@ namespace fsm
         void response(fsm::coloring_error_enum code,std::string &error_msg);
         bool time_tick(int seconds);
         void task_finish_cb(const std_msgs::String msg);
+        void undistort_cb(const undistort_service_msgs::PosedImage msg);
+        void status_cb(const tf_ircampose_msg::tf_pose_status::ConstPtr &msg);
     public:
         coloring_enum current_status;
     public:

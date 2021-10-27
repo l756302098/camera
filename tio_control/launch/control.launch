@@ -7,7 +7,7 @@
       <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
       <param name="mapping_file" value="$(find tio_control)/launch/mapping.json"/>
       <param name="coloring_finish_topic" type="str" value="/ydmsg/platform/keep"/>
-      <param name="coloring_start_topic" type="str" value="//infrared_survey_parm"/>
+      <param name="coloring_start_topic" type="str" value="/tio/coloring/params"/>
       <param name="coloring_timeout" type="int" value="300"/>
   </node>
 </launch>
