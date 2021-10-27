@@ -1,0 +1,6 @@
+int32 device_id
+int32 task_id
+string plan
+---
+bool success
+string message

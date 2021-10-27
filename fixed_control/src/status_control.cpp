@@ -93,7 +93,7 @@ void status_control::reset(){
 
 void status_control::pub_task_status(int task_id, int task_status)
 {
-    //任务状态 0:已执行\1:终止\2:暂停\3:正在执行\4:未执行\5:超期\6:预执行\7:超时
+    //任务状态 0:正常结束\1:终止\2:暂停\3:正在执行\4:未执行\5:超期\6:预执行\7:超时
 	fixed_msg::task_status task_msg;
     task_msg.device_id = 0;
 	task_msg.task_id = task_id;

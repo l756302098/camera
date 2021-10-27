@@ -1,0 +1,6 @@
+[
+   { "watch_id":1 , "watch_posx":0,"watch_posz" : 0 },
+   { "watch_id":2 , "watch_posx":0,"watch_posz" : 30 },
+   { "watch_id":3 , "watch_posx":0,"watch_posz" : 60 },
+   { "watch_id":4 , "watch_posx":0,"watch_posz" : 90 }
+]

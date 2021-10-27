@@ -10,10 +10,11 @@
 #include <thread>
 #include <iostream>
 #include <csignal>
-#include "fc_control/fc_control.hpp"
+#include "tio_control/task_control.hpp"
+#include "tio_control/glod_extension.hpp"
 #include "glog/logging.h"
 #include "gflags/gflags.h"
-#define __app_name__ "fc_control_node"
+#define __app_name__ "tio_control_node"
 
 void glod_init(int argc, char **argv){
     std::string log_path = argv[1];
@@ -57,15 +58,11 @@ int main(int argc, char **argv)
     }
     glod_init(argc,argv);
     ros::NodeHandle nh_("~");
-    fc_control control;
-    ros::Timer timer = nh_.createTimer(ros::Duration(1), &fc_control::tick, &control, false);
-    ros::Rate rate(10);
-    while (ros::ok())
-    {
-        control.update();
-        ros::spinOnce();
-        rate.sleep();
-    }
-    LOG(INFO) << "fc control node exit";
+    task_control control;
+    ros::Timer tick_timer = nh_.createTimer(ros::Duration(1), &task_control::tick, &control, false);
+    ros::Timer loop_timer = nh_.createTimer(ros::Duration(1), &task_control::loop, &control, false);
+    ros::MultiThreadedSpinner s(4);
+    ros::spin(s);
+    LOG(INFO) << "tio control node exit ";
     return 0;
 }

@@ -1,0 +1,7 @@
+int32 device_id
+int32 task_id
+int32 flag
+int32 extension
+---
+bool success
+string message

@@ -80,6 +80,7 @@
         "polytope": "cpp",
         "drawable": "cpp",
         "image": "cpp",
-        "notify": "cpp"
+        "notify": "cpp",
+        "any": "cpp"
     }
 }

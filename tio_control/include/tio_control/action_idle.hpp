@@ -6,6 +6,8 @@
  * @LastEditors: li
  * @LastEditTime: 2021-05-12 14:43:09
  */
+#ifndef __ACTION_IDLE_H__
+#define __ACTION_IDLE_H__
 #include <ros/ros.h>
 #include <functional>
 #include <iostream>
@@ -13,16 +15,18 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "fc_control/fsm.hpp"
+#include "tio_control/fsm.hpp"
 
 namespace fsm
 {
     class action_idle: public state_base
     {
     public:
-        action_idle(std::string name): state_base(name){status = fsm::state_enum::INIT;}
+        action_idle(){status = fsm::fsm_enum::IDLE;}
         void init();
         void run();
         void exit();
+        bool play(uint8_t flag,std::vector<std::string> &data);
     };
 }
+#endif

@@ -7,6 +7,9 @@
  * @LastEditTime: 2021-05-12 14:43:09
  */
 #pragma once
+#ifndef __GLOG_EXTENSION_H__
+#define __GLOG_EXTENSION_H__
+
 #include <dirent.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -116,3 +119,4 @@ bool rmOldDay(const std::string& LOGPATH,int MAX_SAVE_DAYS = 7)
 
     return true;
 }
+#endif

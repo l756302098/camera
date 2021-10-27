@@ -1,7 +1,0 @@
-<launch>
-  <node pkg="fc_control" type="fc_control_node" name="fc_control_node" output="screen" respawn="false" args="/home/li/log/fc_control/ 7">
-      <param name="robot_id" type="int" value="2"/>
-      <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
-      <param name="mapping_file" value="$(find fc_control)/launch/mapping.json"/>
-  </node>
-</launch>
