@@ -14,32 +14,12 @@
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/encodedstream.h>
 #include <rapidjson/document.h>
-using namespace rapidjson;
-using namespace std;
+#include "tio_control/string_extension.hpp"
 #define TASK_CONTROL 0
 #define HANDLE_CONTROL 1
 #define PC_CONTROL 2
 #define URGENCY_CONTROL 3
 #define OBSTACLE_CONTROL 4
-
-static std::vector<std::string> split_str(std::string str, std::string pattern){
-	    std::string::size_type pos;
-	    std::vector<std::string> result;
-	    str += pattern;
-	    int size = str.size();
-
-	    for (int i = 0; i < size; i++)
-	    {
-		    pos = str.find(pattern, i);
-		    if (pos < size)
-		    {
-			    std::string s = str.substr(i, pos - i);
-			    result.push_back(s);
-			    i = pos + pattern.size() - 1;
-		    }
-	    }
-	    return result;
-}
 
 typedef struct _road_plan
 {
@@ -88,7 +68,8 @@ typedef struct _node_option
 	int color_weight;
 	int coloring_timeout;
 	std::vector<std::shared_ptr<WatchNode>> motor_trajectory;
-	std::vector<std::shared_ptr<ROAD_PLAN>> coloring_tasks;
+	//std::vector<std::shared_ptr<ROAD_PLAN>> coloring_tasks;
+	std::shared_ptr<ColorJson> cj;
 }NodeOption;
 
 typedef struct _task_context

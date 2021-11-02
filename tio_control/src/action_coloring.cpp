@@ -153,13 +153,13 @@ namespace fsm
         callback = NULL;
     }
     void action_coloring::motor(){
-        if(task_control::option_.coloring_tasks.size() <= 0){
+        if(task_control::option_.cj->plans.size() <= 0){
             LOG(ERROR) << "coloring_tasks size equal 0";
             return;
         }
-        if(move_level1 < task_control::option_.coloring_tasks.size()){
+        if(move_level1 < task_control::option_.cj->plans.size()){
             LOG(INFO) << "move_level1:" << move_level1 << " move_level2:" << move_level2;
-            std::shared_ptr<ROAD_PLAN> rp = task_control::option_.coloring_tasks[move_level1];
+            std::shared_ptr<TaskPlan> rp = task_control::option_.cj->plans[move_level1];
             int watch_point_count = rp->cameraPose.size();
             if(move_level2 >= watch_point_count){
                 move_level1 ++;
@@ -232,7 +232,7 @@ namespace fsm
             LOG(ERROR) << "response status:" << status << " code:" << code << " "<< error_msg;
         }
         if (callback){
-            float percent = 1.0 * (move_level1 + 1) / task_control::option_.coloring_tasks.size();
+            float percent = 1.0 * (move_level1 + 1) / task_control::option_.cj->plans.size();
             callback(status,code,error_msg, percent);
         }
     }

@@ -1,5 +1,6 @@
 <launch>
   <node pkg="tio_control" type="tio_control_node" name="tio_control_node" output="screen" respawn="false" args="/home/li/log/tio_control/ 7">
+      <param name="device_id" type="int" value="3"/>
       <param name="color_weight" type="int" value="5"/>
       <param name="motor_timeout" type="int" value="60"/>
       <param name="collect_timeout" type="int" value="120"/>

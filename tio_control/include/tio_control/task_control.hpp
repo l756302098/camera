@@ -18,11 +18,14 @@
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/encodedstream.h>
 #include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include "tio_control/fsm.hpp"
 #include "tio_control/action_idle.hpp"
 #include "tio_control/action_coloring.hpp"
 #include "tio_control/action_mapping.hpp"
 #include "tio_control/common.hpp"
+#include "tio_control/string_extension.hpp"
 #include "tio_control/mapping_task.h"
 #include "tio_control/coloring_task.h"
 #include "tio_control/control_task.h"
@@ -38,8 +41,9 @@ class task_control
 private:
 	/* data */
 	ros::NodeHandle nh_;
-	ros::Publisher task_status_pub;
+	ros::Publisher task_status_pub,web_status_pub,web_progress_pub;
 	ros::ServiceServer mapping_srv,control_mapping_srv,coloring_srv,control_coloring_srv;
+    ros::Subscriber web_data_sub,web_command_sub;
 	std::unique_ptr<fsm::manager> brain_;
 	TaskContext task_context;
 public:
@@ -62,7 +66,6 @@ private:
 		return "unknown";
 	}
 	void reset(){
-		task_context.device_id = 0;
 		task_context.task_id = 0;
 		task_context.map_id = 0;
 		task_context.resolution_flag = 0;
@@ -72,6 +75,22 @@ private:
         task_context.task_status = 4;
 		task_context.message = "ok";
 	}
+private:
+	void launch_client();
+	void launch_server();
+	void launch_subscribers();
+	void launch_publishs();
+	bool mapping_task_cb(tio_control::mapping_task::Request &req,tio_control::mapping_task::Response &res);
+	bool control_mapping_cb(tio_control::control_task::Request &req,tio_control::control_task::Response &res);
+	void deal_callback(int module,int code,std::string msg,float percent);
+	bool coloring_task_cb(tio_control::coloring_task::Request &req,tio_control::coloring_task::Response &res);
+    bool control_coloring_cb(tio_control::control_task::Request &req,tio_control::control_task::Response &res);
+    void web_data_cb(const std_msgs::String::ConstPtr& msg);
+    void web_command_cb(const std_msgs::String::ConstPtr& msg);
+    bool control_mapping(int flag);
+    bool control_coloring(int flag);
+    void pub_status_web();
+    void pub_progress_web();
 public:
 	task_control(const ros::NodeHandle &nh = ros::NodeHandle("~"));
 	~task_control(){}
@@ -79,7 +98,6 @@ public:
     void loop(const ros::TimerEvent &event);
     void update();
 	int load_from_stream(std::string &in){
-        task_control::option_.coloring_tasks.clear();
         LOG(WARNING) << "out:";
         LOG(WARNING) << in;
         const char* json = in.c_str();
@@ -124,9 +142,9 @@ public:
 			LOG(ERROR) << "Failed to parse json";
             return -1;
         }
-        return resolve_json(doc);
+        return resolve_motor_json(doc);
 	}
-	int resolve_json(rapidjson::Document &doc){
+	int resolve_motor_json(rapidjson::Document &doc){
 		if(!doc.IsArray()){
 			LOG(ERROR) << "json is not array";
             return -1;
@@ -251,18 +269,9 @@ public:
 			            task->nType = TASK_TYPE_UNKNOWN;
                 }
             }
-            task_control::option_.coloring_tasks.push_back(task);
+            //task_control::option_.coloring_tasks.push_back(task);
         }
         return tid.GetInt();
     }
-	void launch_client();
-	void launch_server();
-	void launch_subscribers();
-	void launch_publishs();
-	bool mapping_task_cb(tio_control::mapping_task::Request &req,tio_control::mapping_task::Response &res);
-	bool control_mapping_cb(tio_control::control_task::Request &req,tio_control::control_task::Response &res);
-	void deal_callback(int module,int code,std::string msg,float percent);
-	bool coloring_task_cb(tio_control::coloring_task::Request &req,tio_control::coloring_task::Response &res);
-    bool control_coloring_cb(tio_control::control_task::Request &req,tio_control::control_task::Response &res);
 };
 #endif

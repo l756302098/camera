@@ -5,7 +5,7 @@
       <param name="collect_timeout" type="int" value="120"/>
       <param name="mapping_color_timeout" type="int" value="300"/>
       <param name="finish_topic" type="str" value="/ydmsg/platform/keep"/>
-      <param name="mapping_file" value="$(find tio_control)/launch/mapping.json"/>
+      <param name="mapping_file" value="$(find tio_control)/launch/mapping_test.json"/>
       <param name="coloring_finish_topic" type="str" value="/ydmsg/platform/keep"/>
       <param name="coloring_start_topic" type="str" value="/tio/coloring/params"/>
       <param name="coloring_timeout" type="int" value="60"/>
