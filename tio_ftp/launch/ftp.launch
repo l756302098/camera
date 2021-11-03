@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="tio_ftp" type="tio_ftp_node" name="tio_ftp_node" output="screen" respawn="false" args="/home/li/log/tio_ftp/ 7">
+  <param name="ftp_host" type="str" value="192.168.1.35"/>
+  <param name="ftp_port" type="int" value="21"/>
+    <param name="ftp_username" type="str" value="ftp"/>
+    <param name="ftp_pwd" type="str" value=""/>
+    <param name="ftp_path" type="str" value="/file/input"/>
+  </node>
+</launch>

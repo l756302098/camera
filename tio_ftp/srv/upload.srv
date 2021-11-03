@@ -1,0 +1,9 @@
+int8 flag
+int32 device_id
+int32 task_id
+int32 map_id
+string src_name
+string target_name
+---
+bool success
+string message

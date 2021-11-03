@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: tio_ftp
+Description: Description of tio_ftp
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: roscpp std_msgs roslib

@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/li/catkin_ws/src/tio_ftp/build/devel/setup.sh

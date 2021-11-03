@@ -1,0 +1,8 @@
+prefix=/home/li/catkin_ws/src/tio_ftp/build/devel
+
+Name: tio_ftp
+Description: Description of tio_ftp
+Version: 0.0.0
+Cflags: -I/home/li/catkin_ws/src/tio_ftp/build/devel/include -I/home/li/catkin_ws/src/tio_ftp/include
+Libs: -L${prefix}/lib 
+Requires: roscpp std_msgs roslib
