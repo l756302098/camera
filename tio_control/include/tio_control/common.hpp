@@ -59,7 +59,7 @@ typedef struct _watch_node
 typedef struct _node_option
 {
 	std::string log_path;
-	std::string mapping_file,test_coloring_file;
+	std::string mapping_file,map_save_path,test_coloring_file;
 	std::string coloring_finish_topic,coloring_start_topic;
 	int log_max_days;
 	int motor_timeout;
@@ -67,6 +67,7 @@ typedef struct _node_option
 	int mapping_color_timeout;
 	int color_weight;
 	int coloring_timeout;
+	int upload_timeout;
 	std::vector<std::shared_ptr<WatchNode>> motor_trajectory;
 	//std::vector<std::shared_ptr<ROAD_PLAN>> coloring_tasks;
 	std::shared_ptr<ColorJson> cj;

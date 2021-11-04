@@ -14,7 +14,7 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 
-std::string checkDir(const std::string& LOGPATH)
+static std::string checkDir(const std::string& LOGPATH)
 {
     if (!boost::filesystem::exists(LOGPATH))
     {
@@ -37,7 +37,45 @@ std::string checkDir(const std::string& LOGPATH)
     }
     return log_path;
 }
-int readFilesInDir(const char *basePath)
+
+static bool readNewFile(const std::string& LOGPATH,std::string &target,std::string suffix = ".pcd"){
+    if (!boost::filesystem::exists(LOGPATH))
+    {
+        printf("current path dont exits");
+        return false;
+    }
+    if(!boost::filesystem::is_directory(LOGPATH)){
+        printf("current path is not directory");
+        return false;
+    }
+    std::multimap<std::time_t, boost::filesystem::path> result_set;
+    boost::filesystem::directory_iterator end_iter;
+    std::time_t last_time;
+    for( boost::filesystem::directory_iterator dir_iter(LOGPATH) ; dir_iter != end_iter ; ++dir_iter)
+    {
+        if (boost::filesystem::is_regular_file(dir_iter->status()))
+        {
+            boost::filesystem::path cpath = *dir_iter;
+            if(cpath.extension().compare(suffix)==0){
+                std::cout <<"file name:" <<cpath.filename() << " extension:" << cpath.extension() << std::endl;
+                last_time = boost::filesystem::last_write_time(dir_iter->path());
+                result_set.insert(std::multimap<std::time_t, boost::filesystem::path>::value_type(last_time,cpath));
+            }
+        }
+    }
+    int count = result_set.size();
+    if(count){
+        auto iter = result_set.find(last_time);
+        if (iter != std::end (result_set)){
+            boost::filesystem::path cpath = iter->second;
+            target = cpath.filename().string();
+            return true;
+        }
+    }
+    return false;
+}
+
+static int readFilesInDir(const char *basePath)
 {
     DIR *dir;
     struct dirent *ptr;
@@ -68,7 +106,7 @@ int readFilesInDir(const char *basePath)
     return 0;
 }
 
-int rmdir2(const char *path)
+static int rmdir2(const char *path)
 {
     int ret = readFilesInDir(path);
     if(ret != 0)
@@ -83,7 +121,7 @@ int rmdir2(const char *path)
     return 0;
 }
 
-bool rmOldDay(const std::string& LOGPATH,int MAX_SAVE_DAYS = 7)
+static bool rmOldDay(const std::string& LOGPATH,int MAX_SAVE_DAYS = 7)
 {
     struct dirent **namelist;
     int n = 0, i = 0;

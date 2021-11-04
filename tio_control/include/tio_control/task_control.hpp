@@ -24,8 +24,10 @@
 #include "tio_control/action_idle.hpp"
 #include "tio_control/action_coloring.hpp"
 #include "tio_control/action_mapping.hpp"
+#include "tio_control/action_upload.hpp"
 #include "tio_control/common.hpp"
 #include "tio_control/string_extension.hpp"
+#include "tio_control/glod_extension.hpp"
 #include "tio_control/mapping_task.h"
 #include "tio_control/coloring_task.h"
 #include "tio_control/control_task.h"
@@ -60,6 +62,8 @@ private:
 			return "mapping";
 		case fsm::fsm_enum::COLORRING:
 			return "coloring";
+        case fsm::fsm_enum::UPLOAD:
+			return "upload";
 		default:
 			break;
 		}
@@ -74,6 +78,7 @@ private:
 		task_context.task_progress = 0;
         task_context.task_status = 4;
 		task_context.message = "ok";
+        brain_->set_state(fsm::fsm_enum::IDLE);
 	}
 private:
 	void launch_client();
@@ -89,6 +94,7 @@ private:
     void web_command_cb(const std_msgs::String::ConstPtr& msg);
     bool control_mapping(int flag);
     bool control_coloring(int flag);
+    bool control_upload(int flag);
     void pub_status_web();
     void pub_progress_web();
 public:

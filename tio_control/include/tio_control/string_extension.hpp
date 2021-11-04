@@ -30,6 +30,18 @@ typedef struct _map_json
     std::string density;
 }MapJson;
 
+typedef struct _upload_map_json
+{
+	std::string InspectId;
+	int InspectTypeId;
+	int RobotId;
+    int TaskId;
+    int TaskHistoryId;
+    int TaskType;
+    int stationMapId;
+    std::string stationMapVersion;
+}UploadMapJson;
+
 typedef struct _task_plan
 {
 	std::string road;
@@ -125,6 +137,39 @@ static std::shared_ptr<MapJson> resolve_map_json(const char* in){
         if(smv.IsString()){LOG(WARNING) << "stationMapVersion:" << smv.GetString();json->stationMapVersion = smv.GetString();}
         const rapidjson::Value &density = doc["density"];
         if(density.IsString()){LOG(WARNING) << "density:" << density.GetString();json->density = density.GetString();}
+        return json;
+}
+
+static std::shared_ptr<UploadMapJson> resolve_upload_map_json(const char* in){
+        LOG(INFO) << "resolve_map_json in:" << in;
+        rapidjson::StringStream ss(in);
+        rapidjson::Document doc;
+        if (doc.ParseStream(ss).HasParseError())
+        {
+            LOG(ERROR) << "Failed to parse json";
+            return nullptr;
+        }
+        if(!doc.IsObject()){
+            LOG(WARNING) <<"json is not object";
+            return nullptr;
+        }
+        std::shared_ptr<UploadMapJson> json(new UploadMapJson());
+        const rapidjson::Value &iid = doc["InspectId"];
+        if(iid.IsString()){LOG(WARNING) << "InspectId:" << iid.GetString();json->InspectId = iid.GetString();}
+        const rapidjson::Value &iti = doc["InspectTypeId"];
+        if(iti.IsNumber()){LOG(WARNING) << "InspectTypeId:" << iti.GetInt();json->InspectTypeId = iti.GetInt();}
+        const rapidjson::Value &rid = doc["RobotId"];
+        if(rid.IsNumber()){LOG(WARNING) << "RobotId:" << rid.GetInt();json->RobotId = rid.GetInt();}
+        const rapidjson::Value &thid = doc["TaskHistoryId"];
+        if(thid.IsNumber()){LOG(WARNING) << "TaskHistoryId:" << thid.GetInt();json->TaskHistoryId = thid.GetInt();}
+        const rapidjson::Value &tid = doc["TaskId"];
+        if(tid.IsNumber()){LOG(WARNING) << "TaskId:" << tid.GetInt();json->TaskId = tid.GetInt();}
+        const rapidjson::Value &tt = doc["TaskType"];
+        if(tt.IsNumber()){LOG(WARNING) << "TaskType:" << tt.GetInt();json->TaskType = tt.GetInt();}
+        const rapidjson::Value &smi = doc["stationMapId"];
+        if(smi.IsNumber()){LOG(WARNING) << "stationMapId:" << smi.GetInt();json->stationMapId = smi.GetInt();}
+        const rapidjson::Value &smv = doc["stationMapVersion"];
+        if(smv.IsString()){LOG(WARNING) << "stationMapVersion:" << smv.GetString();json->stationMapVersion = smv.GetString();}
         return json;
 }
 

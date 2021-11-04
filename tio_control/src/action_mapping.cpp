@@ -59,7 +59,7 @@ namespace fsm
             case fsm::mapping_enum::WAITFOR_MOTOR:
                 time_tick(task_control::option_.motor_timeout);
             case fsm::mapping_enum::WAITFOR_COLOR:
-                time_tick(task_control::option_.mapping_color_timeout);
+                time_tick(task_control::option_.mapping_color_timeout * (flag +1));
             case fsm::mapping_enum::WAITFOR_COLLECT:
                 time_tick(task_control::option_.collect_timeout);
             default:

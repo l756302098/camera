@@ -13,6 +13,8 @@ task_control::task_control(const ros::NodeHandle &nh):nh_(nh)
     brain_->add_state(action_coloring_ptr);
     std::shared_ptr<fsm::action_mapping> action_mapping_ptr(new fsm::action_mapping());
     brain_->add_state(action_mapping_ptr);
+    std::shared_ptr<fsm::action_upload> action_upload_ptr(new fsm::action_upload());
+    brain_->add_state(action_upload_ptr);
     brain_->set_state(fsm::fsm_enum::IDLE);
     reset();
     launch_client();
@@ -49,7 +51,6 @@ void task_control::deal_callback(int module,int code,std::string msg,float perce
         case fsm::mapping_error_enum::MAP_FINISH:
             LOG(INFO) << "mapping finish.";
             task_context.task_status = 0;
-            reset();
             break;
         case fsm::mapping_error_enum::MAP_QUIT:
             LOG(INFO) << "mapping quit ok.";
@@ -70,7 +71,6 @@ void task_control::deal_callback(int module,int code,std::string msg,float perce
         case fsm::coloring_error_enum::COR_FINISH:
             LOG(INFO) << "coloring finish.";
             task_context.task_status = 0;
-            reset();
             break;
         case fsm::coloring_error_enum::COR_EXIT:
             LOG(INFO) << "coloring quit ok.";
@@ -79,6 +79,26 @@ void task_control::deal_callback(int module,int code,std::string msg,float perce
         default:
             task_context.task_status = 1;
             LOG(ERROR) << "coloring fatal error occurred.";
+            break;
+        }
+    }else if(module == (int)fsm::fsm_enum::UPLOAD){
+        switch (code)
+        {
+        case (int)fsm::upload_error_enum::NORMAL:
+            LOG(INFO) << "upload ok";
+            task_context.task_status = 3;
+            break;
+        case (int)fsm::upload_error_enum::FINISH:
+            LOG(INFO) << "upload finish.";
+            task_context.task_status = 0;
+            break;
+        case (int)fsm::upload_error_enum::QUIT:
+            LOG(INFO) << "upload quit ok.";
+            task_context.task_status = 1;
+            break;
+        default:
+            task_context.task_status = 1;
+            LOG(ERROR) << "upload fatal error occurred.";
             break;
         }
     }
@@ -177,25 +197,29 @@ void task_control::update(){
     
 }
 void task_control::load_params(){
-    std::string mapping_file,coloring_finish_topic,test_coloring_file;
-    int device_id,color_weight,motor_timeout,collect_timeout,mapping_color_timeout,coloring_timeout;
+    std::string mapping_file,coloring_finish_topic,test_coloring_file,map_save_path;
+    int device_id,color_weight,motor_timeout,collect_timeout,mapping_color_timeout,coloring_timeout,upload_timeout;
     nh_.param<int>("device_id", device_id, 1);
     nh_.param<int>("color_weight", color_weight, 60);
     nh_.param<int>("motor_timeout", motor_timeout, 60);
     nh_.param<int>("collect_timeout", collect_timeout, 60);
     nh_.param<int>("mapping_color_timeout", mapping_color_timeout, 60);
     nh_.param<int>("coloring_timeout", coloring_timeout, 60);
+    nh_.param<int>("upload_timeout", upload_timeout, 60);
     nh_.param<std::string>("mapping_file", mapping_file, "");
+    nh_.param<std::string>("map_save_path", map_save_path, "");
     nh_.param<std::string>("coloring_finish_topic", coloring_finish_topic, "");
     nh_.param<std::string>("test_coloring_file", test_coloring_file, "");
     option_.log_path = "";
     option_.mapping_file = mapping_file;
+    option_.map_save_path = map_save_path;
     option_.color_weight = color_weight;
     option_.motor_timeout = motor_timeout;
     option_.collect_timeout = collect_timeout;
     option_.mapping_color_timeout = mapping_color_timeout;
     option_.coloring_timeout = coloring_timeout;
     option_.test_coloring_file = test_coloring_file;
+    option_.upload_timeout = upload_timeout;
     LOG(WARNING) << "mapping_file:" << mapping_file.c_str();
     task_context.device_id = device_id;
     //load json
@@ -398,7 +422,31 @@ void task_control::web_data_cb(const std_msgs::String::ConstPtr& msg){
     {
         std::shared_ptr<TaskData> td = resolve_task_data(msg->data.c_str());
         if(td){
-            if(td->type == 3){
+            reset();
+            if(td->type == 1){
+                std::shared_ptr<ColorJson> color = resolve_color_json(td->taskData.c_str());
+                if(color){
+                    task_control::option_.cj = color;
+                    brain_->set_state(fsm::fsm_enum::COLORRING);
+                    std::vector<std::string> data;
+                    data.push_back(std::to_string(color->stationMapId));
+                    bool ok = brain_->get_current()->play(fsm::coloring_enum::COR_START,data);
+                    if(ok){
+                        auto f = std::bind(&task_control::deal_callback,this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+                        brain_->get_current()->set_callback(f);
+                        task_context.device_id = color->RobotId;
+                        task_context.task_id = color->TaskHistoryId;
+                        task_context.map_id = color->stationMapId;
+                        task_context.task_status = 3;
+                    }else{
+                        LOG(ERROR) <<  "coloring play failed.";
+                        return;
+                    }
+                }else{
+                    LOG(ERROR) << "resolve_color_json return null ptr";
+                }
+            }
+            else if(td->type == 3){
                 std::shared_ptr<MapJson> map = resolve_map_json(td->taskData.c_str());
                 //check device id
                 int resolution_flag = atoi(map->density.c_str());
@@ -416,7 +464,7 @@ void task_control::web_data_cb(const std_msgs::String::ConstPtr& msg){
                     data.push_back(map->density);
                     bool ok = brain_->get_current()->play(fsm::mapping_enum::START,data);
                     if(!ok){
-                        LOG(ERROR) <<  "mapping_task_cb request failed . mapping server no response";
+                        LOG(ERROR) <<  "mapping play failed.";
                         return;
                     }else{
                         auto f = std::bind(&task_control::deal_callback,this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -430,26 +478,42 @@ void task_control::web_data_cb(const std_msgs::String::ConstPtr& msg){
                 }else{
                     LOG(ERROR) << "resolve_task_json return null ptr";
                 }
-            }else if(td->type == 1){
-                std::shared_ptr<ColorJson> color = resolve_color_json(td->taskData.c_str());
-                if(color){
-                    task_control::option_.cj = color;
-                    brain_->set_state(fsm::fsm_enum::COLORRING);
+            }else if(td->type == 4){
+                std::shared_ptr<UploadMapJson> umj = resolve_upload_map_json(td->taskData.c_str());
+                if(umj->RobotId != task_context.device_id){
+                    LOG(ERROR) << "current device_id is " << task_context.device_id << " RobotId is " <<umj->RobotId;
+                    return;
+                }
+                if(umj){
+                    //get file
+                    int map_id = umj->stationMapId;
+                    std::string search_path = option_.map_save_path + "/" + std::to_string(map_id) + "/ply/";
+                    std::string map_file;
+                    bool ok = readNewFile(search_path,map_file,".ply");
+                    if(!ok){
+                        LOG(ERROR) << "search map failed in " << search_path;
+                    }
+                    std::string upload_file = search_path + map_file;
+                    LOG(INFO) << "search map success in " << upload_file;
+                    brain_->set_state(fsm::fsm_enum::UPLOAD);
                     std::vector<std::string> data;
-                    bool ok = brain_->get_current()->play(fsm::coloring_enum::COR_START,data);
+                    data.push_back(std::to_string(umj->TaskHistoryId));
+                    data.push_back(std::to_string(umj->stationMapId));
+                    data.push_back(map_file);
+                    data.push_back(upload_file);
+                    ok = brain_->get_current()->play((int)fsm::upload_enum::START,data);
                     if(ok){
                         auto f = std::bind(&task_control::deal_callback,this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
                         brain_->get_current()->set_callback(f);
-                        task_context.device_id = color->RobotId;
-                        task_context.task_id = color->TaskHistoryId;
-                        task_context.map_id = color->stationMapId;
                         task_context.task_status = 3;
+                        task_context.device_id = task_context.device_id;
+                        task_context.task_id = umj->TaskHistoryId;
+                        task_context.map_id = umj->stationMapId;
                     }else{
-                        LOG(ERROR) <<  "coloring_task_cb request failed . coloring server no response";
-                        return;
+                        LOG(ERROR) <<  "upload play failed.";
                     }
                 }else{
-                    LOG(ERROR) << "resolve_color_json return null ptr";
+                    LOG(ERROR) << "resolve_upload_map_json return null ptr";
                 }
             }
         }else{
@@ -482,6 +546,9 @@ void task_control::web_command_cb(const std_msgs::String::ConstPtr& msg){
                     control_coloring(tc->flag);
                     break;
                 case fsm::fsm_enum::MAPPING:
+                    control_mapping(tc->flag);
+                    break;
+                case fsm::fsm_enum::UPLOAD:
                     control_mapping(tc->flag);
                     break;
                 default:
@@ -551,6 +618,37 @@ bool task_control::control_coloring(int flag){
     {
         LOG(INFO)   <<"Request GO ON";
         brain_->get_current()->play(fsm::coloring_enum::COR_GOON,data);
+    }else{
+        LOG(ERROR) << "flag not valid, flag = " << flag;
+        return false;
+    }
+    return true;
+}
+
+bool task_control::control_upload(int flag){
+    LOG(INFO)   <<"task_control::control_upload " << flag;
+    std::vector<std::string> data;
+    if(flag==1)
+    {
+        LOG(INFO)   <<"Request PAUSE";
+        brain_->get_current()->play((int)fsm::upload_enum::PAUSE,data);
+    }
+    else if(flag==2)
+    {
+        LOG(INFO)   <<"Request QUTI";
+        bool ok = brain_->get_current()->play((int)fsm::upload_enum::QUIT,data);
+        if(!ok){
+            LOG(ERROR) <<  "web_task_control request QUTI failed . ftp server no response";
+            return false;
+        }else{
+            reset();
+            brain_->set_state(fsm::fsm_enum::IDLE);
+        }
+    }
+    else if(flag==3)
+    {
+        LOG(INFO)   <<"Request GO ON";
+        brain_->get_current()->play((int)fsm::upload_enum::GOON,data);
     }else{
         LOG(ERROR) << "flag not valid, flag = " << flag;
         return false;

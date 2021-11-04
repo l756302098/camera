@@ -14,7 +14,7 @@
 #include "tio_control/glod_extension.hpp"
 #include "glog/logging.h"
 #include "gflags/gflags.h"
-#define __app_name__ "tio_control_node"
+#define __app_name__ "ftp_control_node"
 
 void glod_init(int argc, char **argv){
     std::string log_path = argv[1];

@@ -82,6 +82,7 @@ roslaunch  fixed_yd_motor motor2.launch
 roslaunch mapping_service mapping_service.launch
 roslaunch tio_control control.launch
 roslaunch tio_mqtt_bridge tio_bridge.launch
+roslaunch tio_ftp ftp.launch
 ```
 ##  启动着色
 ```json

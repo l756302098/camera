@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   mapping_msg
   fixed_msg
+  tio_ftp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -74,6 +75,7 @@ src/action_idle.cpp
 src/action_coloring.cpp
 src/action_mapping.cpp
 src/task_control.cpp
+src/action_upload.cpp
 )
 
 add_executable(${PROJECT_NAME}_node src/tio_control_node.cpp ${CONTROL_SOURCES})
@@ -91,4 +93,4 @@ install(DIRECTORY include/tio_control/
 install(TARGETS ${PROJECT_NAME}_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

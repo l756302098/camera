@@ -121,6 +121,8 @@ namespace fsm
 
     bool action_coloring::start_coloring(std::vector<std::string> &data){
         LOG(INFO) << "action_coloring::start_coloring" ;
+        if(data.size()<=0) return false;
+        map_id = atoi(data[0].c_str());
         reset();
         current_status = fsm::coloring_enum::COR_MOTOR;
         return true;

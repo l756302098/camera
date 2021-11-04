@@ -21,7 +21,7 @@
 namespace fsm
 {
     enum fsm_enum{
-        IDLE = 1,COLORRING, MAPPING
+        IDLE = 1,COLORRING, MAPPING, UPLOAD
     };
 	enum action_enum{
 		INIT = 1, RUNNING, FINISH, TIMEOUT, UNKNOWN,
