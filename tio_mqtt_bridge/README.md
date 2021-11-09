@@ -1,6 +1,4 @@
-# mqtt_bridge
-
-[![CircleCI](https://circleci.com/gh/groove-x/mqtt_bridge.svg?style=svg)](https://circleci.com/gh/groove-x/mqtt_bridge)
+# tio_mqtt_bridge
 
 mqtt_bridge provides a functionality to bridge between ROS and MQTT in bidirectional.
 
@@ -48,40 +46,25 @@ data: True
 ---
 ```
 
-Publish "hello" to `/echo`,
-
-```
-$ rostopic pub /echo std_msgs/String "data: 'hello'"
-```
-
-and see response to `/back`.
-
-```
-$ rostopic echo /back
-data: hello
----
-```
-
-You can also see MQTT messages using `mosquitto_sub`
-
-```
-$ mosquitto_sub -t '#'
-```
-
 ## Usage
 
 parameter file (config.yaml):
 
 ``` yaml
 mqtt:
+  client_name: tio_bridge_115       #client name
   client:
-    protocol: 4      # MQTTv311
+    protocol: 4                     # MQTTv311
   connection:
-    host: localhost
-    port: 1883
-    keepalive: 60
+    host: 192.168.1.35              #mqtt host
+    port: 1883                      #mqtt port
+    keepalive: 60                   #heart beat
+  private_path: device/001
+  account:
+    username: ydrobot               #client username
+    password: 123qweasd             #client password
 bridge:
-  # ping pong
+    # ping pong
   - factory: mqtt_bridge.bridge:RosToMqttBridge
     msg_type: std_msgs.msg:Bool
     topic_from: /ping
@@ -92,18 +75,19 @@ bridge:
     topic_to: /pong
 ```
 
-you can use any msg types like `sensor_msgs.msg:Imu`.
+you can use any msg types like `std_msgs.msg:Bool`.
 
 launch file:
 
 ``` xml
 <launch>
-  <node name="mqtt_bridge" pkg="mqtt_bridge" type="mqtt_bridge_node.py" output="screen">
-    <rosparam file="/path/to/config.yaml" command="load" />
+  <arg name="use_tls" default="false" />
+  <node name="mqtt_bridge" pkg="tio_mqtt_bridge" type="mqtt_bridge_node.py" output="screen">
+    <rosparam command="load" file="$(find tio_mqtt_bridge)/config/tio_params.yaml" />
+    <rosparam if="$(arg use_tls)" command="load" ns="mqtt" file="$(find tio_mqtt_bridge)/config/tls_params.yaml" />
   </node>
 </launch>
 ```
-
 
 ## Configuration
 
@@ -121,10 +105,6 @@ Parameters under `mqtt` section are used for creating paho's `mqtt.Client` and i
 * `will`: used for MQTT's will configuration
 
 See `mqtt_bridge.mqtt_client` for detail.
-
-### mqtt private path
-
-If `mqtt/private_path` parameter is set, leading `~/` in MQTT topic path will be replaced by this value. For example, if `mqtt/pivate_path` is set as "device/001", MQTT path "~/value" will be converted to "device/001/value".
 
 ### serializer and deserializer
 

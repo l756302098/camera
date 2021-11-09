@@ -58,8 +58,12 @@ class RosToMqttBridge(Bridge):
             self._last_published = now
 
     def _publish(self, msg: rospy.Message):
-        payload = self._serialize(extract_values(msg))
-        self._mqtt_client.publish(topic=self._topic_to, payload=payload)
+        try:
+            msg_dict = extract_values(msg)
+            msh_json = json.dumps(msg_dict)
+            self._mqtt_client.publish(topic=self._topic_to, payload=msh_json)
+        except Exception as e:
+            rospy.logerr(e)
 
 
 class MqttToRosBridge(Bridge):
@@ -98,10 +102,7 @@ class MqttToRosBridge(Bridge):
     def _create_ros_message(self, mqtt_msg: mqtt.MQTTMessage) -> rospy.Message:
         """ create ROS message from MQTT payload """
         # Hack to enable both, messagepack and json deserialization.
-        if self._serialize.__name__ == "packb":
-            msg_dict = self._deserialize(mqtt_msg.payload, raw=False)
-        else:
-            msg_dict = self._deserialize(mqtt_msg.payload)
+        msg_dict = json.loads(mqtt_msg.payload)
         return populate_instance(msg_dict, self._msg_type())
 
 class MqttToStrBridge(Bridge):
