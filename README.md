@@ -19,6 +19,7 @@ sudo make install
 #install ZLMediaKit
 git clone https://github.com/ZLMediaKit/ZLMediaKit.git
 cd ZLMediaKit
+git submodule update --init
 mkdir build & cd build
 cmake ..
 make -j2
